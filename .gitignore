@@ -5,6 +5,6 @@
 __pycache__
 *.json
 *.pkl
-result
+/result
 *.DS_Store*
 *.npy
