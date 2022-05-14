@@ -1,5 +1,5 @@
 *.zip
-data
+/data
 *.pyc
 .idea
 __pycache__
