@@ -3,3 +3,8 @@ data
 *.pyc
 .idea
 __pycache__
+*.json
+*.pkl
+result
+*.DS_Store*
+
