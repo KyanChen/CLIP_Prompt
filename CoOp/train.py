@@ -66,9 +66,6 @@ def reset_cfg(cfg, args):
     if args.transforms:
         cfg.INPUT.TRANSFORMS = args.transforms
 
-    if args.trainer:
-        cfg.TRAINER.NAME = args.trainer
-
     if args.backbone:
         cfg.MODEL.BACKBONE.NAME = args.backbone
 
