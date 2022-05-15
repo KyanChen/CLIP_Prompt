@@ -272,7 +272,8 @@ class DatasetWrapper(TorchDataset):
         output = item.__dict__
         
         impath = f'{self.cfg.DATASET.ROOT}/VG/VG_100K/{item.image_id}.jpg'
-        img0 = io.imread(impath, as_gray=False)
+        img0 = read_image(impath)
+
         max_h, max_w, _ = img0.shape
         x, y, w, h = item.instance_bbox
         ratio = 0.4
@@ -302,11 +303,8 @@ class DatasetWrapper(TorchDataset):
 
         # if self.return_img0:
         #     output["img0"] = self.to_tensor(img0)
-        try:
-            output.pop('positive_attributes')
-            output.pop('negative_attributes')
-        except:
-            print(output)
+        output.pop('positive_attributes', None)
+        output.pop('negative_attributes', None)
         return output
 
     def _transform_image(self, tfm, img0):
