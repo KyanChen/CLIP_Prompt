@@ -272,7 +272,7 @@ class DatasetWrapper(TorchDataset):
         output = item.__dict__
         
         impath = f'{self.cfg.DATASET.ROOT}/VG/VG_100K/{item.image_id}.jpg'
-        img0 = read_image(impath)
+        img0 = np.array(read_image(impath))
 
         max_h, max_w, _ = img0.shape
         x, y, w, h = item.instance_bbox
