@@ -302,8 +302,11 @@ class DatasetWrapper(TorchDataset):
 
         # if self.return_img0:
         #     output["img0"] = self.to_tensor(img0)
-        output.pop('positive_attributes')
-        output.pop('negative_attributes')
+        try:
+            output.pop('positive_attributes')
+            output.pop('negative_attributes')
+        except:
+            print(output)
         return output
 
     def _transform_image(self, tfm, img0):
