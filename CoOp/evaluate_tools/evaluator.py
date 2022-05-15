@@ -2,7 +2,9 @@ import json
 import numpy as np
 
 from sklearn.metrics import average_precision_score
-
+import warnings
+from sklearn.exceptions import UndefinedMetricWarning
+warnings.filterwarnings("ignore", category=UndefinedMetricWarning, module="sklearn")
 
 K = 15
 def top_K_values(array):
