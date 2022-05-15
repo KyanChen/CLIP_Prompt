@@ -16,7 +16,7 @@ from PIL import Image
 from dassl.utils import read_image
 from skimage import io
 import numpy as np
-from evaluate.cal_metrics import cal_metrics
+from evaluate_tools import cal_metrics
 
 from torch.utils.data import Dataset as TorchDataset
 
@@ -410,7 +410,7 @@ class CoOp(TrainerX):
         loss_summary = {
             "loss": loss.item(),
             # "acc": compute_accuracy(output, label)[0].item(),
-            "acc": cal_metrics(output, label),
+            "acc": cal_metrics(f'{self.cfg.DATASET.ROOT}/VAW/', output, label),
             
         }
 

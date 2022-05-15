@@ -1,12 +1,12 @@
-from evaluate.evaluator import Evaluator
+from .evaluator import Evaluator
 
-prefix_path = '../data/vaw/'
-fpath_attribute_index = prefix_path+'attribute_index.json'
-fpath_attribute_types = prefix_path+'attribute_types.json'
-fpath_attribute_parent_types = prefix_path+'attribute_parent_types.json'
-fpath_head_tail = prefix_path+'head_tail.json'
 
-def cal_metrics(pred, gt_label):
+def cal_metrics(prefix_path, pred, gt_label):
+    fpath_attribute_index = prefix_path+'attribute_index.json'
+    fpath_attribute_types = prefix_path+'attribute_types.json'
+    fpath_attribute_parent_types = prefix_path+'attribute_parent_types.json'
+    fpath_head_tail = prefix_path+'head_tail.json'
+
     pred = pred.data.cpu().sigmoid()
     gt_label = gt_label.data.cpu()
     gt_label[gt_label==-1] = 2
