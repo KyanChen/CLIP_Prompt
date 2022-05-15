@@ -36,7 +36,7 @@ MODEL:
     NAME: "RN50"
 
 TRAINER:
-  NAME: 'CoOP'
+  NAME: 'CoOp'
   COOP:
     # CTX_INIT: "a photo of a"
     N_CTX: 8  # number of context tokens
