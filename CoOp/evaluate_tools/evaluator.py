@@ -105,8 +105,6 @@ class Evaluator(object):
         - threshold_type: 'threshold' or 'topk'. 
                           Determines positive vs. negative prediction.
         """
-        import pdb
-        pdb.set_trace()
         self.pred = pred
         self.gt_label = gt_label
         self.n_instance = self.gt_label.shape[0]
