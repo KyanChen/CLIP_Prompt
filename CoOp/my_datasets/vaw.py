@@ -13,7 +13,7 @@ from dassl.utils import listdir_nohidden, mkdir_if_missing
 @DATASET_REGISTRY.register()
 class VAW(DatasetBase):
 
-    dataset_dir = "vaw"
+    dataset_dir = "VAW"
 
     def __init__(self, cfg):
         root = os.path.abspath(os.path.expanduser(cfg.DATASET.ROOT))
