@@ -89,7 +89,7 @@ def extend_cfg(cfg):
     """
     from yacs.config import CfgNode as CN
 
-    # cfg.TRAINER.COOP = CN()
+    cfg.TRAINER.COOP = CN()
     # cfg.TRAINER.COOP.N_CTX = 16  # number of context vectors
     # cfg.TRAINER.COOP.CSC = False  # class-specific context
     # cfg.TRAINER.COOP.CTX_INIT = ""  # initialization words
