@@ -397,6 +397,8 @@ class CoOp(TrainerX):
             self.scaler.step(self.optim)
             self.scaler.update()
         else:
+            import pdb
+            pdb.set_trace()
             output = self.model(image) # 2x620
             tmp_output = output.view(-1)
             tmp_label = label.view(-1)
@@ -406,6 +408,7 @@ class CoOp(TrainerX):
             loss = loss.sum()/tmp_mask.sum()
             # loss = F.cross_entropy(output, label)
             self.model_backward_and_update(loss)
+        
 
         loss_summary = {
             "loss": loss.item(),
