@@ -54,7 +54,7 @@ class VAW(DatasetBase):
                 print(f"Loading preprocessed few-shot data from {preprocessed}")
                 with open(preprocessed, "rb") as file:
                     data = pickle.load(file)
-                    train = data["train"][:2]
+                    train = data["train"]
                     val = data["val"]
                     test = data["test"]
                     [print(k, ': ', len(v)) for k,v in data.items()]
