@@ -15,8 +15,7 @@ def cal_metrics(prefix_path, pred, gt_label):
         fpath_attribute_parent_types, fpath_head_tail)
     # Compute scores.
     scores_overall, scores_per_class = evaluator.evaluate(pred, gt_label)
-    import pdb
-    pdb.set_trace()
+    
     return scores_overall['all']['ap']
     # scores_overall_topk, scores_per_class_topk = evaluator.evaluate(pred, gt_label, threshold_type='topk')
     
