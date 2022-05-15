@@ -386,7 +386,6 @@ class CoOp(TrainerX):
     
     def forward_backward(self, batch):
         image, label = self.parse_batch_train(batch)
-        
         prec = self.cfg.TRAINER.COOP.PREC
         if prec == "amp":
             with autocast():

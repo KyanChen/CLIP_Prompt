@@ -42,7 +42,7 @@ TRAINER:
     N_CTX: 8  # number of context tokens
     CSC: False # class-specific context (False or True) 
     CLASS_TOKEN_POSITION: 'end'  # class token position (end or middle)
-    PREC: "fp32"  # fp16, fp32, amp
+    PREC: "fp16"  # fp16, fp32, amp
 
 SEED: 1
 OUTPUT_DIR: results/tmp
