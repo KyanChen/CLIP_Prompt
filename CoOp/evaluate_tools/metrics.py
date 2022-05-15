@@ -7,8 +7,8 @@ def cal_metrics(prefix_path, pred, gt_label):
     fpath_attribute_parent_types = prefix_path+'attribute_parent_types.json'
     fpath_head_tail = prefix_path+'head_tail.json'
 
-    pred = pred.data.cpu().sigmoid()
-    gt_label = gt_label.data.cpu()
+    pred = pred.data.cpu().sigmoid().numpy()
+    gt_label = gt_label.data.cpu().numpy()
     gt_label[gt_label==-1] = 2
     evaluator = Evaluator(
         fpath_attribute_index, fpath_attribute_types,
