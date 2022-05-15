@@ -18,7 +18,7 @@ def cal_metrics(prefix_path, pred, gt_label):
     # Compute scores.
     scores_overall, scores_per_class = evaluator.evaluate(pred, gt_label)
     
-    return scores_overall['all']['ap']
+    return scores_overall['all']['f1']
     # scores_overall_topk, scores_per_class_topk = evaluator.evaluate(pred, gt_label, threshold_type='topk')
     
     # CATEGORIES = ['all', 'head', 'medium', 'tail'] + \
