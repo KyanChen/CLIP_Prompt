@@ -31,7 +31,7 @@ class VAW(DatasetBase):
                 train = preprocessed["train"]
                 val = preprocessed["val"]
                 test = preprocessed["test"]
-                [print(k, ': ', len(v)) for k,v in preprocessed.items()]
+                [print(k, ': ', len(v)) for k, v in preprocessed.items()]
         else:
             
             train = self.read_data(classname_maps, ["train_part1.json", "train_part2.json"])

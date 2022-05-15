@@ -270,7 +270,7 @@ class DatasetWrapper(TorchDataset):
     def __getitem__(self, idx):
         item = self.data_source[idx]
         output = item.__dict__
-        impath = f'data/vaw/images/{item.image_id}.jpg'
+        impath = f'D:/Dataset/VG/VG_100K/{item.image_id}.jpg'
         img0 = io.imread(impath, as_gray=False)
         max_h, max_w, _ = img0.shape
         x, y, w, h = item.instance_bbox
@@ -301,7 +301,8 @@ class DatasetWrapper(TorchDataset):
 
         # if self.return_img0:
         #     output["img0"] = self.to_tensor(img0)
-
+        output.pop('positive_attributes')
+        output.pop('negative_attributes')
         return output
 
     def _transform_image(self, tfm, img0):

@@ -154,7 +154,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root", type=str, default="data", help="path to dataset")
+    parser.add_argument("--root", type=str, default=None, help="path to dataset")
     parser.add_argument("--output-dir", type=str, default="result/tmp", help="output directory")
     parser.add_argument(
         "--resume",
@@ -175,12 +175,12 @@ if __name__ == "__main__":
         "--transforms", type=str, nargs="+", help="data augmentation methods"
     )
     parser.add_argument(
-        "--config-file", type=str, default="CoOp/configs/my_trainers/rn50_ep50.yaml", help="path to config file"
+        "--config-file", type=str, default="configs/my_trainers/rn50_ep50.yaml", help="path to config file"
     )
     parser.add_argument(
         "--dataset-config-file",
         type=str,
-        default="CoOp/configs/my_datasets/VAW.yaml",
+        default="configs/my_datasets/VAW.yaml",
         help="path to config file for dataset setup",
     )
     parser.add_argument("--trainer", type=str, default="CoOp", help="name of trainer")

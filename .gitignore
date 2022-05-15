@@ -1,10 +1,12 @@
 *.zip
 /data
+/CoOp/data
 *.pyc
 .idea
 __pycache__
 *.json
 *.pkl
 /result
+/CoOp/result
 *.DS_Store*
 *.npy
