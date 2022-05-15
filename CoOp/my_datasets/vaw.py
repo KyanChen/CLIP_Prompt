@@ -76,7 +76,7 @@ class VAW(DatasetBase):
         self._val = val  # validation data (optional)
         self._train_u = None
         self._test = test  # test data
-        self._num_classes = max(classname_maps.values() + 1)
+        self._num_classes = max(classname_maps.values()) + 1
         self._lab2cname = {v:k for k,v in classname_maps.items()}
         self._classnames = list(self._lab2cname.values())
 
