@@ -375,6 +375,8 @@ class CoOp(TrainerX):
         self.model = CustomCLIP(cfg, classnames, clip_model)
 
         print("Turning off gradients in both the image and the text encoder")
+        import pdb
+        pdb.set_trace()
         for name, param in self.model.named_parameters():
             if "prompt_learner" not in name:
                 param.requires_grad_(False)
