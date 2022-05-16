@@ -328,7 +328,7 @@ class CoOp(TrainerX):
     https://arxiv.org/abs/2109.01134
     """
     def __init__(self, cfg):
-        super().__init__()
+        super().__init__(cfg)
         if torch.cuda.is_available() and cfg.USE_CUDA:
             self.device = torch.device(f"cuda:{cfg.GPU_ID}")
 
