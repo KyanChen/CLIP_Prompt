@@ -385,6 +385,7 @@ class CoOp(TrainerX):
         if device_count > 1:
             print(f"Multiple GPUs detected (n_gpus={device_count}), use all of them!")
             self.model = nn.DataParallel(self.model, device_ids=range(device_count))
+            self.model = self.model.module
             print('Multiple GPUs applied')
     
     def forward_backward(self, batch):
