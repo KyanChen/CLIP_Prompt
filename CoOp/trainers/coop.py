@@ -98,7 +98,7 @@ class PromptLearner(nn.Module):
             prompt = clip.tokenize(ctx_init)
             with torch.no_grad():
                 embedding = clip_model.token_embedding(prompt).type(dtype)
-            ctx_vectors = embedding[0, 1 : 1 + n_ctx, :]
+            ctx_vectors = embedding[0, 1: 1 + n_ctx, :]
             prompt_prefix = ctx_init
 
         else:
@@ -129,7 +129,7 @@ class PromptLearner(nn.Module):
         # but they should be ignored in load_model() as we want to use
         # those computed using the current class names
         self.register_buffer("token_prefix", embedding[:, :1, :])  # SOS
-        self.register_buffer("token_suffix", embedding[:, 1 + n_ctx :, :])  # CLS, EOS
+        self.register_buffer("token_suffix", embedding[:, 1 + n_ctx:, :])  # CLS, EOS
 
         self.n_cls = n_cls
         self.n_ctx = n_ctx
@@ -213,8 +213,8 @@ class CustomCLIP(nn.Module):
         self.text_encoder = TextEncoder(clip_model)
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
 
     def forward(self, image):
         image_features = self.image_encoder(image.type(self.dtype)) # 2x1024
@@ -374,7 +374,7 @@ class CoOp(TrainerX):
 
         print("Building custom CLIP")
         self.model = CustomCLIP(cfg, classnames, clip_model)
-        # self.model.to(self.device)
+        self.model.to(self.device)
 
         print("Turning off gradients in both the image and the text encoder")
         for name, param in self.model.named_parameters():
