@@ -213,6 +213,8 @@ class CustomCLIP(nn.Module):
         self.text_encoder = TextEncoder(clip_model)
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
+        import pdb
+        pdb.set_trace()
 
     def forward(self, image):
         image_features = self.image_encoder(image.type(self.dtype)) # 2x1024
@@ -372,9 +374,7 @@ class CoOp(TrainerX):
 
         print("Building custom CLIP")
         self.model = CustomCLIP(cfg, classnames, clip_model)
-        import pdb
-        pdb.set_trace()
-        self.model.to(self.device)
+        # self.model.to(self.device)
 
         print("Turning off gradients in both the image and the text encoder")
         for name, param in self.model.named_parameters():
