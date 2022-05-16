@@ -81,6 +81,10 @@ def extend_cfg(cfg):
     cfg.TRAINER.COOP.CTX_INIT = None  # initialization words
     cfg.TRAINER.COOP.PREC = None  # fp16, fp32, amp
     cfg.TRAINER.COOP.CLASS_TOKEN_POSITION = None  # 'middle' or 'end' or 'front'
+    cfg.EVAL_ONLY = None
+    cfg.EVAL_ONLY.MODEL_DIR = None
+    cfg.EVAL_ONLY.LOAD_EPOCH = None
+
 
     # cfg.TRAINER.COCOOP = CN()
     # cfg.TRAINER.COCOOP.N_CTX = 16  # number of context vectors
