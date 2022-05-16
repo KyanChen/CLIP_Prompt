@@ -372,6 +372,9 @@ class CoOp(TrainerX):
 
         print("Building custom CLIP")
         self.model = CustomCLIP(cfg, classnames, clip_model)
+        import pdb
+        pdb.set_trace()
+        self.model.to(self.device)
 
         print("Turning off gradients in both the image and the text encoder")
         for name, param in self.model.named_parameters():
@@ -382,8 +385,7 @@ class CoOp(TrainerX):
             load_pretrained_weights(self.model.prompt_learner, cfg.MODEL.INIT_WEIGHTS)
 
         # NOTE: only give prompt_learner to the optimizer
-        import pdb
-        pdb.set_trace()
+
         self.optim = build_optimizer(self.model.prompt_learner, cfg.OPTIM)
         self.sched = build_lr_scheduler(self.optim, cfg.OPTIM)
 
@@ -399,9 +401,6 @@ class CoOp(TrainerX):
             self.model = nn.DataParallel(self.model, device_ids=range(device_count))
             # self.model = self.model.to(self.device)
             print('Multiple GPUs applied')
-
-        self.model.to(self.device)
-        print("Done", flush=True)
 
     def run_epoch(self):
         # import pdb
