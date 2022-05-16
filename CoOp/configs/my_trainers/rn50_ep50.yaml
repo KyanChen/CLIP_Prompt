@@ -46,10 +46,10 @@ TRAINER:
     # CTX_INIT: "a photo of a"
     N_CTX: 16  # number of context tokens
     CSC: False # class-specific context (False or True) 
-    CLASS_TOKEN_POSITION: 'end'  # class token position (end or middle)
+    CLASS_TOKEN_POSITION: 'middle'  # class token position (end or middle)
     PREC: "fp16"  # fp16, fp32, amp
 
 SEED: 1
 # DIR=output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/nctx${NCTX}_csc${CSC}_ctp${CTP}/seed${SEED}
-OUTPUT_DIR: results/EXP20220515_0
+OUTPUT_DIR: results/EXP20220516_0
 RESUME: ""
