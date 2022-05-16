@@ -1,6 +1,5 @@
 import json
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import pickle
 from collections import OrderedDict, defaultdict
 import random
