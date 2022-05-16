@@ -1,2 +1,2 @@
 from .metrics import cal_metrics
-from .evaluator import AttCls
+from .att_evaluator import AttCls
