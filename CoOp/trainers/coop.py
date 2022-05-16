@@ -371,22 +371,23 @@ class CoOp(TrainerX):
         if cfg.MODEL.INIT_WEIGHTS:
             load_pretrained_weights(self.model.prompt_learner, cfg.MODEL.INIT_WEIGHTS)
 
-        self.model.to(self.device)
-        # NOTE: only give prompt_learner to the optimizer
-        self.optim = build_optimizer(self.model.prompt_learner, cfg.OPTIM)
-        self.sched = build_lr_scheduler(self.optim, cfg.OPTIM)
-        self.register_model("prompt_learner", self.model.prompt_learner, self.optim, self.sched)
-
-        self.scaler = GradScaler() if cfg.TRAINER.COOP.PREC == "amp" else None
-
         # Note that multi-gpu training could be slow because CLIP's size is
         # big, which slows down the copy operation in DataParallel
         device_count = torch.cuda.device_count()
         if device_count > 1:
             print(f"Multiple GPUs detected (n_gpus={device_count}), use all of them!")
             self.model = nn.DataParallel(self.model, device_ids=range(device_count))
-            self.model = self.model.module
+            self.model = self.model.to(self.device)
             print('Multiple GPUs applied')
+        else:
+            self.model = self.model.to(self.device)
+
+        # NOTE: only give prompt_learner to the optimizer
+        self.optim = build_optimizer(self.model.prompt_learner, cfg.OPTIM)
+        self.sched = build_lr_scheduler(self.optim, cfg.OPTIM)
+        self.register_model("prompt_learner", self.model.prompt_learner, self.optim, self.sched)
+
+        self.scaler = GradScaler() if cfg.TRAINER.COOP.PREC == "amp" else None
     
     def forward_backward(self, batch):
         image, label = self.parse_batch_train(batch)
