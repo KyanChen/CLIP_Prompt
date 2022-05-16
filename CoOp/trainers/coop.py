@@ -1,7 +1,7 @@
 import datetime
 import os.path as osp
 import time
-from dassl.utils import MetricMeter, AverageMeter
+from dassl.utils import MetricMeter, AverageMeter, mkdir_if_missing
 
 import cv2
 
@@ -400,13 +400,13 @@ class CoOp(TrainerX):
         self.model = self.model.to(self.device)
 
     def run_epoch(self):
+        # import pdb
+        # pdb.set_trace()
         self.set_model_mode("train")
         losses = MetricMeter()
         batch_time = AverageMeter()
         data_time = AverageMeter()
         self.num_batches = len(self.train_loader_x)
-        import pdb
-        pdb.set_trace()
         end = time.time()
         for self.batch_idx, batch in enumerate(self.train_loader_x):
             data_time.update(time.time() - end)
@@ -485,7 +485,23 @@ class CoOp(TrainerX):
             self.update_lr()
 
         return loss_summary
-    
+
+    def before_train(self):
+        import pdb
+        pdb.set_trace()
+        directory = self.cfg.OUTPUT_DIR
+        if self.cfg.RESUME:
+            directory = self.cfg.RESUME
+        self.start_epoch = self.resume_model_if_exist(directory)
+
+        # Initialize summary writer
+        writer_dir = osp.join(self.output_dir, "tensorboard")
+        mkdir_if_missing(writer_dir)
+        self.init_writer(writer_dir)
+
+        # Remember the starting time (for computing the elapsed time)
+        self.time_start = time.time()
+
     @torch.no_grad()
     def test(self, split=None):
         """A generic testing pipeline."""
