@@ -65,8 +65,8 @@ class VAW(DatasetBase):
 
                 val = self.generate_fewshot_dataset(val, num_shots=int(0.01*len(val)))
                 test = self.generate_fewshot_dataset(test, num_shots=int(0.01*len(test)))
-                val = []
-                test = []
+                # val = []
+                # test = []
                 data = {"train": train, "val": val, "test": test}
 
                 print(f"Saving preprocessed few-shot data to {preprocessed}")
