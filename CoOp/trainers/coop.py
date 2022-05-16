@@ -327,6 +327,12 @@ class CoOp(TrainerX):
     Learning to Prompt for Vision-Language Models
     https://arxiv.org/abs/2109.01134
     """
+    def __init__(self, cfg):
+        super().__init__()
+        if torch.cuda.is_available() and cfg.USE_CUDA:
+            self.device = torch.device(f"cuda:{cfg.GPU_ID}")
+
+
     def build_data_loader(self):
         """Create essential data-related attributes.
 
@@ -384,10 +390,9 @@ class CoOp(TrainerX):
         if device_count > 1:
             print(f"Multiple GPUs detected (n_gpus={device_count}), use all of them!")
             self.model = nn.DataParallel(self.model, device_ids=range(device_count))
-            self.model = self.model.to(self.device)
+            # self.model = self.model.to(self.device)
             print('Multiple GPUs applied')
-        else:
-            self.model = self.model.to(self.device)
+        self.model = self.model.to(self.device)
     
     def forward_backward(self, batch):
         image, label = self.parse_batch_train(batch)

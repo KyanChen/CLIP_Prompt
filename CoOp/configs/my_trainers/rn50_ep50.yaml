@@ -38,6 +38,7 @@ TEST:
   EVALUATOR: AttCls
 
 USE_CUDA: True
+GPU_ID: 0
 
 MODEL:
   BACKBONE:
