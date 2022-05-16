@@ -59,8 +59,8 @@ class VAW(DatasetBase):
                 with open(preprocessed, "rb") as file:
                     data = pickle.load(file)
                     train = data["train"]
-                    val = data["val"]
-                    test = data["test"]
+                    # val = data["val"]
+                    # test = data["test"]
             else:
                 train = self.generate_fewshot_dataset(train, num_shots=num_shots)
 
@@ -73,9 +73,9 @@ class VAW(DatasetBase):
                 with open(preprocessed, "wb") as file:
                     pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
-            print(10 * '*', 'All Dataset', 10 * '*')
+            print(10 * '*', 'Split Dataset', 10 * '*')
             [print(k, ': ', len(v)) for k, v in data.items()]
-            print(10 * '*', 'All Dataset', 10 * '*')
+            print(10 * '*', 'Split Dataset', 10 * '*')
 
         # subsample = cfg.DATASET.SUBSAMPLE_CLASSES
         # train, test = OxfordPets.subsample_classes(train, test, subsample=subsample)
