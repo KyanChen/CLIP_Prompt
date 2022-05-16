@@ -55,6 +55,13 @@ def reset_cfg(cfg, args):
     if args.head:
         cfg.MODEL.HEAD.NAME = args.head
 
+    if args.eval_only:
+        cfg.EVAL_ONLY = args.eval_only
+    if args.model_dir:
+        cfg.EVAL_ONLY.MODEL_DIR = args.model_dir
+    if args.load_epoch:
+        cfg.EVAL_ONLY.LOAD_EPOCH = args.load_epoch
+
 
 def extend_cfg(cfg):
     """
@@ -75,6 +82,11 @@ def extend_cfg(cfg):
     cfg.TRAINER.COOP.CTX_INIT = None  # initialization words
     cfg.TRAINER.COOP.PREC = None  # fp16, fp32, amp
     cfg.TRAINER.COOP.CLASS_TOKEN_POSITION = None  # 'middle' or 'end' or 'front'
+
+    cfg.EVAL_ONLY = CN()
+    cfg.EVAL_ONLY.FLAG = None
+    cfg.EVAL_ONLY.MODEL_DIR = None
+    cfg.EVAL_ONLY.LOAD_EPOCH = None
 
     # cfg.TRAINER.COCOOP = CN()
     # cfg.TRAINER.COCOOP.N_CTX = 16  # number of context vectors
@@ -126,7 +138,6 @@ def main(args):
 
     if not args.no_train:
         trainer.train()
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

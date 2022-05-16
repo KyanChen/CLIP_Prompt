@@ -1,6 +1,6 @@
 DATASET:
   NAME: "VAW"
-  NUM_SHOTS: 4
+  NUM_SHOTS: 8
   ROOT: 'data/'
 
 DATALOADER:
@@ -30,7 +30,7 @@ OPTIM:
 
 TRAIN:
   PRINT_FREQ: 5
-  CHECKPOINT_FREQ: 15
+  CHECKPOINT_FREQ: 20
 
 TEST:
   NO_TEST: True
@@ -49,15 +49,15 @@ TRAINER:
     # CTX_INIT: "a photo of a"
     N_CTX: 16  # number of context tokens
     CSC: False # class-specific context (False or True) 
-    CLASS_TOKEN_POSITION: 'middle'  # class token position (end or middle)
+    CLASS_TOKEN_POSITION: 'end'  # class token position (end or middle)
     PREC: "fp16"  # fp16, fp32, amp
 
 SEED: 1
 # DIR=output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/nctx${NCTX}_csc${CSC}_ctp${CTP}/seed${SEED}
-OUTPUT_DIR: results/EXP20220515_0
+OUTPUT_DIR: results/EXP20220516_1
 RESUME: ""
 
 EVAL_ONLY:
-  FLAG: True
-  MODEL_DIR: results/EXP20220515_0
+  FLAG: False
+  MODEL_DIR: results/EXP20220516_1
   LOAD_EPOCH: 100
