@@ -9,7 +9,7 @@ DATALOADER:
     SAMPLER: 'RandomSampler'
   TEST:
     BATCH_SIZE: 256
-  NUM_WORKERS: 1
+  NUM_WORKERS: 8
 
 INPUT:
   SIZE: (224, 224)
