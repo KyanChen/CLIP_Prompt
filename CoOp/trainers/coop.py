@@ -398,6 +398,7 @@ class CoOp(TrainerX):
             # self.model = self.model.to(self.device)
             print('Multiple GPUs applied')
         self.model = self.model.to(self.device)
+        print("Done", flush=True)
 
     def run_epoch(self):
         # import pdb
