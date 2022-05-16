@@ -16,6 +16,7 @@ from PIL import Image
 from dassl.utils import read_image
 from skimage import io
 import numpy as np
+import tqdm
 from evaluate_tools import cal_metrics
 
 from torch.utils.data import Dataset as TorchDataset
@@ -421,13 +422,53 @@ class CoOp(TrainerX):
             self.update_lr()
 
         return loss_summary
+    
+    @torch.no_grad()
+    def test(self, split=None):
+        """A generic testing pipeline."""
+        self.set_model_mode("eval")
+        self.evaluator.reset()
 
+        if split is None:
+            split = self.cfg.TEST.SPLIT
+
+        if split == "val" and self.val_loader is not None:
+            data_loader = self.val_loader
+            print("Do evaluation on {} set".format(split))
+        else:
+            data_loader = self.test_loader
+            print("Do evaluation on test set")
+
+        for batch_idx, batch in enumerate(tqdm.tqdm(data_loader)):
+            input, label = self.parse_batch_test(batch)
+            output = self.model_inference(input)
+            self.evaluator.process(output, label)
+
+        results = self.evaluator.evaluate()
+
+        for k, v in results.items():
+            tag = "{}/{}".format(split, k)
+            self.write_scalar(tag, v, self.epoch)
+
+        return list(results.values())[0]
+    
     def parse_batch_train(self, batch):
         input = batch["img"]
         label = batch["label"]
         input = input.to(self.device)
         label = label.to(self.device)
         return input, label
+    
+    def parse_batch_test(self, batch):
+        input = batch["img"]
+        label = batch["label"]
+
+        input = input.to(self.device)
+        label = label.to(self.device)
+
+        return input, label
+    
+
 
     def load_model(self, directory, epoch=None):
         if not directory:

@@ -34,7 +34,9 @@ TRAIN:
 
 TEST:
   NO_TEST: True
+  SPLIT: 'test'
 
+USE_CUDA: True
 
 MODEL:
   BACKBONE:
@@ -53,3 +55,7 @@ SEED: 1
 # DIR=output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/nctx${NCTX}_csc${CSC}_ctp${CTP}/seed${SEED}
 OUTPUT_DIR: results/EXP20220516_0
 RESUME: ""
+
+EVAL_ONLY: True
+MODEL_DIR: results/EXP20220516_0
+LOAD_EPOCH: 100

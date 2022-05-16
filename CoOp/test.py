@@ -54,7 +54,13 @@ def reset_cfg(cfg, args):
 
     if args.head:
         cfg.MODEL.HEAD.NAME = args.head
-
+    
+    if args.eval_only:
+        cfg.EVAL_ONLY = args.eval_only
+    if args.model_dir:
+        cfg.EVAL_ONLY.MODEL_DIR = args.model_dir
+    if args.load_epoch:
+        cfg.EVAL_ONLY.LOAD_EPOCH = args.load_epoch
 
 def extend_cfg(cfg):
     """
@@ -119,8 +125,8 @@ def main(args):
 
     trainer = build_trainer(cfg)
 
-    if args.eval_only:
-        trainer.load_model(args.model_dir, epoch=args.load_epoch)
+    if cfg.EVAL_ONLY:
+        trainer.load_model(cfg.EVAL_ONLY.MODEL_DIR, epoch=cfg.EVAL_ONLY.LOAD_EPOCH)
         trainer.test()
         return
 

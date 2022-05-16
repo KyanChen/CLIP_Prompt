@@ -1,7 +1,7 @@
 from .evaluator import Evaluator
 
 
-def cal_metrics(prefix_path, pred, gt_label):
+def cal_metrics(prefix_path, pred, gt_label, return_all=False):
     fpath_attribute_index = prefix_path+'attribute_index.json'
     fpath_attribute_types = prefix_path+'attribute_types.json'
     fpath_attribute_parent_types = prefix_path+'attribute_parent_types.json'
@@ -15,6 +15,9 @@ def cal_metrics(prefix_path, pred, gt_label):
         fpath_attribute_parent_types, fpath_head_tail)
     # Compute scores.
     scores_overall, scores_per_class = evaluator.evaluate(pred, gt_label)
+    if return_all:
+        scores_overall_topk, scores_per_class_topk = evaluator.evaluate(pred, gt_label, threshold_type='topk')
+        return scores_overall, scores_per_class, scores_overall_topk, scores_per_class_topk
     
     return scores_overall['all']['f1']
     # scores_overall_topk, scores_per_class_topk = evaluator.evaluate(pred, gt_label, threshold_type='topk')
