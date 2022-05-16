@@ -35,6 +35,7 @@ TRAIN:
 TEST:
   NO_TEST: True
   SPLIT: 'test'
+  EVALUATOR: AttCls
 
 USE_CUDA: True
 
