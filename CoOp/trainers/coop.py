@@ -439,9 +439,9 @@ class CoOp(TrainerX):
         else:
             data_loader = self.test_loader
             print("Do evaluation on test set")
-        print('xxxxxxxxxxxxxxxxxxxxxx')
         for batch_idx, batch in enumerate(tqdm.tqdm(data_loader)):
-            print('xxxxxxxxxxxxxxxxxxxxxx')
+            import pdb
+            pdb.set_trace()
             input, label = self.parse_batch_test(batch)
             output = self.model_inference(input)
             self.evaluator.process(output, label)
