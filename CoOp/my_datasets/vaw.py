@@ -31,7 +31,6 @@ class VAW(DatasetBase):
                 train = preprocessed["train"]
                 val = preprocessed["val"]
                 test = preprocessed["test"]
-                [print(k, ': ', len(v)) for k, v in preprocessed.items()]
         else:
             
             train = self.read_data(classname_maps, ["train_part1.json", "train_part2.json"])
@@ -45,6 +44,10 @@ class VAW(DatasetBase):
             with open(self.preprocessed, "wb") as f:
                 pickle.dump(preprocessed, f, protocol=pickle.HIGHEST_PROTOCOL)
 
+        print(10 * '*', 'All Dataset', 10 * '*')
+        [print(k, ': ', len(v)) for k, v in preprocessed.items()]
+        print(10 * '*', 'All Dataset', 10 * '*')
+
         num_shots = cfg.DATASET.NUM_SHOTS
         if num_shots >= 1:
             seed = cfg.SEED
@@ -57,17 +60,21 @@ class VAW(DatasetBase):
                     train = data["train"]
                     val = data["val"]
                     test = data["test"]
-                    [print(k, ': ', len(v)) for k,v in data.items()]
             else:
                 train = self.generate_fewshot_dataset(train, num_shots=num_shots)
 
                 val = self.generate_fewshot_dataset(val, num_shots=int(0.01*len(val)))
                 test = self.generate_fewshot_dataset(test, num_shots=int(0.01*len(test)))
                 data = {"train": train, "val": val, "test": test}
+
                 print(f"Saving preprocessed few-shot data to {preprocessed}")
                 
                 with open(preprocessed, "wb") as file:
                     pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
+
+            print(10 * '*', 'All Dataset', 10 * '*')
+            [print(k, ': ', len(v)) for k, v in data.items()]
+            print(10 * '*', 'All Dataset', 10 * '*')
 
         # subsample = cfg.DATASET.SUBSAMPLE_CLASSES
         # train, test = OxfordPets.subsample_classes(train, test, subsample=subsample)
@@ -77,7 +84,7 @@ class VAW(DatasetBase):
         self._train_u = None
         self._test = test  # test data
         self._num_classes = max(classname_maps.values()) + 1
-        self._lab2cname = {v:k for k,v in classname_maps.items()}
+        self._lab2cname = {v: k for k, v in classname_maps.items()}
         self._classnames = list(self._lab2cname.values())
 
     def split_dataset_by_label(self, data_source):
@@ -163,7 +170,7 @@ class VAW(DatasetBase):
         json_data = [json.load(open(self.dataset_dir+'/'+x)) for x in json_file_list]
         datas = []
         [datas.extend(x) for x in json_data]
-        print(json_file_list[0], ' samples : ', len(datas))
+        # print(json_file_list[0], ' samples : ', len(datas))
         items = []
         for data in datas:
             # for x in data['positive_attributes']:
@@ -178,7 +185,7 @@ class VAW(DatasetBase):
             item.set_label(classname_maps=classname_maps)
             
             items.append(item)
-        print(json_file_list[0], ' instances: ', len(items))
+        # print(json_file_list[0], ' instances: ', len(items))
         return items 
 
 # {
