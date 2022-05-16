@@ -1,6 +1,6 @@
 DATASET:
   NAME: "VAW"
-  NUM_SHOTS: 8
+  NUM_SHOTS: 16
   ROOT: 'data/'
 
 DATALOADER:
@@ -54,10 +54,10 @@ TRAINER:
 
 SEED: 1
 # DIR=output/${DATASET}/${TRAINER}/${CFG}_${SHOTS}shots/nctx${NCTX}_csc${CSC}_ctp${CTP}/seed${SEED}
-OUTPUT_DIR: results/EXP20220516_1
+OUTPUT_DIR: results/EXP20220516_2
 RESUME: ""
 
 EVAL_ONLY:
   FLAG: True
-  MODEL_DIR: results/EXP20220516_1
+  MODEL_DIR: results/EXP20220516_2
   LOAD_EPOCH: 100
