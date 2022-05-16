@@ -123,8 +123,8 @@ def main(args):
         set_random_seed(cfg.SEED)
     setup_logger(cfg.OUTPUT_DIR)
 
-    if torch.cuda.is_available() and cfg.USE_CUDA:
-        torch.backends.cudnn.benchmark = True
+    # if torch.cuda.is_available() and cfg.USE_CUDA:
+    #     torch.backends.cudnn.benchmark = True
 
     print_args(args, cfg)
     print("Collecting env info ...")
