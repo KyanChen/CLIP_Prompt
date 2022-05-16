@@ -82,6 +82,7 @@ def extend_cfg(cfg):
     cfg.TRAINER.COOP.PREC = None  # fp16, fp32, amp
     cfg.TRAINER.COOP.CLASS_TOKEN_POSITION = None  # 'middle' or 'end' or 'front'
     cfg.EVAL_ONLY = CN()
+    cfg.EVAL_ONLY.FLAG = None
     cfg.EVAL_ONLY.MODEL_DIR = None
     cfg.EVAL_ONLY.LOAD_EPOCH = None
 
@@ -129,7 +130,7 @@ def main(args):
 
     trainer = build_trainer(cfg)
 
-    if cfg.EVAL_ONLY:
+    if cfg.EVAL_ONLY.FLAG:
         trainer.load_model(cfg.EVAL_ONLY.MODEL_DIR, epoch=cfg.EVAL_ONLY.LOAD_EPOCH)
         trainer.test()
         return
