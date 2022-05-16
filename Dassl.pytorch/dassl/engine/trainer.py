@@ -600,8 +600,7 @@ class TrainerX(SimpleTrainer):
         batch_time = AverageMeter()
         data_time = AverageMeter()
         self.num_batches = len(self.train_loader_x)
-        import pdb
-        pdb.set_trace()
+
         end = time.time()
         for self.batch_idx, batch in enumerate(self.train_loader_x):
             data_time.update(time.time() - end)
