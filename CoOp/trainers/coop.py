@@ -335,7 +335,7 @@ class CoOp(TrainerX):
     def __init__(self, cfg):
         super().__init__(cfg)
         if torch.cuda.is_available() and cfg.USE_CUDA:
-            self.device = f"cuda:{cfg.GPU_ID}"
+            self.device = torch.device(f"cuda:{cfg.GPU_ID[0]}")
 
     def build_data_loader(self):
         """Create essential data-related attributes.
@@ -396,10 +396,10 @@ class CoOp(TrainerX):
             self.model = nn.DataParallel(self.model, device_ids=range(device_count))
             # self.model = self.model.to(self.device)
             print('Multiple GPUs applied')
-        self.model = self.model.to(self.device)
-        print("Done", flush=True)
         import pdb
         pdb.set_trace()
+        self.model.to(self.device)
+        print("Done", flush=True)
 
     def run_epoch(self):
         # import pdb

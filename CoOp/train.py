@@ -89,7 +89,7 @@ def extend_cfg(cfg):
     cfg.EVAL_ONLY.FLAG = None
     cfg.EVAL_ONLY.MODEL_DIR = None
     cfg.EVAL_ONLY.LOAD_EPOCH = None
-    cfg.GPU_ID = 0
+    cfg.GPU_ID = [0]
 
     # cfg.TRAINER.COCOOP = CN()
     # cfg.TRAINER.COCOOP.N_CTX = 16  # number of context vectors
