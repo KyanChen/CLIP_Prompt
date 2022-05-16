@@ -387,7 +387,7 @@ class SimpleTrainer(TrainerBase):
             print(
                 f"Detected {device_count} GPUs. Wrap the model with nn.DataParallel"
             )
-            self.model = nn.DataParallel(self.model)
+            self.model = nn.DataParallel(self.model, device_ids=range(device_count))
 
     def train(self):
         super().train(self.start_epoch, self.max_epoch)
