@@ -490,8 +490,6 @@ class CoOp(TrainerX):
         return loss_summary
 
     def before_train(self):
-        import pdb
-        pdb.set_trace()
         directory = self.cfg.OUTPUT_DIR
         if self.cfg.RESUME:
             directory = self.cfg.RESUME
