@@ -85,7 +85,7 @@ class VAWDataset(Dataset):
             self.data = preprocessed[pattern]
         else:
             self.data = data['train']
-        self.data = self.data[:4]
+        self.data = self.data[:3]
         print('data len: ', len(self.data))
         self.num_classes = max(classname_maps.values()) + 1
         self.lab2cname = {v: k for k, v in classname_maps.items()}

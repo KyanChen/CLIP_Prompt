@@ -26,14 +26,16 @@ mp_start_method = 'fork'
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 # model settings
-# data_root = 'D:/Dataset'
-data_root = '/data/kyanchen/prompt/data'
+data_root = 'D:/Dataset'
+# data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='OFA_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
+    ofa_pretrained_weights='../pretrain/vqa_large_best.pt',
+    # ofa_pretrained_weights='../pretrain/ofa_large.pt',
     backbone=dict(
         type='OFA',
-        ofa_name='ofa_tiny',
+        ofa_name='ofa_large'
     ),
     prompt_learner=dict(
         type='OFAPromptLearner',
@@ -49,7 +51,8 @@ model = dict(
         loss_cls=dict(
             type='AdjustLabelSmoothedCrossEntropyCriterion',
             sentence_avg=False,
-            label_smoothing=0
+            label_smoothing=0.1,
+            report_accuracy=True
         )
     )
 )
@@ -94,7 +97,7 @@ test_pipeline = [
 num_shots = 128
 seed = 1
 data = dict(
-    samples_per_gpu=2,
+    samples_per_gpu=3,
     workers_per_gpu=1,
     persistent_workers=True,
     train=dict(

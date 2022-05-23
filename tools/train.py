@@ -4,7 +4,7 @@ import copy
 import os
 import sys
 sys.path.append(sys.path[0]+'/../')
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import os.path as osp
 import time
 import warnings
@@ -198,6 +198,7 @@ def main():
     logger.info(f'Config:\n{cfg.pretty_text}')
 
     cfg.device = get_device()
+    # cfg.device = 'cpu'
     # set random seeds
     seed = init_random_seed(args.seed, device=cfg.device)
     seed = seed + dist.get_rank() if args.diff_seed else seed
@@ -209,7 +210,7 @@ def main():
     meta['exp_name'] = osp.basename(args.config)
 
     model = build_detector(
-        cfg.model,
+        copy.deepcopy(cfg.model),
         train_cfg=cfg.get('train_cfg'),
         test_cfg=cfg.get('test_cfg'))
     model.init_weights()

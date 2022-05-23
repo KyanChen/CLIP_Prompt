@@ -18,8 +18,8 @@ from utils.vision_helper import RandomAugment
 
 from PIL import Image, ImageFile
 
-from data import data_utils
-from data.ofa_dataset import OFADataset
+from datasets import data_utils
+from datasets.ofa_dataset import OFADataset
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 ImageFile.MAX_IMAGE_PIXELS = None
@@ -157,7 +157,8 @@ class ImageClassifyDataset(OFADataset):
 
     def __getitem__(self, index):
         # image, label_name = self.dataset[index]
-        image, label_name = 'test.png', 'ship'
+        image = f'{index}.jpg'
+        label_name = 'no' if index == 0 else 'yes'
         # image = Image.open(BytesIO(base64.urlsafe_b64decode(image)))
         image = Image.open(image)
         patch_image = self.patch_resize_transform(image)

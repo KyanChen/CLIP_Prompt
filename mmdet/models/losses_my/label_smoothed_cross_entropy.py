@@ -101,8 +101,8 @@ class AdjustLabelSmoothedCrossEntropyCriterion(nn.Module):
     ):
         super().__init__()
         self.task = task
-        if hasattr(task, "target_dictionary"):
-            tgt_dict = task.target_dictionary
+        if hasattr(task, "tgt_dict"):
+            tgt_dict = task.tgt_dict
             self.padding_idx = tgt_dict.pad() if tgt_dict is not None else -100
 
         self.sentence_avg = sentence_avg
@@ -162,8 +162,8 @@ class AdjustLabelSmoothedCrossEntropyCriterion(nn.Module):
         logging_output = {
             "loss": loss.data,
             "nll_loss": nll_loss.data,
-            "ntokens": sample["ntokens"],
-            "nsentences": sample["nsentences"],
+            # "ntokens": sample["ntokens"],
+            # "nsentences": sample["nsentences"],
             "sample_size": sample_size,
         }
         if self.report_accuracy:
@@ -224,7 +224,7 @@ class AdjustLabelSmoothedCrossEntropyCriterion(nn.Module):
         return loss, nll_loss, ntokens
 
     def compute_accuracy(self, model, net_output, sample):
-        lprobs, target = self.get_lprobs_and_target(model, net_output, sample)
+        lprobs, target, constraint_masks = self.get_lprobs_and_target(model, net_output, sample)
         mask = target.ne(self.padding_idx)
         n_correct = torch.sum(
             lprobs.argmax(1).masked_select(mask).eq(target.masked_select(mask))

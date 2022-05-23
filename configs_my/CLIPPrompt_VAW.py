@@ -26,15 +26,15 @@ mp_start_method = 'fork'
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 # model settings
-# data_root = 'D:/Dataset'
-data_root = '/data/kyanchen/prompt/data'
+data_root = 'D:/Dataset'
+# data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='CLIP_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
     backbone=dict(
         type='CLIPModel',
-        # backbone_name='RN50',
-        backbone_name='ViT-B/16',
+        backbone_name='RN50',
+        # backbone_name='ViT-B/16',
         load_ckpt_from=None,
         precision='fp16',
     ),

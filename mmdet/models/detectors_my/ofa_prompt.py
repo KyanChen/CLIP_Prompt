@@ -10,7 +10,8 @@ from mmcv import ConfigDict
 from utils_my import Trie
 import utils_my.data_utils as data_utils
 from fairseq import search
-
+from fairseq.data.encoders import build_bpe
+from omegaconf import DictConfig
 
 @DETECTORS.register_module()
 class OFA_Prompter(BaseDetector):
@@ -18,9 +19,15 @@ class OFA_Prompter(BaseDetector):
                  classname_path,
                  backbone,
                  prompt_learner,
-                 model_config=dict(bpe_dir='../../../utils_my/BPE', valid_batch_size=20),
-                 n_sample_attr=100,
+                 model_config=dict(
+                     bpe_dir='../utils_my/BPE',
+                     valid_batch_size=20,
+                     max_src_length=32,
+                     max_tgt_length=8
+                 ),
+                 n_sample_attr=5,
                  prompt_learner_weights='',
+                 ofa_pretrained_weights='',
                  neck=None,
                  bbox_head=None,
                  train_cfg=None,
@@ -32,29 +39,41 @@ class OFA_Prompter(BaseDetector):
             warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
             backbone.pretrained = pretrained
-        self.cfg = self.load_cfg().update(ConfigDict(model_config))
-
-        self.ans2label_dict = None
-        if self.cfg.ans2label_file is not None:
-            self.ans2label_dict = pickle.load(open(self.cfg.ans2label_file, "rb"))
-        else:
-            self.ans2label_dict = json.loads(self.cfg.ans2label_dict)
-        self.uses_ema = self.cfg.uses_ema
+        self.cfg = self.load_cfg()
+        # self.cfg.update(model_config)
+        self.ans2label_dict = self.cfg.ans2label_dict
+        if ofa_pretrained_weights:
+            state_dict = torch.load(ofa_pretrained_weights, map_location="cpu")
+            self.cfg.update(state_dict['cfg']['generation'])
+            self.cfg.update(vars(state_dict['cfg']['model']))
+            self.cfg.update(state_dict['cfg']['task'])
+            # self.model.load_state_dict(state_dict['model'])
+        self.cfg.update(model_config)
+        self.setup_task(self.cfg)
 
         classname_maps = json.load(open(classname_path))
         classnames = list(classname_maps.keys())
         self.n_classnames = len(classnames)
         self.n_sample_attr = n_sample_attr
 
-        backbone.update(task=self)
-        self.model = build_backbone(backbone)
+        self.task = ConfigDict(
+            dict(
+                src_dict=self.src_dict,
+                tgt_dict=self.tgt_dict
+            )
+        )
+        backbone.update(model_cfg=self.cfg, task=self.task)
+        self.model = build_backbone(backbone).model
+        if ofa_pretrained_weights:
+            self.model.load_state_dict(state_dict['model'])
+
         bpe_dict = {
             "_name": "gpt2",
             "gpt2_encoder_json": self.cfg.bpe_dir+"/encoder.json",
             "gpt2_vocab_bpe": self.cfg.bpe_dir+"/vocab.bpe"
         }
-        bpe_dict = ConfigDict(bpe_dict)
-        self.bpe = self.build_bpe(bpe_dict)
+        bpe_dict = DictConfig(bpe_dict)
+        self.bpe = build_bpe(bpe_dict)
 
         tgt_list = []
         prev_output_list = []
@@ -101,7 +120,8 @@ class OFA_Prompter(BaseDetector):
                 data_utils.collate_tokens(constrain_mask, pad_idx=pad, left_pad=False)
             )
 
-        prompt_learner.update(dict(classnames=classnames, model=self.model, task=self))
+        self.task.update(max_src_length=self.cfg.max_src_length, bpe=self.bpe)
+        prompt_learner.update(dict(classnames=classnames, model=self.model, task=self.task))
         self.prompt_learner = build_backbone(prompt_learner)
         self.tokenized_prompts = self.prompt_learner.tokenized_prompts
 
@@ -112,15 +132,15 @@ class OFA_Prompter(BaseDetector):
         if neck is not None:
             self.neck = build_neck(neck)
 
-        self.generator = self.build_generator()
+        self.generator = self.build_generator(self.model, self.cfg)
 
-        self.idx2token = self.idx2token()
+        self.idx2tokens = torch.cat(self.idx2tokens())
         self.bos_token_tensor = torch.LongTensor([self.src_dict.bos()])
         self.eos_token_tensor = torch.LongTensor([self.src_dict.eos()])
 
         bbox_head.update(train_cfg=train_cfg)
         bbox_head.update(test_cfg=test_cfg)
-        bbox_head.update(task=self)
+        bbox_head.update(task=self.task)
         self.bbox_head = build_head(bbox_head)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
@@ -170,16 +190,18 @@ class OFA_Prompter(BaseDetector):
         self.src_dict = src_dict
         self.tgt_dict = tgt_dict
 
-    def idx2token(self):
-        idx2token = {}
+    def idx2tokens(self):
+        idx2tokens = []
         for idx, ans in self.index2ans.items():
-            idx2token[idx] = self.prompt_learner.encode_text(
+            idx2tokens.append(
+                self.prompt_learner.encode_text(
                 ' {}'.format(ans),
-                context_length=1,
+                pad=False,
                 append_bos=False,
                 append_eos=False
+                )
             )
-        return idx2token
+        return idx2tokens
 
     def build_generator(self,
                         models,
@@ -421,8 +443,8 @@ class OFA_Prompter(BaseDetector):
 
     def forward_train(self, img, img_metas, gt_labels, gt_bboxes_ignore=None):
 
-        prompts_embeddings = self.prompt_learner()
-
+        prompts_embeddings = self.prompt_learner().to(img.device)
+        self.tokenized_prompts = self.tokenized_prompts.to(img.device)
         input_patch_images = []
         input_tokenized_prompts = []
         input_prompts_embeddings = []
@@ -440,22 +462,20 @@ class OFA_Prompter(BaseDetector):
                 input_patch_images.append(img[i_img].unsqueeze(0).expand(self.n_sample_attr, -1, -1, -1))
                 input_tokenized_prompts.append(self.tokenized_prompts[sample_id])
                 input_prompts_embeddings.append(prompts_embeddings[sample_id])
-
-                prev_output_item = torch.cat(
-                    [
-                        torch.cat([self.bos_token_tensor, self.idx2token[x]])
-                        for x in labels
-                    ]
+                label_tokens = torch.index_select(self.idx2tokens.to(labels.device), 0, labels).view(-1, 1)
+                prev_output_item = torch.cat([
+                    self.bos_token_tensor.expand(self.n_sample_attr, 1).to(labels.device), label_tokens],
+                    dim=1
                 )
-                target_item = torch.cat(
-                    [
-                        torch.cat([self.idx2token[x], self.eos_token_tensor])
-                        for x in labels
-                    ]
+                target_item = torch.cat([
+                    label_tokens, self.eos_token_tensor.expand(self.n_sample_attr, 1).to(labels.device)],
+                    dim=1
                 )
 
                 if self.constraint_trie is not None:
-                    input_constraint_mask.append(torch.stack([self.valid_constraint_masks_list[x] for x in labels]))
+                    input_constraint_mask.append(
+                        torch.index_select(self.valid_constraint_masks_list[0].to(labels.device), 0, labels)
+                    )
                 # constraint_mask = torch.zeros((len(prev_output_item), len(self.tgt_dict))).bool()
                 # for i in range(len(prev_output_item)):
                 #     constraint_prefix_token = prev_output_item[:i + 1].tolist()
@@ -473,7 +493,7 @@ class OFA_Prompter(BaseDetector):
         input_constraint_mask = torch.cat(input_constraint_mask)
 
         patch_masks = torch.tensor(len(input_patch_images) * [True]).to(img.device)
-        src_lengths = torch.sum(input_tokenized_prompts.ne(self.model.pad).long(), dim=1)  # N
+        src_lengths = torch.sum(input_tokenized_prompts.ne(self.tgt_dict.pad()).long(), dim=1)  # N
 
         sample = {
             'net_input': dict(
@@ -504,6 +524,17 @@ class OFA_Prompter(BaseDetector):
         #     #     constraint_nodes = self.constraint_trie.get_next_layer(constraint_prefix_token)
         #     #     constraint_mask[i][constraint_nodes] = True
         #     sample["constraint_mask"] = torch.cat(self.valid_constraint_masks_list)
+        self.model = self.model.cpu()
+        for k, v in sample.items():
+            try:
+                sample[k] = v.cpu()
+            except:
+                if k == 'net_input':
+                    for k, v in sample['net_input'].items():
+                        try:
+                            sample['net_input'][k] = v.cpu()
+                        except:
+                            pass
         losses = self.bbox_head.forward_train(self.model, sample, update_num=0)
 
         return losses

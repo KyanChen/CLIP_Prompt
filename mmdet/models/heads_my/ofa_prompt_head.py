@@ -38,8 +38,23 @@ class OFAPromptHead(BaseModule):
                       reduce=True,
                       **kwargs):
         loss, sample_size, logging_output = self.loss_cls(model, sample, update_num=update_num)
+        # logging_output = {
+        #     "loss": loss.data,
+        #     "nll_loss": nll_loss.data,
+        #     # "ntokens": sample["ntokens"],
+        #     # "nsentences": sample["nsentences"],
+        #     "sample_size": sample_size,
+        # }
+        # if self.report_accuracy:
+        #     n_correct, total = self.compute_accuracy(model, net_output, sample)
+        #     logging_output["n_correct"] = utils.item(n_correct.data)
+        #     logging_output["total"] =
         losses = {
-            "loss": loss
+            "loss": loss,
+            'nll_loss': logging_output['nll_loss'],
+            'sample_size': logging_output['sample_size'],
+            'acc': logging_output['n_correct'] / logging_output['total']
+
         }
         return losses
 

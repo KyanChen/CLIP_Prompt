@@ -528,10 +528,10 @@ def cli_main(
         # "--data-dir=",
         # "--ans2label-file=train.txt",
         # "--ans2label_dict={'no': 0, 'yes':1}"
-        # "--restore-file=ofa_tiny.pt",
+        "--restore-file=imagenet_1k_large_best.pt",
         "--selected-cols=0,2",
         "--task=image_classify",
-        "--arch=ofa_tiny",
+        "--arch=ofa_large",
         "--criterion=adjust_label_smoothed_cross_entropy",
         "--label-smoothing=0",
         "--batch-size=2",

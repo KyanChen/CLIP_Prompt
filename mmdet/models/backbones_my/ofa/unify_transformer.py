@@ -21,14 +21,14 @@ from fairseq.models import (
 )
 from fairseq.modules import (
     AdaptiveSoftmax,
-    BaseLayer,
+    # BaseLayer,
     FairseqDropout,
     LayerDropModuleList,
     LayerNorm,
     SinusoidalPositionalEmbedding,
     GradMultiply
 )
-from fairseq.modules.checkpoint_activations import checkpoint_wrapper
+# from fairseq.modules.checkpoint_activations import checkpoint_wrapper
 from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
 from torch import Tensor
 
@@ -269,7 +269,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
         if getattr(args, "max_target_positions", None) is None:
             args.max_target_positions = DEFAULT_MAX_TARGET_POSITIONS
 
-        src_dict, tgt_dict = task.source_dictionary, task.target_dictionary
+        src_dict, tgt_dict = task.src_dict, task.tgt_dict
 
         if args.share_all_embeddings:
             if src_dict != tgt_dict:
@@ -715,14 +715,14 @@ class TransformerEncoder(FairseqEncoder):
         image_pos_embed_2 = None
         if patch_images is not None:
             image_embed, image_num_patches, image_padding_mask, image_position_ids, image_pos_embed = \
-                self.get_patch_images_info(patch_images, sample_patch_num, src_tokens.device)
+                self.get_patch_images_info(patch_images, sample_patch_num, patch_images.device)
             image_padding_mask[~patch_masks] = True
         if patch_images_2 is not None:
             image_embed_2, image_num_patches_2, image_padding_mask_2, image_position_ids_2, image_pos_embed_2 = \
-                self.get_patch_images_info(patch_images_2, sample_patch_num, src_tokens.device)
+                self.get_patch_images_info(patch_images_2, sample_patch_num, patch_images.device)
             image_padding_mask_2[~patch_masks] = True
 
-        encoder_padding_mask = src_tokens.eq(self.padding_idx)
+        encoder_padding_mask = src_tokens.eq(self.padding_idx).to(patch_images.device)
         if patch_images is not None:
             encoder_padding_mask = torch.cat([image_padding_mask, encoder_padding_mask], dim=1)
         if patch_images_2 is not None:
@@ -1456,7 +1456,7 @@ def Linear(in_features, out_features, bias=True):
     return m
 
 
-@register_model_architecture("unify_transformer", "unify_transformer")
+# @register_model_architecture("unify_transformer", "unify_transformer")
 def base_architecture(args):
     args.encoder_embed_path = getattr(args, "encoder_embed_path", None)
     args.encoder_embed_dim = getattr(args, "encoder_embed_dim", 512)

@@ -15,6 +15,7 @@ from .seg_heads import *  # noqa: F401,F403
 from .detectors_my import *
 from .backbones_my import *
 from .heads_my import *
+from .losses_my import *
 
 __all__ = [
     'BACKBONES', 'NECKS', 'ROI_EXTRACTORS', 'SHARED_HEADS', 'HEADS', 'LOSSES',

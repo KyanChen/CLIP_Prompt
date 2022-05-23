@@ -10,14 +10,14 @@ import os
 import math
 import pickle
 from typing import Optional
-from data.file_dataset import FileDataset
+from datasets.file_dataset import FileDataset
 
 import torch
 from fairseq import metrics
 from fairseq.tasks import register_task
 
-from data.cv_data.image_classify_dataset import ImageClassifyDataset
-from data import data_utils
+from datasets.cv_data.image_classify_dataset import ImageClassifyDataset
+from datasets import data_utils
 from tasks.ofa_task import OFAConfig, OFATask
 from utils.trie import Trie
 

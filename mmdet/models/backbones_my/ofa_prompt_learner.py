@@ -21,7 +21,7 @@ class OFAPromptLearner(BaseModule):
 
         n_cls = len(classnames)
 
-        ctx_dim = model.ln_final.weight.shape[0]  # 256 model.embed_tokens.weight.shape[1]
+        ctx_dim = model.encoder.embed_tokens.weight.shape[1]  # 256 model.embed_tokens.weight.shape[1]
 
         if ctx_init:
             ctx_init = self.pre_question(ctx_init, model.max_src_length)
@@ -55,7 +55,7 @@ class OFAPromptLearner(BaseModule):
         # prompt = self.encode_text(' {}'.format(ctx_init), append_bos=True, append_eos=True)
         # n_ctx = (prompt.ne(model.eos) & prompt.ne(model.pad)).long().sum()
 
-        self.max_src_length = task.cfg.max_src_length
+        self.max_src_length = task.max_src_length
         classnames = [self.pre_question(name, self.max_src_length) for name in classnames]
         self.name_lens = [len(x.split()) for x in classnames]
         prompts = [prompt_prefix + " " + name + "?" for name in classnames]
@@ -64,7 +64,13 @@ class OFAPromptLearner(BaseModule):
         self.src_dict = task.src_dict
         self.bpe = task.bpe
 
-        tokenized_prompts = torch.cat([self.encode_text(' {}'.format(p), context_length=self.max_src_length, append_bos=True, append_eos=True) for p in prompts])
+        tokenized_prompts = torch.stack(
+            [self.encode_text(' {}'.format(p),
+                              pad=True,
+                              context_length=self.max_src_length,
+                              append_bos=True,
+                              append_eos=True
+                              ) for p in prompts])
 
         # self.prev_output_item = torch.cat(
         #     [self.encode_text(' {}'.format(x), length=model.cfg.max_src_length, append_bos=True, append_eos=False)
@@ -74,7 +80,7 @@ class OFAPromptLearner(BaseModule):
         #      for x in classnames])
 
         with torch.no_grad():
-            embedding = model.embed_tokens(tokenized_prompts)
+            embedding = model.encoder.embed_tokens(tokenized_prompts)
 
         self.register_buffer("token_prefix", embedding[:, :1, :])  # SOS
         self.register_buffer("token_suffix", embedding[:, 1 + n_ctx:, :])  # CLS, EOS
@@ -84,33 +90,32 @@ class OFAPromptLearner(BaseModule):
         self.tokenized_prompts = tokenized_prompts  # torch.Tensor
         self.class_token_position = class_token_position
 
-    def encode_text(self, texts, context_length=128, truncate=False, append_bos=False, append_eos=False):
-        if isinstance(texts, str):
-            texts = [texts]
-
-        s = self.tgt_dict.encode_line(
+    def encode_text(self, texts, pad=True, context_length=128, truncate=False, append_bos=False, append_eos=False):
+        tokens = self.tgt_dict.encode_line(
             line=self.bpe.encode(texts),
             add_if_not_exist=False,
             append_eos=False
         ).long()
         if append_bos:
             bos_item = torch.LongTensor([self.src_dict.bos()])  # [0]
-            s = torch.cat([bos_item, s])
+            tokens = torch.cat([bos_item, tokens])
         if append_eos:
             eos_item = torch.LongTensor([self.src_dict.eos()])
-            s = torch.cat([s, eos_item])
-        result = torch.ones(len(s), context_length, dtype=torch.long) * self.src_dict.pad()
+            tokens = torch.cat([tokens, eos_item])
+        if pad:
+            result = torch.ones(context_length, dtype=torch.long) * self.src_dict.pad()
 
-        for i, tokens in enumerate(s):
             if len(tokens) > context_length:
                 if truncate:
                     tokens = tokens[:context_length]
                     tokens[-1] = self.src_dict.eos()
                 else:
                     raise RuntimeError(f"Input {texts[i]} is too long for context length {context_length}")
-            result[i, :len(tokens)] = tokens
+            result[:len(tokens)] = tokens
+        else:
+            result = tokens
 
-        return s
+        return result
 
     def pre_question(self, question, max_ques_words):
         question = question.lower().lstrip(",.!?*#:;~").replace('-', ' ').replace('/', ' ')

@@ -14,7 +14,7 @@ from fairseq.models import FairseqIncrementalDecoder
 from torch import Tensor
 from fairseq.ngram_repeat_block import NGramRepeatBlock
 
-from data import data_utils
+from utils_my import data_utils
 
 class SequenceGenerator(nn.Module):
     def __init__(
@@ -72,7 +72,7 @@ class SequenceGenerator(nn.Module):
         if isinstance(models, EnsembleModel):
             self.model = models
         else:
-            self.model = EnsembleModel(models)
+            self.model = EnsembleModel([models])
         self.gen_code = gen_code
         self.gen_box = gen_box
         self.ignore_eos = ignore_eos

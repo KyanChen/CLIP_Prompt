@@ -5,8 +5,7 @@ result/
 /tools_my/analysis_tools/test_better.png
 /Bak/OFA_bak/examples/
 *.pt*
-ofa_tiny.pt
-Bak/OFA_bak/ofa_tiny.pt
+/pretrain
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,3 +1,3 @@
-from trie import Trie
+from .trie import Trie
 
 __all__ = ['Trie']
