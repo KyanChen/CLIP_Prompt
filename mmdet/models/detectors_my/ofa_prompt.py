@@ -500,7 +500,7 @@ class OFA_Prompter(BaseDetector):
                 src_tokens=input_tokenized_prompts,
                 src_lengths=src_lengths,
                 prev_output_tokens=input_prev_output_item,
-                patch_images=input_patch_images,
+                patch_images=input_patch_images.contiguous(),
                 patch_images_2=None,
                 patch_masks=patch_masks,
                 code_masks=None,
