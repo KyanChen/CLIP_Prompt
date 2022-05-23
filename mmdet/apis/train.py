@@ -119,6 +119,7 @@ def train_detector(model,
                    cfg,
                    distributed=False,
                    validate=False,
+                   test=False,
                    timestamp=None,
                    meta=None):
 
@@ -230,6 +231,37 @@ def train_detector(model,
         # priority of IterTimerHook has been modified from 'NORMAL' to 'LOW'.
         runner.register_hook(
             eval_hook(val_dataloader, **eval_cfg), priority='LOW')
+
+        # register test hooks
+        if test:
+            test_dataloader_default_args = dict(
+                samples_per_gpu=1,
+                workers_per_gpu=2,
+                dist=distributed,
+                shuffle=False,
+                persistent_workers=False)
+
+            test_dataloader_args = {
+                **test_dataloader_default_args,
+                **cfg.data.get('test_dataloader', {})
+            }
+            # Support batch_size > 1 in testidation
+
+            if test_dataloader_args['samples_per_gpu'] > 1:
+                # Replace 'ImageToTensor' to 'DefaultFormatBundle'
+                cfg.data.test.pipeline = replace_ImageToTensor(
+                    cfg.data.test.pipeline)
+            test_dataset = build_dataset(cfg.data.test, dict(test_mode=True))
+
+            test_dataloader = build_dataloader(test_dataset, **test_dataloader_args)
+
+            test_cfg = cfg.get('test', {})
+            test_cfg['by_epoch'] = cfg.runner['type'] != 'IterBasedRunner'
+            test_hook = DistEvalHook if distributed else EvalHook
+            # In this PR (https://github.com/open-mmlab/mmcv/pull/1193), the
+            # priority of IterTimerHook has been modified from 'NORMAL' to 'LOW'.
+            runner.register_hook(
+                test_hook(test_dataloader, **test_cfg), priority='LOW')
 
     resume_from = None
     if cfg.resume_from is None and cfg.get('auto_resume'):

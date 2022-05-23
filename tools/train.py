@@ -39,6 +39,12 @@ def parse_args():
         default=False,
         action='store_true',
         help='whether not to evaluate the checkpoint during training')
+    parser.add_argument(
+        '--no-test',
+        default=True,
+        action='store_true',
+        help='whether not to test the checkpoint during training')
+
     group_gpus = parser.add_mutually_exclusive_group()
     group_gpus.add_argument(
         '--gpus',
@@ -235,6 +241,7 @@ def main():
         cfg,
         distributed=distributed,
         validate=(not args.no_validate),
+        test=(not args.no_test),
         timestamp=timestamp,
         meta=meta)
 

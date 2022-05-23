@@ -194,6 +194,7 @@ data = dict(
         pipeline=test_pipeline)
 )
 evaluation = dict(interval=5, metric='bbox')
+test = dict(interval=5, metric=['bbox'], mode='test', areaRng=[0, 32, 96])
 
 # optimizer
 optimizer = dict(
