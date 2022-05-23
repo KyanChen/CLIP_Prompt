@@ -54,7 +54,7 @@ class OFAPromptHead(BaseModule):
             "loss": loss,
             'nll_loss': logging_output['nll_loss'],
             'sample_size': torch.tensor(logging_output['sample_size'], dtype=torch.float),
-            'acc': logging_output['n_correct'] / logging_output['total']
+            'acc': torch.tensor(logging_output['n_correct'] / logging_output['total'], dtype=torch.float)
 
         }
         return losses
