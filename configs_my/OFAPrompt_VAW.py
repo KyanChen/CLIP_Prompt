@@ -31,8 +31,8 @@ data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='OFA_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
-    ofa_pretrained_weights=data_root+'/../pretrain/ofa_medium.pt', # 256
-    # ofa_pretrained_weights=data_root+'../pretrain/ofa_tiny.pt', # 256
+    ofa_pretrained_weights=data_root+'/../pretrain/ofa_medium.pt',  # 256
+    # ofa_pretrained_weights=data_root+'../pretrain/ofa_tiny.pt',  # 256
     n_sample_attr=4,
     backbone=dict(
         type='OFA',
@@ -70,9 +70,9 @@ train_pipeline = [
     dict(type='ScaleCrop', scale_range=[0.2, 0.4]),
     dict(type='RandomCrop', crop_size=[0.7, 0.7], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='Resize', img_scale=(480, 480), keep_ratio=True, interpolation='bicubic'),
+    dict(type='Resize', img_scale=(256, 256), keep_ratio=True, interpolation='bicubic'),
     dict(type='Normalize', **img_norm_cfg),
-    dict(type='Pad', size=(480, 480), center_pad=True),
+    dict(type='Pad', size=(256, 256), center_pad=True),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['gt_labels']),
     dict(type='Collect', keys=['img', 'gt_labels'])
@@ -86,9 +86,9 @@ test_pipeline = [
          img_scale=(480, 480),
          flip=False,
          transforms=[
-            dict(type='Resize', img_scale=(480, 480), keep_ratio=True),
+            dict(type='Resize', img_scale=(256, 256), keep_ratio=True),
             dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size=(480, 480)),
+            dict(type='Pad', size=(256, 256)),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img'])
         ]
@@ -98,7 +98,7 @@ test_pipeline = [
 num_shots = 128
 seed = 1
 data = dict(
-    samples_per_gpu=16,
+    samples_per_gpu=32,
     workers_per_gpu=4,
     persistent_workers=True,
     train=dict(
