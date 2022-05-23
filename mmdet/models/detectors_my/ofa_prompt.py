@@ -144,7 +144,8 @@ class OFA_Prompter(BaseDetector):
         self.bbox_head = build_head(bbox_head)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
-
+        print('max_src_length: ', self.cfg.max_src_length)
+        print('max_tgt_length: ', self.cfg.max_tgt_length)
         print("Turning off gradients in both the image and the text encoder")
         for name, param in self.named_parameters():
             if "prompt_learner" not in name:
