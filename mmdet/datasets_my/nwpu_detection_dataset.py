@@ -587,7 +587,10 @@ class NWPUDataset(CustomDataset):
                  classwise=False,
                  proposal_nums=(100, 300, 1000),
                  iou_thrs=None,
-                 metric_items=None):
+                 metric_items=None,
+                 # specific param
+                 areaRng=None,
+                 val_or_test='val'):
         """Evaluation in COCO protocol.
 
         Args:

@@ -193,7 +193,7 @@ data = dict(
         img_prefix=data_root + '/PositiveEvaluation',
         pipeline=test_pipeline)
 )
-evaluation = dict(interval=2, metric='bbox')
+evaluation = dict(interval=5, metric='bbox')
 
 # optimizer
 optimizer = dict(
@@ -202,7 +202,7 @@ optimizer = dict(
     weight_decay=0.0001,
     paramwise_cfg=dict(
         custom_keys={'backbone': dict(lr_mult=0.1, decay_mult=1.0)}))
-optimizer_config = dict(grad_clip=dict(max_norm=0.1, norm_type=2))
+optimizer_config = dict(grad_clip=dict(max_norm=50, norm_type=2))
 
 # learning policy
 # lr_config = dict(policy='step', step=[100])
