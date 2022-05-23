@@ -380,9 +380,13 @@ class NWPUDataset(CustomDataset):
                           metrics,
                           logger=None,
                           classwise=False,
-                          proposal_nums=(100, 300, 1000),
-                          iou_thrs=None,
-                          metric_items=None):
+                          metric_items=None,
+                          # my settings
+                          maxDets=(100, 300, 1000),
+                          iouThrs=None,
+                          areaRng=None,
+                          val_or_test='val'
+                          ):
         """Instance segmentation and object detection evaluation in COCO
         protocol.
 
@@ -414,9 +418,21 @@ class NWPUDataset(CustomDataset):
         Returns:
             dict[str, float]: COCO style evaluation metric.
         """
-        if iou_thrs is None:
-            iou_thrs = np.linspace(
-                .5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
+        # specific settings
+        if iouThrs is None:
+            iouThrs = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
+
+        if areaRng is None:
+            areaRng = [0, 32, 96]
+        assert len(areaRng) == 3
+        areaRng = [
+            [0 ** 2, 1e5 ** 2], [areaRng[0] ** 2, areaRng[1] ** 2], [areaRng[1] ** 2, areaRng[2] ** 2],
+            [areaRng[2] ** 2, 1e5 ** 2]
+        ]
+        if maxDets is None:
+            maxDets = [100, 300, 1000]
+
+
         if metric_items is not None:
             if not isinstance(metric_items, list):
                 metric_items = [metric_items]
@@ -433,9 +449,9 @@ class NWPUDataset(CustomDataset):
                     raise KeyError('proposal_fast is not supported for '
                                    'instance segmentation result.')
                 ar = self.fast_eval_recall(
-                    results, proposal_nums, iou_thrs, logger='silent')
+                    results, maxDets, iou_thrs, logger='silent')
                 log_msg = []
-                for i, num in enumerate(proposal_nums):
+                for i, num in enumerate(maxDets):
                     eval_results[f'AR@{num}'] = ar[i]
                     log_msg.append(f'\nAR@{num}\t{ar[i]:.4f}')
                 log_msg = ''.join(log_msg)
@@ -473,9 +489,13 @@ class NWPUDataset(CustomDataset):
             cocoEval = COCOeval(coco_gt, coco_det, iou_type)
             cocoEval.params.catIds = self.cat_ids
             cocoEval.params.imgIds = self.img_ids
-            cocoEval.params.maxDets = list(proposal_nums)
-            cocoEval.params.iouThrs = iou_thrs
+            assert len(maxDets) == 3
+            cocoEval.params.maxDets = list(maxDets)
+            cocoEval.params.iouThrs = iouThrs
+            cocoEval.params.areaRng = areaRng
+
             # mapping of cocoEval.stats
+            # my settings
             coco_metric_names = {
                 'mAP': 0,
                 'mAP_50': 1,
@@ -483,13 +503,18 @@ class NWPUDataset(CustomDataset):
                 'mAP_s': 3,
                 'mAP_m': 4,
                 'mAP_l': 5,
-                'AR@100': 6,
-                'AR@300': 7,
-                'AR@1000': 8,
-                'AR_s@1000': 9,
-                'AR_m@1000': 10,
-                'AR_l@1000': 11
+                f'AR_{maxDets[0]}': 6,
+                f'AR_{maxDets[1]}': 7,
+                f'AR_{maxDets[2]}': 8,
+                f'AR_s_{maxDets[2]}': 9,
+                f'AR_m_{maxDets[2]}': 10,
+                f'AR_l_{maxDets[2]}': 11,
+                f'AP_50_s': 12,
+                f'AP_50_m': 13,
+                f'AR_50_s': 14,
+                f'AR_50_m': 15,
             }
+
             if metric_items is not None:
                 for metric_item in metric_items:
                     if metric_item not in coco_metric_names:
@@ -562,20 +587,30 @@ class NWPUDataset(CustomDataset):
                     print_log('\n' + table.table, logger=logger)
 
                 if metric_items is None:
+                    # metric_items = [
+                    #     'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'
+                    # ]
+                    # my changes
                     metric_items = [
-                        'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'
+                        'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l',
+                        f'AP_50_s', f'AP_50_m', 'AR_50_s', f'AR_50_m'
                     ]
 
                 for metric_item in metric_items:
-                    key = f'{metric}_{metric_item}'
+                    # my changes
+                    key = f'{val_or_test}_{metric}_{metric_item}'
                     val = float(
                         f'{cocoEval.stats[coco_metric_names[metric_item]]:.3f}'
                     )
                     eval_results[key] = val
-                ap = cocoEval.stats[:6]
-                eval_results[f'{metric}_mAP_copypaste'] = (
-                    f'{ap[0]:.3f} {ap[1]:.3f} {ap[2]:.3f} {ap[3]:.3f} '
-                    f'{ap[4]:.3f} {ap[5]:.3f}')
+
+                # ap = cocoEval.stats[:6]
+                # eval_results[f'{metric}_mAP_copypaste'] = (
+                #     f'{ap[0]:.3f} {ap[1]:.3f} {ap[2]:.3f} {ap[3]:.3f} '
+                #     f'{ap[4]:.3f} {ap[5]:.3f}')
+
+                all_metrics = cocoEval.stats
+                eval_results[f'{val_or_test}_{metric}_all_metrics'] = ' '.join([f'{x:.3f}' for x in all_metrics])
 
         return eval_results
 
@@ -585,9 +620,10 @@ class NWPUDataset(CustomDataset):
                  logger=None,
                  jsonfile_prefix=None,
                  classwise=False,
-                 proposal_nums=(100, 300, 1000),
-                 iou_thrs=None,
                  metric_items=None,
+
+                 maxDets=(100, 300, 1000),
+                 iouThrs=None,
                  # specific param
                  areaRng=None,
                  val_or_test='val'):
@@ -633,9 +669,8 @@ class NWPUDataset(CustomDataset):
 
         result_files, tmp_dir = self.format_results(results, jsonfile_prefix)
         eval_results = self.evaluate_det_segm(results, result_files, coco_gt,
-                                              metrics, logger, classwise,
-                                              proposal_nums, iou_thrs,
-                                              metric_items)
+                                              metrics, logger, classwise, metric_items,
+                                              maxDets, iouThrs, areaRng, val_or_test)
 
         if tmp_dir is not None:
             tmp_dir.cleanup()
