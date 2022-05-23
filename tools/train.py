@@ -4,7 +4,7 @@ import copy
 import os
 import sys
 sys.path.append(sys.path[0]+'/../')
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import os.path as osp
 import time
 import warnings
@@ -26,8 +26,8 @@ from mmdet.utils import (collect_env, get_device, get_root_logger,
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
-    parser.add_argument('--config', default='../configs_my/OFAPrompt_VAW.py', help='train config file path')
-    parser.add_argument('--work-dir', default='results/EXP20220523_1', help='the dir to save logs and models')
+    parser.add_argument('--config', default='../configs_my/detr_rs.py', help='train config file path')
+    parser.add_argument('--work-dir', default='results/tmp', help='the dir to save logs and models')
     parser.add_argument(
         '--resume-from', help='the checkpoint file to resume from')
     parser.add_argument(
@@ -36,7 +36,7 @@ def parse_args():
         help='resume from the latest checkpoint automatically')
     parser.add_argument(
         '--no-validate',
-        default=True,
+        default=False,
         action='store_true',
         help='whether not to evaluate the checkpoint during training')
     group_gpus = parser.add_mutually_exclusive_group()
