@@ -26,7 +26,7 @@ mp_start_method = 'fork'
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 # model settings
-img_size=256
+img_size = 256
 # data_root = 'D:/Dataset'
 data_root = '/data/kyanchen/prompt/data'
 model = dict(
