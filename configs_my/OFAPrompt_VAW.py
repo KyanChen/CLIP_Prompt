@@ -36,7 +36,7 @@ model = dict(
     n_sample_attr=4,
     backbone=dict(
         type='OFA',
-        ofa_name='ofa_large'
+        ofa_name='ofa_medium'
     ),
     prompt_learner=dict(
         type='OFAPromptLearner',
