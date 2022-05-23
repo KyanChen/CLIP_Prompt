@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=15)
+checkpoint_config = dict(interval=20)
 # yapf:disable
 log_config = dict(
     interval=50,
@@ -26,13 +26,14 @@ mp_start_method = 'fork'
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 # model settings
-data_root = 'D:/Dataset'
-# data_root = '/data/kyanchen/prompt/data'
+# data_root = 'D:/Dataset'
+data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='OFA_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
-    ofa_pretrained_weights='../pretrain/vqa_large_best.pt',
-    # ofa_pretrained_weights='../pretrain/ofa_large.pt',
+    ofa_pretrained_weights=data_root+'../pretrain/vqa_large_best.pt',
+    # ofa_pretrained_weights=data_root+'../pretrain/ofa_large.pt',
+    n_sample_attr=5,
     backbone=dict(
         type='OFA',
         ofa_name='ofa_large'
@@ -82,12 +83,12 @@ test_pipeline = [
     dict(type='ScaleCrop', scale_range=[0.2, 0.4]),
     dict(type='RandomCrop', crop_size=[0.7, 0.7], crop_type='relative_range'),
     dict(type='MultiScaleFlipAug',
-         img_scale=(224, 224),
+         img_scale=(480, 480),
          flip=False,
          transforms=[
-            dict(type='Resize', img_scale=(224, 224), keep_ratio=True),
+            dict(type='Resize', img_scale=(480, 480), keep_ratio=True),
             dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size=(224, 224)),
+            dict(type='Pad', size=(480, 480)),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img'])
         ]
@@ -97,8 +98,8 @@ test_pipeline = [
 num_shots = 128
 seed = 1
 data = dict(
-    samples_per_gpu=3,
-    workers_per_gpu=1,
+    samples_per_gpu=128,
+    workers_per_gpu=8,
     persistent_workers=True,
     train=dict(
         type=dataset_type,
