@@ -1,6 +1,7 @@
 import warnings
 from abc import abstractmethod
 
+import torch
 from mmcv.runner import force_fp32
 
 from ..builder import HEADS, build_loss
