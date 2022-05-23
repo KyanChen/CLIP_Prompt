@@ -9,7 +9,7 @@ import mmcv
 import numpy as np
 
 class_name = [
-    'airplane', 'ship', 'storage tank', 'baseball', 'diamond',
+    'airplane', 'ship', 'storage tank', 'baseball diamond',
     'tennis court', 'basketball court', 'ground track field',
     'harbor', 'bridge', 'vehicle'
 ]
@@ -195,9 +195,9 @@ def cvt_to_coco_json(annotations):
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Convert PASCAL VOC annotations to mmdetection format')
-    parser.add_argument('--devkit_path', default=r'D:\Dataset\NWPU VHR-10 dataset\PositiveTrain', help='pascal voc devkit path')
+    parser.add_argument('--devkit_path', default=r'D:\Dataset\NWPU VHR-10 dataset\PositiveEvaluation', help='pascal voc devkit path')
     parser.add_argument('-o', '--out-dir', default=r'D:\Dataset\NWPU VHR-10 dataset', help='output path')
-    parser.add_argument('--dataset_name', default='NWPU_train', help='dataset name')
+    parser.add_argument('--dataset_name', default='NWPU_val', help='dataset name')
     parser.add_argument(
         '--out-format',
         default='coco',
