@@ -26,6 +26,7 @@ mp_start_method = 'fork'
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 # model settings
+img_size=256
 # data_root = 'D:/Dataset'
 data_root = '/data/kyanchen/prompt/data'
 model = dict(
@@ -33,6 +34,8 @@ model = dict(
     classname_path=data_root+'/VAW/attribute_index.json',
     ofa_pretrained_weights=data_root+'/../pretrain/ofa_medium.pt',  # 256
     # ofa_pretrained_weights=data_root+'../pretrain/ofa_tiny.pt',  # 256
+    # ofa_pretrained_weights=data_root+'../pretrain/ofa_base.pt',  # 384
+    # ofa_pretrained_weights=data_root+'../pretrain/vqa_base_best.pt',  # 480
     n_sample_attr=4,
     backbone=dict(
         type='OFA',
@@ -70,9 +73,9 @@ train_pipeline = [
     dict(type='ScaleCrop', scale_range=[0.2, 0.4]),
     dict(type='RandomCrop', crop_size=[0.7, 0.7], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='Resize', img_scale=(256, 256), keep_ratio=True, interpolation='bicubic'),
+    dict(type='Resize', img_scale=(img_size, img_size), keep_ratio=True, interpolation='bicubic'),
     dict(type='Normalize', **img_norm_cfg),
-    dict(type='Pad', size=(256, 256), center_pad=True),
+    dict(type='Pad', size=(img_size, img_size), center_pad=True),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['gt_labels']),
     dict(type='Collect', keys=['img', 'gt_labels'])
@@ -83,12 +86,12 @@ test_pipeline = [
     dict(type='ScaleCrop', scale_range=[0.2, 0.4]),
     dict(type='RandomCrop', crop_size=[0.7, 0.7], crop_type='relative_range'),
     dict(type='MultiScaleFlipAug',
-         img_scale=(480, 480),
+         img_scale=(img_size, img_size),
          flip=False,
          transforms=[
-            dict(type='Resize', img_scale=(256, 256), keep_ratio=True),
+            dict(type='Resize', img_scale=(img_size, img_size), keep_ratio=True),
             dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size=(256, 256)),
+            dict(type='Pad', size=(img_size, img_size)),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img'])
         ]
@@ -98,8 +101,8 @@ test_pipeline = [
 num_shots = 128
 seed = 1
 data = dict(
-    samples_per_gpu=32,
-    workers_per_gpu=4,
+    samples_per_gpu=128,
+    workers_per_gpu=8,
     persistent_workers=True,
     train=dict(
         type=dataset_type,
@@ -135,7 +138,7 @@ optimizer = dict(
     constructor='SubModelConstructor',
     sub_model='prompt_learner',
     type='SGD',
-    lr=0.002,
+    lr=0.001,
     momentum=0.9,
     weight_decay=0.0005
 )
