@@ -524,17 +524,18 @@ class OFA_Prompter(BaseDetector):
         #     #     constraint_nodes = self.constraint_trie.get_next_layer(constraint_prefix_token)
         #     #     constraint_mask[i][constraint_nodes] = True
         #     sample["constraint_mask"] = torch.cat(self.valid_constraint_masks_list)
-        self.model = self.model.cpu()
-        for k, v in sample.items():
-            try:
-                sample[k] = v.cpu()
-            except:
-                if k == 'net_input':
-                    for k, v in sample['net_input'].items():
-                        try:
-                            sample['net_input'][k] = v.cpu()
-                        except:
-                            pass
+
+        # self.model = self.model.cpu()
+        # for k, v in sample.items():
+        #     try:
+        #         sample[k] = v.cpu()
+        #     except:
+        #         if k == 'net_input':
+        #             for k, v in sample['net_input'].items():
+        #                 try:
+        #                     sample['net_input'][k] = v.cpu()
+        #                 except:
+        #                     pass
         losses = self.bbox_head.forward_train(self.model, sample, update_num=0)
 
         return losses
