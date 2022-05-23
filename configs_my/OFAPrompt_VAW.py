@@ -27,12 +27,12 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 # model settings
 img_size = 256
-# data_root = 'D:/Dataset'
-data_root = '/data/kyanchen/prompt/data'
+data_root = 'D:/Dataset'
+# data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='OFA_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
-    ofa_pretrained_weights=data_root+'/../pretrain/ofa_medium.pt',  # 256
+    ofa_pretrained_weights=data_root+'/ofa/ofa_tiny.pt',  # 256
     # ofa_pretrained_weights=data_root+'../pretrain/ofa_tiny.pt',  # 256
     # ofa_pretrained_weights=data_root+'../pretrain/ofa_base.pt',  # 384
     # ofa_pretrained_weights=data_root+'../pretrain/vqa_base_best.pt',  # 480
@@ -101,8 +101,8 @@ test_pipeline = [
 num_shots = 128
 seed = 1
 data = dict(
-    samples_per_gpu=128,
-    workers_per_gpu=8,
+    samples_per_gpu=2,
+    workers_per_gpu=1,
     persistent_workers=True,
     train=dict(
         type=dataset_type,
@@ -122,7 +122,7 @@ data = dict(
         pipeline=test_pipeline),
     test=
     dict(
-        samples_per_gpu=256,
+        samples_per_gpu=1,
         type=dataset_type,
         data_root=data_root,
         num_shots=num_shots,
@@ -162,7 +162,7 @@ lr_config = dict(
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=100)
-evaluation = dict(interval=1000, metric='mAP')
+evaluation = dict(interval=1000, metric='mAP', is_logit=False)
 
 load_from = None
 resume_from = None

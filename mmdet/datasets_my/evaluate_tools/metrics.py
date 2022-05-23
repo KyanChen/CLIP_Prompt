@@ -3,13 +3,16 @@ import torch
 from .evaluator import Evaluator
 
 
-def cal_metrics(prefix_path, pred, gt_label, return_all=False, return_evaluator=False):
+def cal_metrics(prefix_path, pred, gt_label, return_all=False, return_evaluator=False, is_logit=True):
     fpath_attribute_index = prefix_path + '/attribute_index.json'
     fpath_attribute_types = prefix_path + '/attribute_types.json'
     fpath_attribute_parent_types = prefix_path + '/attribute_parent_types.json'
     fpath_head_tail = prefix_path + '/head_tail.json'
 
-    pred = pred.data.cpu().float().sigmoid().numpy()  # Nx620
+    if is_logit:
+        pred = pred.data.cpu().float().sigmoid().numpy()  # Nx620
+    else:
+        pred = pred.data.cpu().float().numpy()  # Nx620
     gt_label = gt_label.data.cpu().float().numpy()  # Nx620
     evaluator = Evaluator(
         fpath_attribute_index, fpath_attribute_types,

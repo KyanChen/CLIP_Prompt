@@ -25,8 +25,8 @@ from mmdet.utils import (build_ddp, build_dp, compat_cfg, get_device,
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
-    parser.add_argument('--config', default='../configs_my/CLIPPrompt_VAW.py', help='test config file path')
-    parser.add_argument('--checkpoint', default='results/EXP20220518_3/latest.pth', help='checkpoint file')
+    parser.add_argument('--config', default='../configs_my/OFAPrompt_VAW.py', help='test config file path')
+    parser.add_argument('--checkpoint', default=None, help='checkpoint file')
     parser.add_argument(
         '--work-dir',
         help='the directory to save the file containing evaluation metrics')
@@ -222,8 +222,13 @@ def main():
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
-    checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
+    if args.checkpoint is not None and os.path.exists(args.checkpoint):
+        checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
+    else:
+        checkpoint = {}
+        warnings.warn('No loading model')
     if args.fuse_conv_bn:
+
         model = fuse_conv_bn(model)
     # old versions did not save class info in checkpoints, this walkaround is
     # for backward compatibility

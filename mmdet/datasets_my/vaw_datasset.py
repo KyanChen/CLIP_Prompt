@@ -213,7 +213,8 @@ class VAWDataset(Dataset):
     def evaluate(self,
                  results,
                  metric='mAP',
-                 per_class_out_file=None
+                 per_class_out_file=None,
+                 is_logit=True
                  ):
 
         results = np.array(results)
@@ -221,7 +222,11 @@ class VAWDataset(Dataset):
         gts = self.get_labels()
         gts = torch.from_numpy(gts)
 
-        output = cal_metrics(self.data_root + '/VAW', preds, gts, return_all=True, return_evaluator=per_class_out_file)
+        output = cal_metrics(self.data_root + '/VAW',
+                             preds, gts,
+                             return_all=True,
+                             return_evaluator=per_class_out_file,
+                             is_logit=is_logit)
 
         if per_class_out_file:
             scores_overall, scores_per_class, scores_overall_topk, scores_per_class_topk, evaluator = output

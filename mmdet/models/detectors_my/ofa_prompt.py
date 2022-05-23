@@ -1,4 +1,5 @@
 import json
+import math
 import pickle
 
 import torch
@@ -606,7 +607,7 @@ class OFA_Prompter(BaseDetector):
         # input_constraint_mask = torch.cat(input_constraint_mask)
 
         patch_masks = torch.tensor(len(input_patch_images) * [True]).to(img.device)
-        src_lengths = torch.sum(input_tokenized_prompts.ne(self.model.pad).long(), dim=1)  # N
+        src_lengths = torch.sum(input_tokenized_prompts.ne(self.tgt_dict.pad()).long(), dim=1)  # N
 
         sample = {
             'net_input': dict(
@@ -629,12 +630,25 @@ class OFA_Prompter(BaseDetector):
             'target': None,
             "conf": None,
         }
+
+        self.model = self.model.cpu()
+        for k, v in sample.items():
+            try:
+                sample[k] = v.cpu()
+            except:
+                if k == 'net_input':
+                    for k, v in sample['net_input'].items():
+                        try:
+                            sample['net_input'][k] = v.cpu()
+                        except:
+                            pass
+
         encoder_out = self.model.encoder(
             sample["net_input"]["src_tokens"],
             src_lengths=sample["net_input"]["src_lengths"],
             patch_images=sample["net_input"]["patch_images"],
             patch_masks=sample["net_input"]["patch_masks"],
-            token_embeddings=sample["net_input"]["input_prompts_embeddings"],
+            token_embeddings=sample["net_input"]["token_embeddings"],
         )
         device = sample["net_input"]["src_tokens"].device
         valid_result = []
@@ -645,9 +659,9 @@ class OFA_Prompter(BaseDetector):
                                                                         self.valid_prev_output_list,
                                                                         self.valid_constraint_masks_list):
             valid_tgt_size = valid_tgt.size(0)
-            valid_tgt = valid_tgt.repeat(batch_size, 1).to(device)
-            valid_prev_output = valid_prev_output.repeat(batch_size, 1).to(device)
-            valid_constraint_masks = valid_constraint_masks.repeat(batch_size, 1, 1).to(device)
+            valid_tgt = valid_tgt.repeat(batch_size*self.n_classnames, 1).to(device)
+            valid_prev_output = valid_prev_output.repeat(batch_size*self.n_classnames, 1).to(device)
+            valid_constraint_masks = valid_constraint_masks.repeat(batch_size*self.n_classnames, 1, 1).to(device)
             new_encoder_out = {}
             new_encoder_out["encoder_out"] = [
                 encoder_out["encoder_out"][0].repeat_interleave(valid_tgt_size, dim=1)
@@ -669,12 +683,14 @@ class OFA_Prompter(BaseDetector):
             valid_result.append(scores)
 
         valid_result = torch.cat(valid_result, dim=-1)
-        predicts = valid_result.argmax(1).tolist()
-        hyps = [self.index2ans[predict_index] for predict_index in predicts]
-        scores = [ref_dict.get(hyp, 0) for ref_dict, hyp in zip(sample['ref_dict'], hyps)]
+        # predicts = valid_result.argmax(1).tolist()
+        # hyps = [self.index2ans[predict_index] for predict_index in predicts]
+        # scores = [ref_dict.get(hyp, 0) for ref_dict, hyp in zip(sample['ref_dict'], hyps)]
 
-        pred = list(scores.detach().cpu().numpy())
-        return pred
+        # pred = list(scores.detach().cpu().numpy())
+        pred_score = torch.softmax(valid_result, dim=-1)[..., 1].view(-1, self.n_classnames).cpu().numpy()
+        pred_score = list(pred_score)
+        return pred_score
 
 
     def aug_test(self, imgs, img_metas, **kwargs):
