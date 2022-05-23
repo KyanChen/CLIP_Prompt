@@ -33,7 +33,7 @@ model = dict(
     classname_path=data_root+'/VAW/attribute_index.json',
     ofa_pretrained_weights=data_root+'/../pretrain/vqa_large_best.pt',
     # ofa_pretrained_weights=data_root+'../pretrain/ofa_large.pt',
-    n_sample_attr=5,
+    n_sample_attr=4,
     backbone=dict(
         type='OFA',
         ofa_name='ofa_large'
@@ -98,8 +98,8 @@ test_pipeline = [
 num_shots = 128
 seed = 1
 data = dict(
-    samples_per_gpu=32,
-    workers_per_gpu=8,
+    samples_per_gpu=16,
+    workers_per_gpu=4,
     persistent_workers=True,
     train=dict(
         type=dataset_type,
@@ -158,7 +158,7 @@ lr_config = dict(
     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=150)
+runner = dict(type='EpochBasedRunner', max_epochs=100)
 evaluation = dict(interval=1000, metric='mAP')
 
 load_from = None
