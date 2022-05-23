@@ -112,7 +112,7 @@ class LaserTask(LegacyFairseqTask):
         return cls(args, config, src_dictionary, tgt_dictionary, num_tasks)
 
     # Experimental overriding for backtranslation
-    def build_model(self, args, from_checkpoint=False):
+    def build_model(self, args):
         model = models.build_model(args, self)
         return model
 
@@ -282,9 +282,6 @@ class LaserTask(LegacyFairseqTask):
         epoch=1,
         data_buffer_size=0,
         disable_iterator_cache=False,
-        grouped_shuffling=False,
-        update_epoch_batch_itr=False,
-        **kwargs,
     ):
 
         assert isinstance(dataset, OrderedDict)

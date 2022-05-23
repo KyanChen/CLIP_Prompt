@@ -16,9 +16,7 @@ from .modules import ActivationQuantizer, IntConv2d, IntEmbedding, IntLinear
 MAPPING = {nn.Linear: IntLinear, nn.Embedding: IntEmbedding, nn.Conv2d: IntConv2d}
 
 
-def quantize_model_(
-    model, p=0.2, bits=8, update_step=3000, method="histogram", remove_weights=False
-):
+def quantize_model_(model, p=0.2, bits=8, update_step=3000, method="histogram", remove_weights=False):
     """
     Replaces all modules with their scalar quantized counterpart and
     registers hooks to quantize the post-ativations of those modules.

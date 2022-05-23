@@ -5,11 +5,6 @@
 
 import torch
 
-try:
-    import torch.ao.quantization as quantization
-except ImportError:
-    import torch.quantization as quantization
-
 
 def emulate_int(w, bits, method, scale=None, zero_point=None):
     q = globals()[f"emulate_int8_{method}"]
@@ -18,7 +13,7 @@ def emulate_int(w, bits, method, scale=None, zero_point=None):
 
 def quantize(w, scale, zero_point, bits=8):
     # In the default behavior, max_val = 255.
-    max_val = 2**bits - 1
+    max_val = 2 ** bits - 1
     return (
         torch.clamp(torch.round(w / scale + zero_point), 0, max_val) - zero_point
     ) * scale
@@ -26,7 +21,7 @@ def quantize(w, scale, zero_point, bits=8):
 
 def emulate_int8_histogram(w, scale=None, zero_point=None, bits=8):
     if scale is None:
-        obs = quantization.observer.HistogramObserver()
+        obs = torch.quantization.observer.HistogramObserver()
         obs.to(device=w.device)
         _ = obs(w.float())
         scale, zero_point = obs.calculate_qparams()
@@ -37,7 +32,7 @@ def emulate_int8_histogram(w, scale=None, zero_point=None, bits=8):
 
 def emulate_int8_channel(w, scale=None, zero_point=None, bits=8):
     if scale is None:
-        obs = quantization.observer.PerChannelMinMaxObserver(
+        obs = torch.quantization.observer.PerChannelMinMaxObserver(
             ch_axis=-1, qscheme=torch.per_channel_symmetric
         )
         obs.to(device=w.device)
@@ -50,7 +45,7 @@ def emulate_int8_channel(w, scale=None, zero_point=None, bits=8):
 
 def emulate_int8_tensor(w, scale=None, zero_point=None, bits=8):
     if scale is None:
-        obs = quantization.observer.MinMaxObserver()
+        obs = torch.quantization.observer.MinMaxObserver()
         obs.to(device=w.device)
         _ = obs(w)
         scale, zero_point = obs.calculate_qparams()

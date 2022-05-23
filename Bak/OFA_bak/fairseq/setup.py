@@ -173,6 +173,7 @@ else:
 if "clean" in sys.argv[1:]:
     # Source: https://bit.ly/2NLVsgE
     print("deleting Cython files...")
+    import subprocess
 
     subprocess.run(
         ["rm -f fairseq/*.so fairseq/**/*.so fairseq/*.pyd fairseq/**/*.pyd"],
@@ -217,10 +218,10 @@ def do_setup(package_data):
             'numpy; python_version>="3.7"',
             "regex",
             "sacrebleu>=1.4.12",
-            "torch",
+            # "torch",
             "tqdm",
             "bitarray",
-            "torchaudio>=0.8.0",
+            # "torchaudio>=0.8.0",
         ],
         dependency_links=dependency_links,
         packages=find_packages(
@@ -274,8 +275,7 @@ if __name__ == "__main__":
 
         package_data = {
             "fairseq": (
-                get_files(fairseq_examples)
-                + get_files(os.path.join("fairseq", "config"))
+                get_files(fairseq_examples) + get_files(os.path.join("fairseq", "config"))
             )
         }
         do_setup(package_data)

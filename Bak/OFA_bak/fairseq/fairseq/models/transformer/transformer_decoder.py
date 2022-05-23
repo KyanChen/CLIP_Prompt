@@ -8,8 +8,6 @@ from typing import Any, Dict, List, Optional
 
 import torch
 import torch.nn as nn
-from torch import Tensor
-
 from fairseq import utils
 from fairseq.distributed import fsdp_wrap
 from fairseq.models import FairseqIncrementalDecoder
@@ -22,16 +20,17 @@ from fairseq.modules import (
     LayerNorm,
     PositionalEmbedding,
     SinusoidalPositionalEmbedding,
-    transformer_layer,
 )
+from fairseq.modules import transformer_layer
 from fairseq.modules.checkpoint_activations import checkpoint_wrapper
 from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
+from torch import Tensor
 
 
 # rewrite name for backward compatibility in `make_generation_fast_`
 def module_name_fordropout(module_name: str) -> str:
-    if module_name == "TransformerDecoderBase":
-        return "TransformerDecoder"
+    if module_name == 'TransformerDecoderBase':
+        return 'TransformerDecoder'
     else:
         return module_name
 
@@ -162,7 +161,7 @@ class TransformerDecoderBase(FairseqIncrementalDecoder):
                 self.output_embed_dim, len(dictionary), bias=False
             )
             nn.init.normal_(
-                self.output_projection.weight, mean=0, std=self.output_embed_dim**-0.5
+                self.output_projection.weight, mean=0, std=self.output_embed_dim ** -0.5
             )
         num_base_layers = cfg.base_layers
         for i in range(num_base_layers):
@@ -287,6 +286,9 @@ class TransformerDecoderBase(FairseqIncrementalDecoder):
         padding_mask: Optional[Tensor] = None
         if encoder_out is not None and len(encoder_out["encoder_out"]) > 0:
             enc = encoder_out["encoder_out"][0]
+            assert (
+                enc.size()[1] == bs
+            ), f"Expected enc.shape == (t, {bs}, c) got {enc.shape}"
         if encoder_out is not None and len(encoder_out["encoder_padding_mask"]) > 0:
             padding_mask = encoder_out["encoder_padding_mask"][0]
 

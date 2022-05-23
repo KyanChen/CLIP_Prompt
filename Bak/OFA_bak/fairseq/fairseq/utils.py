@@ -4,7 +4,6 @@
 # LICENSE file in the root directory of this source tree.
 
 import argparse
-import collections
 import contextlib
 import copy
 import importlib
@@ -13,11 +12,12 @@ import os
 import sys
 import warnings
 from itertools import accumulate
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, TYPE_CHECKING
 
 import torch
 import torch.nn.functional as F
 from torch import Tensor
+import collections
 
 if TYPE_CHECKING:
     from fairseq.modules.multihead_attention import MultiheadAttention
@@ -85,9 +85,7 @@ def apply_to_sample(f, sample):
             return f(x)
         elif isinstance(x, collections.OrderedDict):
             # OrderedDict has attributes that needs to be preserved
-            od = collections.OrderedDict(
-                (key, _apply(value)) for key, value in x.items()
-            )
+            od = collections.OrderedDict((key, _apply(value)) for key, value in x.items())
             od.__dict__ = x.__dict__
             return od
         elif isinstance(x, dict):
@@ -501,8 +499,6 @@ def import_user_module(args):
                     from fairseq.models import import_models
 
                     import_models(models_path, f"{module_name}.models")
-            elif module_path in sys.modules[module_name].__path__:
-                logger.info(f"--user-dir={module_path} has already been imported.")
             else:
                 raise ImportError(
                     "Failed to import --user-dir={} because the corresponding module name "
@@ -531,7 +527,7 @@ def get_perplexity(loss, round=2, base=2):
     if loss is None:
         return 0.0
     try:
-        return safe_round(base**loss, round)
+        return safe_round(base ** loss, round)
     except OverflowError:
         return float("inf")
 
@@ -541,18 +537,12 @@ def deprecation_warning(message, stacklevel=3):
     warnings.warn(message, stacklevel=stacklevel)
 
 
-def relu_squared(x: torch.Tensor):
-    return F.relu(x).pow(2)
-
-
 def get_activation_fn(activation: str) -> Callable:
     """Returns the activation function corresponding to `activation`"""
     from fairseq.modules import gelu, gelu_accurate
 
     if activation == "relu":
         return F.relu
-    elif activation == "relu_squared":
-        return relu_squared
     elif activation == "gelu":
         return gelu
     elif activation == "gelu_fast":
@@ -566,8 +556,6 @@ def get_activation_fn(activation: str) -> Callable:
         return torch.tanh
     elif activation == "linear":
         return lambda x: x
-    elif activation == "swish":
-        return torch.nn.SiLU
     else:
         raise RuntimeError("--activation-fn {} not supported".format(activation))
 
@@ -716,7 +704,6 @@ def get_tpu_device():
 def tpu_data_loader(itr):
     import torch_xla.core.xla_model as xm
     import torch_xla.distributed.parallel_loader as pl
-
     from fairseq.data import iterators
 
     xm.rendezvous("tpu_data_loader")  # wait for all workers

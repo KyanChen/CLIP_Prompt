@@ -4,16 +4,15 @@
 # LICENSE file in the root directory of this source tree.
 
 import math
-import sys
 from typing import Dict, List, Optional
+import sys
 
 import torch
 import torch.nn as nn
-from torch import Tensor
-
 from fairseq import search, utils
 from fairseq.data import data_utils
 from fairseq.models import FairseqIncrementalDecoder
+from torch import Tensor
 from fairseq.ngram_repeat_block import NGramRepeatBlock
 
 
@@ -81,7 +80,6 @@ class SequenceGenerator(nn.Module):
         self.beam_size = beam_size
         # the max beam size is the dictionary size - 1, since we never select pad
         self.beam_size = min(beam_size, self.vocab_size - 1)
-        self.model.set_decoder_beam_size(self.beam_size)
         self.max_len_a = max_len_a
         self.max_len_b = max_len_b
         self.min_len = min_len
@@ -173,9 +171,7 @@ class SequenceGenerator(nn.Module):
                 yield id, src, ref, hypos[i]
 
     @torch.no_grad()
-    def generate(
-        self, models, sample: Dict[str, Dict[str, Tensor]], **kwargs
-    ) -> List[List[Dict[str, Tensor]]]:
+    def generate(self, models, sample: Dict[str, Dict[str, Tensor]], **kwargs) -> List[List[Dict[str, Tensor]]]:
         """Generate translations. Match the api of other fairseq generators.
 
         Args:
@@ -227,10 +223,7 @@ class SequenceGenerator(nn.Module):
                 else torch.tensor(src_tokens.size(-1)).to(src_tokens)
             )
         else:
-            raise Exception(
-                "expected src_tokens or source in net input. input keys: "
-                + str(net_input.keys())
-            )
+            raise Exception("expected src_tokens or source in net input. input keys: " + str(net_input.keys()))
 
         # bsz: total number of sentences in beam
         # Note that src_tokens may have more than 2 dimensions (i.e. audio features)
@@ -335,9 +328,7 @@ class SequenceGenerator(nn.Module):
                 encoder_outs = self.model.reorder_encoder_out(
                     encoder_outs, reorder_state
                 )
-            with torch.autograd.profiler.record_function(
-                "EnsembleModel: forward_decoder"
-            ):
+            with torch.autograd.profiler.record_function("EnsembleModel: forward_decoder"):
                 lprobs, avg_attn_scores = self.model.forward_decoder(
                     tokens[:, : step + 1],
                     encoder_outs,
@@ -352,17 +343,6 @@ class SequenceGenerator(nn.Module):
                 )
                 probs = probs[:, -1, :] * self.lm_weight
                 lprobs += probs
-
-            lprobs[lprobs != lprobs] = torch.tensor(-math.inf).to(lprobs)
-
-            lprobs[:, self.pad] = -math.inf  # never select pad
-            lprobs[:, self.unk] -= self.unk_penalty  # apply unk penalty
-
-            # handle max length constraint
-            if step >= max_len:
-                lprobs[:, : self.eos] = -math.inf
-                lprobs[:, self.eos + 1 :] = -math.inf
-
             # handle prefix tokens (possibly with different lengths)
             if (
                 prefix_tokens is not None
@@ -375,6 +355,16 @@ class SequenceGenerator(nn.Module):
             elif step < self.min_len:
                 # minimum length constraint (does not apply if using prefix_tokens)
                 lprobs[:, self.eos] = -math.inf
+
+            lprobs[lprobs != lprobs] = torch.tensor(-math.inf).to(lprobs)
+
+            lprobs[:, self.pad] = -math.inf  # never select pad
+            lprobs[:, self.unk] -= self.unk_penalty  # apply unk penalty
+
+            # handle max length constraint
+            if step >= max_len:
+                lprobs[:, : self.eos] = -math.inf
+                lprobs[:, self.eos + 1 :] = -math.inf
 
             # Record attention scores, only support avg_attn_scores is a Tensor
             if avg_attn_scores is not None:
@@ -577,7 +567,7 @@ class SequenceGenerator(nn.Module):
         prefix_toks = prefix_tokens[:, step].unsqueeze(-1).repeat(1, beam_size).view(-1)
         prefix_lprobs = lprobs.gather(-1, prefix_toks.unsqueeze(-1))
         prefix_mask = prefix_toks.ne(self.pad)
-        lprobs[prefix_mask] = torch.tensor(-math.inf).to(lprobs)
+        lprobs[prefix_mask] = torch.min(prefix_lprobs) - 1
         lprobs[prefix_mask] = lprobs[prefix_mask].scatter(
             -1, prefix_toks[prefix_mask].unsqueeze(-1), prefix_lprobs[prefix_mask]
         )
@@ -665,7 +655,7 @@ class SequenceGenerator(nn.Module):
                 cum_unfin.append(prev)
         cum_fin_tensor = torch.tensor(cum_unfin, dtype=torch.int).to(bbsz_idx)
 
-        unfin_idx = torch.div(bbsz_idx, beam_size, rounding_mode="trunc")
+        unfin_idx = bbsz_idx // beam_size
         sent = unfin_idx + torch.index_select(cum_fin_tensor, 0, unfin_idx)
 
         # Create a set of "{sent}{unfin_idx}", where
@@ -761,21 +751,7 @@ class EnsembleModel(nn.Module):
         return self.has_incremental
 
     def max_decoder_positions(self):
-        return min(
-            [
-                m.max_decoder_positions()
-                for m in self.models
-                if hasattr(m, "max_decoder_positions")
-            ]
-            + [sys.maxsize]
-        )
-
-    def set_decoder_beam_size(self, beam_size):
-        """Set beam size for efficient beamable enc-dec attention."""
-        if beam_size > 1:
-            for model in self.models:
-                if hasattr(model, "set_beam_size"):
-                    model.set_beam_size(beam_size)
+        return min([m.max_decoder_positions() for m in self.models if hasattr(m, "max_decoder_positions")] + [sys.maxsize])
 
     @torch.jit.export
     def forward_encoder(self, net_input: Dict[str, Tensor]):

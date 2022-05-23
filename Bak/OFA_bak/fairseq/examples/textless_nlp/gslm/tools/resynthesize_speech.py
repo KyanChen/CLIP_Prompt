@@ -6,13 +6,16 @@
 import argparse
 import gc
 import logging
-import os
 
 import joblib
 import soundfile as sf
 import torch
-from examples.textless_nlp.gslm.speech2unit.pretrained.utils import get_feature_reader
-from examples.textless_nlp.gslm.unit2speech.tts_data import TacotronInputDataset
+from examples.textless_nlp.gslm.speech2unit.pretrained.utils import (
+    get_feature_reader,
+)
+from examples.textless_nlp.gslm.unit2speech.tts_data import (
+    TacotronInputDataset,
+)
 from examples.textless_nlp.gslm.unit2speech.utils import (
     load_tacotron,
     load_waveglow,
@@ -28,7 +31,9 @@ def get_logger():
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description="GSLM U2S tool")
+    parser = argparse.ArgumentParser(
+        description="GSLM speech resynthesis tool."
+    )
     parser.add_argument(
         "--feature_type",
         type=str,
@@ -42,7 +47,9 @@ def get_parser():
         type=str,
         help="Pretrained acoustic model checkpoint",
     )
-    parser.add_argument("--layer", type=int, help="Layer of acoustic model")
+    parser.add_argument(
+        "--layer", type=int, help="Layer of acoustic model"
+    )
     parser.add_argument(
         "--kmeans_model_path",
         type=str,
@@ -53,11 +60,6 @@ def get_parser():
         "--tts_model_path",
         type=str,
         help="TTS model file path to use for inference",
-    )
-    parser.add_argument(
-        "--code_dict_path",
-        type=str,
-        help="Code dict file path to use for inference",
     )
     parser.add_argument(
         "--waveglow_path",
@@ -95,14 +97,16 @@ def main(args, logger):
     waveglow, denoiser = load_waveglow(waveglow_path=args.waveglow_path)
 
     # Dataset
-    if not os.path.exists(hparams.code_dict):
-        hparams.code_dict = args.code_dict_path
     tts_dataset = TacotronInputDataset(hparams)
 
     iters = 0
     while True:
-        in_file_path = input("Input: Enter the full file path of audio file...\n")
-        out_file_path = input("Output: Enter the full file path of audio file...\n")
+        in_file_path = input(
+            "Input: Enter the full file path of audio file...\n"
+        )
+        out_file_path = input(
+            "Output: Enter the full file path of audio file...\n"
+        )
         feats = reader.get_feats(in_file_path).cpu().numpy()
         iters += 1
         if iters == 1000:
@@ -120,7 +124,9 @@ def main(args, logger):
             tts_input.unsqueeze(0),
             strength=args.denoiser_strength,
         )
-        sf.write(f"{out_file_path}", aud_dn[0].cpu().float().numpy(), sample_rate)
+        sf.write(
+            f"{out_file_path}", aud_dn[0].cpu().float().numpy(), sample_rate
+        )
         logger.info("Resynthesis done!\n")
 
 

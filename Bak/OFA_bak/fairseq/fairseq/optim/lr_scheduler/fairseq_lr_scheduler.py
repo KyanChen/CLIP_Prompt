@@ -49,6 +49,9 @@ class FairseqLRScheduler(object):
         """Update the learning rate after each update."""
         return self.optimizer.get_lr()
 
+    def reinit(self, total_num_update, num_updates):
+        pass
+
 
 class LegacyFairseqLRScheduler(FairseqLRScheduler):
     def __init__(self, args: Namespace, optimizer):

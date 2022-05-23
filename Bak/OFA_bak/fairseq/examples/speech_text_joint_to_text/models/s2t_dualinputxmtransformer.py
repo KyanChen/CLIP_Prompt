@@ -14,11 +14,10 @@ from fairseq.models import (
     register_model_architecture,
     FairseqEncoder,
 )
-from fairseq.models.speech_to_text import Wav2VecEncoderWithAdaptor
+from fairseq.models.speech_to_text import XMTransformerModel, Wav2VecEncoderWithAdaptor
 from fairseq.models.speech_to_text.xm_transformer import (
     set_default_adaptor_args,
     set_default_w2v_encoder_args,
-    need_finetuning
 )
 from fairseq.models.transformer import TransformerEncoder, TransformerDecoder
 from fairseq.models.wav2vec import TransformerSentenceEncoderLayer
@@ -151,8 +150,10 @@ class StackedWav2VecEncoderWithAdaptor(FairseqEncoder):
         out = self.w2v_encoder.forward(src_tokens, padding_mask, tbc=True)
         x = out["encoder_out"]
         enc_padding_mask = None
-        if out["padding_mask"] is not None:
-            enc_padding_mask = out["padding_mask"]  # B X T
+        if out["encoder_padding_mask"] is not None:
+            enc_padding_mask = out["encoder_padding_mask"].transpose(
+                0, 1
+            )  # T X B --> B X T
 
         x, enc_padding_mask = self.adaptor(x, enc_padding_mask)
         encoder_states = []
@@ -443,7 +444,7 @@ class DualInputXMTransformerModel(DualInputS2TTransformerModel):
             # Freeze pretrained models by default
             if safe_hasattr(
                 args, "finetune_w2v_params"
-            ) and need_finetuning(args.finetune_w2v_params, k):
+            ) and XMTransformerModel.finetune_params(args.finetune_w2v_params, k):
                 p.requires_grad = True
             else:
                 p.requires_grad = False
@@ -451,7 +452,7 @@ class DualInputXMTransformerModel(DualInputS2TTransformerModel):
             # Freeze pretrained models by default
             if safe_hasattr(
                 args, "finetune_mbart_encoder_params"
-            ) and need_finetuning(
+            ) and XMTransformerModel.finetune_params(
                 args.finetune_mbart_encoder_params, k
             ):
                 p.requires_grad = True
@@ -490,7 +491,7 @@ class DualInputXMTransformerModel(DualInputS2TTransformerModel):
             # Freeze pretrained models by default
             if safe_hasattr(
                 args, "finetune_mbart_decoder_params"
-            ) and need_finetuning(
+            ) and XMTransformerModel.finetune_params(
                 args.finetune_mbart_decoder_params, k
             ):
                 p.requires_grad = True
