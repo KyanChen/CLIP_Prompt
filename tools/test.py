@@ -25,8 +25,8 @@ from mmdet.utils import (build_ddp, build_dp, compat_cfg, get_device,
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
-    parser.add_argument('--config', default='../configs_my/OFAPrompt_VAW.py', help='test config file path')
-    parser.add_argument('--checkpoint', default=None, help='checkpoint file')
+    parser.add_argument('--config', default='../configs_my/detr_rs.py', help='test config file path')
+    parser.add_argument('--checkpoint', default='results/tmp/latest.pth', help='checkpoint file')
     parser.add_argument(
         '--work-dir',
         help='the directory to save the file containing evaluation metrics')
@@ -56,14 +56,14 @@ def parse_args():
         'submit it to the test server')
     parser.add_argument(
         '--eval',
-        default='mAP',
+        default="bbox",
         type=str,
         nargs='+',
         help='evaluation metrics, which depends on the dataset, e.g., "bbox",'
         ' "segm", "proposal" for COCO, and "mAP", "recall" for PASCAL VOC')
     parser.add_argument('--show', action='store_true', help='show results')
     parser.add_argument(
-        '--show-dir', help='directory where painted images will be saved')
+        '--show-dir', default='', help='directory where painted images will be saved')
     parser.add_argument(
         '--show-score-thr',
         type=float,
