@@ -27,8 +27,8 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 # model settings
 img_size = 256
-data_root = 'D:/Dataset'
-# data_root = '/data/kyanchen/prompt/data'
+# data_root = 'D:/Dataset'
+data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='OFA_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
@@ -39,7 +39,7 @@ model = dict(
     n_sample_attr=4,
     backbone=dict(
         type='OFA',
-        ofa_name='ofa_medium'
+        ofa_name='ofa_tiny'
     ),
     prompt_learner=dict(
         type='OFAPromptLearner',
@@ -101,8 +101,8 @@ test_pipeline = [
 num_shots = 128
 seed = 1
 data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=1,
+    samples_per_gpu=256,
+    workers_per_gpu=8,
     persistent_workers=True,
     train=dict(
         type=dataset_type,
@@ -122,7 +122,7 @@ data = dict(
         pipeline=test_pipeline),
     test=
     dict(
-        samples_per_gpu=1,
+        samples_per_gpu=4,
         type=dataset_type,
         data_root=data_root,
         num_shots=num_shots,
