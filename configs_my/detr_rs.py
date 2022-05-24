@@ -220,4 +220,4 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=500)
 
 load_from = '../pretrain/detr_r50_8x2_150e_coco_20201130_194835-2c4b8974.pth'
-resume_from = None
+resume_from = 'results/detr/latest.pth'
