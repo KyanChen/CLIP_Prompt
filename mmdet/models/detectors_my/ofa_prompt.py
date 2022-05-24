@@ -681,7 +681,8 @@ class OFA_Prompter(BaseDetector):
             scores = scores.sum(1)
             scores = scores.view(-1, valid_tgt_size)
             valid_result.append(scores)
-
+        import pdb
+        pdb.set_trace()
         valid_result = torch.cat(valid_result, dim=-1)
         # predicts = valid_result.argmax(1).tolist()
         # hyps = [self.index2ans[predict_index] for predict_index in predicts]
