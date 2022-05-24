@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 sys.path.append(sys.path[0]+'/../')
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 import os.path as osp
 import time
 import warnings
