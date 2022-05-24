@@ -25,8 +25,8 @@ from mmdet.utils import (build_ddp, build_dp, compat_cfg, get_device,
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
-    parser.add_argument('--config', default='../configs_my/detr_rs.py', help='test config file path')
-    parser.add_argument('--checkpoint', default='results/detr/latest.pth', help='checkpoint file')
+    parser.add_argument('--config', default='../configs_my/OFAPrompt_VAW.py', help='test config file path')
+    parser.add_argument('--checkpoint', default='results/EXP20220523_2/latest.pth', help='checkpoint file')
     parser.add_argument(
         '--work-dir',
         help='the directory to save the file containing evaluation metrics')

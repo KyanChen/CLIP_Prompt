@@ -26,16 +26,16 @@ mp_start_method = 'fork'
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 # model settings
-img_size = 480
+img_size = 256
 # data_root = 'D:/Dataset'
 data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='OFA_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
     # ofa_pretrained_weights=data_root+'/../pretrain/ofa_tiny.pt',  # 256
-    # ofa_pretrained_weights=data_root+'/../pretrain/ofa_tiny.pt',  # 256
+    ofa_pretrained_weights=data_root+'/../pretrain/ofa_tiny.pt',  # 256
     # ofa_pretrained_weights=data_root+'/../pretrain/ofa_base.pt',  # 384
-    ofa_pretrained_weights=data_root+'/../pretrain/vqa_base_best.pt',  # 480
+    # ofa_pretrained_weights=data_root+'/../pretrain/vqa_base_best.pt',  # 480
     n_sample_attr=4,
     backbone=dict(
         type='OFA',
@@ -122,7 +122,7 @@ data = dict(
         pipeline=test_pipeline),
     test=
     dict(
-        samples_per_gpu=4,
+        samples_per_gpu=12,
         type=dataset_type,
         data_root=data_root,
         num_shots=num_shots,
@@ -165,4 +165,5 @@ runner = dict(type='EpochBasedRunner', max_epochs=100)
 evaluation = dict(interval=1000, metric='mAP', is_logit=False)
 
 load_from = None
-resume_from = 'results/EXP20220523_3/latest.pth'
+# resume_from = 'results/EXP20220523_3/latest.pth'
+resume_from = None
