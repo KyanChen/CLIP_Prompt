@@ -82,7 +82,7 @@ class VAWDataset(Dataset):
         [print(k, ': ', len(v)) for k, v in data.items()]
         print(10 * '*', 'Split Dataset', 10 * '*')
         if self.test_mode:
-            self.data = preprocessed[pattern][:20]
+            self.data = preprocessed[pattern][:1000]
         else:
             self.data = data['train']
         # self.data = self.data[:3]
