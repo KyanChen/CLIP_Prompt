@@ -32,14 +32,14 @@ data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='OFA_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
+    ofa_pretrained_weights=data_root+'/../pretrain/ofa_medium.pt',  # 256
     # ofa_pretrained_weights=data_root+'/../pretrain/ofa_tiny.pt',  # 256
-    ofa_pretrained_weights=data_root+'/../pretrain/ofa_tiny.pt',  # 256
     # ofa_pretrained_weights=data_root+'/../pretrain/ofa_base.pt',  # 384
     # ofa_pretrained_weights=data_root+'/../pretrain/vqa_base_best.pt',  # 480
     n_sample_attr=4,
     backbone=dict(
         type='OFA',
-        ofa_name='ofa_tiny'
+        ofa_name='ofa_medium'
     ),
     prompt_learner=dict(
         type='OFAPromptLearner',
