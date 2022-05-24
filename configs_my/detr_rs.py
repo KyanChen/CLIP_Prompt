@@ -97,7 +97,8 @@ model = dict(
 )
 # dataset settings
 dataset_type = 'NWPUDataset'
-data_root = 'D:/Dataset/NWPU VHR-10 dataset'
+# data_root = 'D:/Dataset/NWPU VHR-10 dataset'
+data_root = '/data/kyanchen/prompt1/data'
 img_norm_cfg = dict(
     mean=[85.89889107352009, 91.4896297176063, 81.3935903939403],
     std=[9.239241126100374, 9.05431189407829, 9.192180602956606],
@@ -173,7 +174,7 @@ test_pipeline = [
 ]
 
 data = dict(
-    samples_per_gpu=4,
+    samples_per_gpu=64,
     workers_per_gpu=4,
     train=dict(
         type=dataset_type,
@@ -194,7 +195,7 @@ data = dict(
         pipeline=test_pipeline)
 )
 evaluation = dict(interval=10, metric='bbox')
-test = dict(interval=5, metric=['bbox'], mode='test', areaRng=[0, 32, 96])
+test = dict(interval=10, metric=['bbox'], mode='test', areaRng=[0, 32, 96])
 
 # optimizer
 optimizer = dict(

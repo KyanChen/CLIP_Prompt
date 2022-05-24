@@ -4,7 +4,7 @@ import copy
 import os
 import sys
 sys.path.append(sys.path[0]+'/../')
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "4"
 import os.path as osp
 import time
 import warnings
