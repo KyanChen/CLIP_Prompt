@@ -122,7 +122,7 @@ data = dict(
         pipeline=test_pipeline),
     test=
     dict(
-        samples_per_gpu=2,
+        samples_per_gpu=1,
         type=dataset_type,
         data_root=data_root,
         num_shots=num_shots,
