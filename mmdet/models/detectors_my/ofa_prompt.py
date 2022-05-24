@@ -586,8 +586,8 @@ class OFA_Prompter(BaseDetector):
         # input_constraint_mask = []
         for i_img in range(len(img)):
             input_patch_images.append(img[i_img].unsqueeze(0).expand(self.n_classnames, -1, -1, -1))
-            input_tokenized_prompts.append(self.tokenized_prompts)
-            input_prompts_embeddings.append(prompts_embeddings)
+            input_tokenized_prompts.append(self.tokenized_prompts.to(img.device))
+            input_prompts_embeddings.append(prompts_embeddings.to(img.device))
                 # if self.constraint_trie is not None:
                 #     input_constraint_mask.append(torch.stack([self.valid_constraint_masks_list[x] for x in labels]))
                 # # constraint_mask = torch.zeros((len(prev_output_item), len(self.tgt_dict))).bool()
