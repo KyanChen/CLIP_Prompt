@@ -631,17 +631,17 @@ class OFA_Prompter(BaseDetector):
             "conf": None,
         }
 
-        self.model = self.model.cpu()
-        for k, v in sample.items():
-            try:
-                sample[k] = v.cpu()
-            except:
-                if k == 'net_input':
-                    for k, v in sample['net_input'].items():
-                        try:
-                            sample['net_input'][k] = v.cpu()
-                        except:
-                            pass
+        # self.model = self.model.cpu()
+        # for k, v in sample.items():
+        #     try:
+        #         sample[k] = v.cpu()
+        #     except:
+        #         if k == 'net_input':
+        #             for k, v in sample['net_input'].items():
+        #                 try:
+        #                     sample['net_input'][k] = v.cpu()
+        #                 except:
+        #                     pass
 
         encoder_out = self.model.encoder(
             sample["net_input"]["src_tokens"],
