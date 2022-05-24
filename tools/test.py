@@ -56,14 +56,15 @@ def parse_args():
         'submit it to the test server')
     parser.add_argument(
         '--eval',
-        default="bbox",
+        # default="bbox",
+        default="mAP",
         type=str,
         nargs='+',
         help='evaluation metrics, which depends on the dataset, e.g., "bbox",'
         ' "segm", "proposal" for COCO, and "mAP", "recall" for PASCAL VOC')
     parser.add_argument('--show', action='store_true', help='show results')
     parser.add_argument(
-        '--show-dir', default='results/detr/result', help='directory where painted images will be saved')
+        '--show-dir', default=None, help='directory where painted images will be saved')
     parser.add_argument(
         '--show-score-thr',
         type=float,
