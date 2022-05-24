@@ -26,8 +26,8 @@ from mmdet.utils import (collect_env, get_device, get_root_logger,
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
-    parser.add_argument('--config', default='../configs_my/OFAPrompt_VAW.py', help='train config file path')
-    parser.add_argument('--work-dir', default='results/EXP20220523_3', help='the dir to save logs and models')
+    parser.add_argument('--config', default='../configs_my/detr_rs.py', help='train config file path')
+    parser.add_argument('--work-dir', default='results/detr', help='the dir to save logs and models')
     parser.add_argument(
         '--resume-from', help='the checkpoint file to resume from')
     parser.add_argument(

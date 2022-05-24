@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=20)
+checkpoint_config = dict(interval=30)
 # yapf:disable
 log_config = dict(
     interval=50,
@@ -7,8 +7,8 @@ log_config = dict(
         dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable
-# custom_hooks = [dict(type='NumClassCheckHook')]
-custom_hooks = None
+custom_hooks = [dict(type='NumClassCheckHook')]
+# custom_hooks = None
 
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
@@ -160,7 +160,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(700, 900),
+        img_scale=(600, 900),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -193,7 +193,7 @@ data = dict(
         img_prefix=data_root + '/PositiveEvaluation',
         pipeline=test_pipeline)
 )
-evaluation = dict(interval=5, metric='bbox')
+evaluation = dict(interval=10, metric='bbox')
 test = dict(interval=5, metric=['bbox'], mode='test', areaRng=[0, 32, 96])
 
 # optimizer
@@ -203,7 +203,7 @@ optimizer = dict(
     weight_decay=0.0001,
     paramwise_cfg=dict(
         custom_keys={'backbone': dict(lr_mult=0.1, decay_mult=1.0)}))
-optimizer_config = dict(grad_clip=dict(max_norm=50, norm_type=2))
+optimizer_config = dict(grad_clip=dict(max_norm=100, norm_type=2))
 
 # learning policy
 # lr_config = dict(policy='step', step=[100])
@@ -216,7 +216,7 @@ lr_config = dict(
     warmup_iters=5,
     warmup_by_epoch=True)
 
-runner = dict(type='EpochBasedRunner', max_epochs=300)
+runner = dict(type='EpochBasedRunner', max_epochs=500)
 
 load_from = '../pretrain/detr_r50_8x2_150e_coco_20201130_194835-2c4b8974.pth'
 resume_from = None

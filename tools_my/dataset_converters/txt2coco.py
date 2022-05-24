@@ -55,7 +55,7 @@ def parse_txt(args):
     if osp.exists(txt_path) and osp.getsize(txt_path) > 2:
         targets = txt_paraser(txt_path)
         bboxes = targets[:, :-1]
-        bboxes[:, 2:] = bboxes[:, 2:] - bboxes[:, :2]
+        # bboxes[:, 2:] = bboxes[:, 2:] - bboxes[:, :2]
         bboxes[:, ::2] = np.clip(bboxes[:, ::2], a_min=0, a_max=w)
         bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], a_min=0, a_max=h)
         labels = targets[:, -1]
@@ -195,9 +195,9 @@ def cvt_to_coco_json(annotations):
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Convert PASCAL VOC annotations to mmdetection format')
-    parser.add_argument('--devkit_path', default=r'D:\Dataset\NWPU VHR-10 dataset\PositiveEvaluation', help='pascal voc devkit path')
+    parser.add_argument('--devkit_path', default=r'D:\Dataset\NWPU VHR-10 dataset\PositiveTrain', help='pascal voc devkit path')
     parser.add_argument('-o', '--out-dir', default=r'D:\Dataset\NWPU VHR-10 dataset', help='output path')
-    parser.add_argument('--dataset_name', default='NWPU_val', help='dataset name')
+    parser.add_argument('--dataset_name', default='NWPU_train', help='dataset name')
     parser.add_argument(
         '--out-format',
         default='coco',
