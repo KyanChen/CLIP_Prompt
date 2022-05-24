@@ -1,8 +1,7 @@
 /data/
 results/
 result/
-/tools_my/analysis_tools/all.png
-/tools_my/analysis_tools/test_better.png
+/tools_my/analysis_tools/*.png
 /Bak/OFA_bak/examples/
 *.pt*
 /pretrain
