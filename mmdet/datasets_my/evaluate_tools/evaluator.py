@@ -11,7 +11,7 @@ K = 15
 def top_K_values(array):
     """Keeps only topK largest values in array.
     """
-    indexes = np.argpartition(array, -K, axis=-1)[-K:]
+    indexes = np.argpartition(array, -K, axis=-1)[-K:]  # 第K大的数
     A = set(indexes)
     B = set(list(range(array.shape[0])))
     B -= A
@@ -189,10 +189,10 @@ class Evaluator(object):
             return score[i_class]
 
         if threshold_type == 'threshold':
-            pred = self.pred[:,i_class].copy()
+            pred = self.pred[:, i_class].copy()
         else:
-            pred = self.pred_topk[:,i_class].copy()
-        gt_label = self.gt_label[:,i_class].copy()
+            pred = self.pred_topk[:, i_class].copy()
+        gt_label = self.gt_label[:, i_class].copy()
 
         # Find instances that are explicitly labeled (either positive or negative).
         mask_labeled = (gt_label < 2)

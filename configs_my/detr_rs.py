@@ -100,8 +100,7 @@ dataset_type = 'NWPUDataset'
 # data_root = 'D:/Dataset/NWPU VHR-10 dataset'
 data_root = '/data/kyanchen/prompt1/data'
 img_norm_cfg = dict(
-    mean=[85.89889107352009, 91.4896297176063, 81.3935903939403],
-    std=[9.239241126100374, 9.05431189407829, 9.192180602956606],
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375],
     to_rgb=True)
 # train_pipeline, NOTE the img_scale and the Pad's size_divisor is different
 # from the default setting in mmdet.
@@ -220,4 +219,4 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=500)
 
 load_from = '../pretrain/detr_r50_8x2_150e_coco_20201130_194835-2c4b8974.pth'
-resume_from = 'results/detr/latest.pth'
+resume_from = None

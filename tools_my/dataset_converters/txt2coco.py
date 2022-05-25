@@ -30,7 +30,7 @@ def txt_paraser(txt_name):
     def get_label_id(x):
         # return label_ids[x.decode()]
 
-        return int(x.decode())
+        return int(x.decode())-1
 
     targets = np.loadtxt(txt_name,
                          float,
