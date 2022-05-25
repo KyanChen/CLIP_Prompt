@@ -1,10 +1,10 @@
 import os
 import time
 
-os.system("CUDA_VISIBLE_DEVICES=0,2,3 "
+os.system("CUDA_VISIBLE_DEVICES=4,5,6,7 "
           "sh dist_test.sh "
-          "../configs_my/CLIPPrompt_VAW.py "
-          "results/EXP20220519_1/latest.pth "
+          "../configs_my/OFAPrompt_VAW.py "
+          "results/EXP20220523_3/latest.pth "
           "3"
 )
 
