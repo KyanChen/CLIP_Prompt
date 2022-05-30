@@ -5,6 +5,7 @@ result/
 /Bak/OFA_bak/examples/
 *.pt*
 /pretrain
+/attributes/VG/attributes.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

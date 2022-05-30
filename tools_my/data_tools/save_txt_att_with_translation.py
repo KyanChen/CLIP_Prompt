@@ -3,7 +3,7 @@ from googletrans import Translator
 import json
 
 # 设置Google翻译服务地址
-dataset = 'VAW'
+dataset = 'VG'
 pattern = 'attributes'
 
 translator = Translator(service_urls=['translate.google.cn'])
@@ -13,9 +13,12 @@ translator = Translator(service_urls=['translate.google.cn'])
 # att_data = {}
 
 
-json_path = f'../../attributes/{dataset}/{pattern}.json'
+json_path = f'../../attributes/{dataset}/{pattern}_extracted.json'
 json_data_lines = json.load(open(json_path, 'r'))
-att_data = json_data_lines
+json_data_lines = list(set([x.lower().replace('\"', '') for x in json_data_lines]))
+att_data = {}
+for att in json_data_lines:
+    att_data[att] = att
 
 # for data in txt_data_lines:
 #     att, sub_att = data.split(':')
@@ -50,7 +53,7 @@ att_data = json_data_lines
 #     att_data[att] += [sub_att]
 
 att_data = {k: list(set(v)) for k, v in att_data.items()}
-all_att = {'att': att_data, 'levels': 2}
+all_att = {'att': att_data, 'levels': 1}
 
 json_data = {}
 for k, v in all_att.items():
