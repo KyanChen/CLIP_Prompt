@@ -80,7 +80,6 @@ for att_k, att_v in att_data.items():
         except:
             pass
     json_data['attribute_tree'].append({att_k + ',' + translation.text: sub_atts})
-    time.sleep(0.1)
 
 json.dump(json_data, open(f'../../attributes/{dataset}/{pattern}.json', 'w'), indent=4, ensure_ascii=False)
 
