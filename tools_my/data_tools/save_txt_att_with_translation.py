@@ -64,14 +64,23 @@ for att_k, att_v in att_data.items():
     if json_data['levels'] == 2:
         sub_atts = []
         for sub_att in att_v:
-            translation = translator.translate(sub_att, src='en', dest='zh-CN')
+            while True:
+                try:
+                    translation = translator.translate(sub_att, src='en', dest='zh-CN')
+                    break
+                except:
+                    pass
             sub_atts.append(sub_att + ',' + translation.text)
     else:
         sub_atts = None
-    time.sleep(0.1)
-    translation = translator.translate(att_k, src='en', dest='zh-CN')
+    while True:
+        try:
+            translation = translator.translate(att_k, src='en', dest='zh-CN')
+            break
+        except:
+            pass
     json_data['attribute_tree'].append({att_k + ',' + translation.text: sub_atts})
-    # time.sleep(0.1)
+    time.sleep(0.1)
 
 json.dump(json_data, open(f'../../attributes/{dataset}/{pattern}.json', 'w'), indent=4, ensure_ascii=False)
 
