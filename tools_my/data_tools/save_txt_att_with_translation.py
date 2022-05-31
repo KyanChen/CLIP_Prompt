@@ -3,7 +3,7 @@ from googletrans import Translator
 import json
 
 # 设置Google翻译服务地址
-dataset = 'VG'
+dataset = 'SUN'
 pattern = 'attributes'
 
 translator = Translator(service_urls=['translate.google.cn'])
@@ -15,6 +15,7 @@ translator = Translator(service_urls=['translate.google.cn'])
 
 json_path = f'../../attributes/{dataset}/{pattern}_extracted.json'
 json_data_lines = json.load(open(json_path, 'r'))
+
 json_data_lines = list(set([x.lower().replace('\"', '') for x in json_data_lines]))
 att_data = {}
 for att in json_data_lines:
