@@ -1,12 +1,19 @@
 import multiprocessing
+import sys
 import time
 from googletrans import Translator
 import json
+import tqdm
 
 
 def get_trans(att_data, q, levels, pid_id):
     translator = Translator(service_urls=['translate.google.cn'])
+    # if pid_id == 0:
+    tbar = tqdm.tqdm(total=len(att_data))
     for att_k, att_v in att_data.items():
+        # if pid_id == 0:
+        tbar.update(1)
+
         if levels == 2:
             sub_atts = []
             for sub_att in att_v:
@@ -96,7 +103,7 @@ if __name__ == '__main__':
     json_data['attribute_tree'] = []
 
     multiprocessing.set_start_method('spawn')
-    n_process = 16
+    n_process = 32
 
     data_slice_list = []
     n_item_per_slice = int(len(att_data) / n_process)
