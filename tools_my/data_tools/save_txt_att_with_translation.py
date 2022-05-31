@@ -17,21 +17,29 @@ def get_trans(att_data, q, levels, pid_id):
         if levels == 2:
             sub_atts = []
             for sub_att in att_v:
+                try_times = 0
                 while True:
                     try:
                         translation = translator.translate(sub_att, src='en', dest='zh-CN')
                         break
                     except:
-                        pass
+                        try_times += 1
+                        if try_times > 20:
+                            time.sleep(1)
+                        time.sleep(0.1)
                 sub_atts.append(sub_att + ',' + translation.text)
         else:
             sub_atts = None
+        try_times = 0
         while True:
             try:
                 translation = translator.translate(att_k, src='en', dest='zh-CN')
                 break
             except:
-                pass
+                try_times += 1
+                if try_times > 20:
+                    time.sleep(1)
+                time.sleep(0.2)
         q.append({att_k + ',' + translation.text: sub_atts})
 
 
