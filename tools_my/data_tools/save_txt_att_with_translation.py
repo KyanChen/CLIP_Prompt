@@ -111,7 +111,8 @@ if __name__ == '__main__':
     json_data['attribute_tree'] = []
 
     multiprocessing.set_start_method('spawn')
-    n_process = 16
+
+    n_process = 32
 
     data_slice_list = []
     n_item_per_slice = int(len(att_data) / n_process)

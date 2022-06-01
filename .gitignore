@@ -13,6 +13,9 @@ result/
 /captions/CC12M/cc12m.tsv
 /captions/CC12M/captions_extracted.json
 
+captions/CC3M/captions_extracted.json
+*.tsv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[co]
