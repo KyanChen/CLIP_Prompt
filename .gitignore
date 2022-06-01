@@ -6,6 +6,7 @@ result/
 *.pt*
 /pretrain
 /attributes/VG/attributes.json
+/captions/COCO/captions_train2014.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
