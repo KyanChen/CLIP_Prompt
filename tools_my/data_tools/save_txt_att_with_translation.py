@@ -133,4 +133,6 @@ if __name__ == '__main__':
 
     results = list(q)
     json_data['attribute_tree'] = results
+    json.dump(json_data, open(f'../../attributes/{dataset}/{pattern}_.json', 'w'), indent=4)
     json.dump(json_data, open(f'../../attributes/{dataset}/{pattern}.json', 'w'), indent=4, ensure_ascii=False)
+
