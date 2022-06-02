@@ -1,0 +1,6 @@
+COCO Captions: img
+SUB: img
+CC3M: img
+CC12M: img
+TextCaps: img
+VG: Box
