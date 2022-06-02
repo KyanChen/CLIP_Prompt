@@ -16,6 +16,8 @@ captions/COCO/captions_train2014.json
 captions/CC3M/captions_extracted.json
 *.tsv
 
+captions/caption_all
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[co]

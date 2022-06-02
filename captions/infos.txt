@@ -1,6 +1,11 @@
-COCO Captions: img
-SUB: img
+# quility 0, 1, 2
+COCO Captions: img, 2
+SUB: img, 1
+TextCaps: img, 2
+VG: Box, 2
+Flickr30k: img, 2
+VizWiz-Captions: img, 2
 CC3M: img
 CC12M: img
-TextCaps: img
-VG: Box
+LAION: img
+
