@@ -1,58 +1,73 @@
 import json
+import os
 
+import tqdm
 from textblob import TextBlob
+from textblob import Word
 from textblob.taggers import NLTKTagger
-from textblob.np_extractors import ConllExtractor
 import multiprocessing
 
-extractor = ConllExtractor()
 nltk_tagger = NLTKTagger()
 
-batch_size = 4
 
-def get_att_categories(data, atts, categories, pid):
-    n_data = len(data)
-    n_batch = n_data // batch_size
-    if n_batch % batch_size != 0:
-        n_batch += 1
-    for i_batch in range(n_batch):
-        text_list = data[i_batch*batch_size: (i_batch+1)*batch_size]
-        if i_batch == n_batch - 1:
-            text_list = data[i_batch*batch_size:]
-    blob = TextBlob(text_list, pos_tagger=nltk_tagger, np_extractor=extractor)
-    print(blob.pos_tags)
-    print(blob.noun_phrases)
-    for word in blob.words:
-        print(word.lemmatize())
-    atts.append(1)
+def get_att_categories(pid, path):
+    data = json.load(open(path + f'/split_{pid}.json', 'r'))
+    return_data = {'atts': {}, 'categories': {}}
+    for text_str in tqdm.tqdm(data):
+        blob = TextBlob(text_str, pos_tagger=nltk_tagger)
+        # print(blob.pos_tags)
+        for word, tag in blob.pos_tags:
+            if tag == 'JJ':
+                return_data['atts'][word] = return_data['atts'].get(word, 0) + 1
+            elif tag == 'NN':
+                return_data['categories'][word] = return_data['categories'].get(word, 0) + 1
+            elif tag == 'NNS':
+                word = Word(word).singularize()
+                return_data['categories'][word] = return_data['categories'].get(word, 0) + 1
+
+    json.dump(return_data, open(path + f'/split_{pid}_atts_categories.json', 'w'), indent=4)
+
+
+def split_json_data(text_list, split_num, path):
+    os.makedirs(path, exist_ok=True)
+    n_item_per_slice = len(text_list) // split_num
+    for i in range(split_num):
+        start = i * n_item_per_slice
+        end = min(start + n_item_per_slice, len(json_data))
+        json.dump(text_list[start: end], open(path+f'/split_{i}.json', 'w'))
+
+
+def gather_all(path, split_num):
+    return_data = {'num_atts': 0, 'num_categories': 0, 'atts': {}, 'categories': {}}
+    for i in range(split_num):
+        data = json.load(open(path + f'/split_{i}_atts_categories.json', 'r'))
+        for k, v in data['atts'].items():
+            return_data['atts'][k] = return_data['atts'].get(k, 0) + v
+        for k, v in data['categories'].items():
+            return_data['categories'][k] = return_data['categories'].get(k, 0) + v
+
+    return_data['atts'] = sorted(return_data['atts'].items(), key=lambda kv: kv[1], reverse=True)
+    return_data['categories'] = sorted(return_data['categories'].items(), key=lambda kv: kv[1], reverse=True)
+    return_data['num_atts'] = len(return_data['atts'])
+    return_data['num_categories'] = len(return_data['categories'])
+    return return_data
+
 
 if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
+    n_process = 32
 
-    n_process = 1
-
-    json_data = json.load(open('', 'r'))['captions']
-    data_slice_list = []
-    n_item_per_slice = len(json_data) // n_process
-    for i in range(n_process):
-        start = i * n_item_per_slice
-        end = min(start + n_item_per_slice, len(json_data))
-        data_slice_list.append(json_data[start: end])
+    json_data = json.load(open('caption_all/caption_seg_word.json', 'r'))['captions']
+    split_json_data(json_data, split_num=n_process, path='caption_all/tmp')
 
     process_list = []
-    atts = multiprocessing.Manager().list()
-    categories = multiprocessing.Manager().list()
-
     for pid in range(n_process):
-        slice_datas = data_slice_list[pid]
         print('pid {}'.format(pid))
         process_list.append(
-            multiprocessing.Process(target=get_att_categories, args=(slice_datas, atts, categories, pid))
+            multiprocessing.Process(target=get_att_categories, args=(pid, 'caption_all/tmp'))
         )
     [p.start() for p in process_list]
     [p.join() for p in process_list]
 
-    atts = list(atts)
-    categories = list(categories)
-    json_data = {'atts': atts, 'categories': categories}
-    json.dump(json_data, open(f'captions_all/extracted_atts_categories.json', 'w'), indent=4)
+    return_data = gather_all(path='caption_all/tmp', split_num=n_process)
+    json.dump(return_data, open(f'caption_all/extracted_atts_categories.json', 'w'), indent=4)

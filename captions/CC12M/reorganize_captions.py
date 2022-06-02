@@ -4,5 +4,6 @@ import pandas as pd
 
 data = pd.read_csv('cc12m.tsv', header=None, delimiter='\t')
 
-json.dump(list(data.iloc[:, 1])[:1000], open('captions_extracted_split.json', 'w'), indent=4)
-pass
+data = list(data.iloc[:, 1])
+json_data = {'num': len(data), 'captions': list(data)}
+json.dump(json_data, open('../caption_all/CC12M_all_extracted.json', 'w'), indent=4)

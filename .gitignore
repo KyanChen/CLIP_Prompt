@@ -7,7 +7,7 @@ result/
 /pretrain
 /attributes/VG/attributes.json
 captions/COCO/captions_train2014.json
-/captions/SUB/sbu-captions-all.json
+/captions/SBU/sbu-captions-all.json
 /captions/VG/region_descriptions.json
 /captions/VG/captions_extracted.json
 /captions/CC12M/cc12m.tsv
