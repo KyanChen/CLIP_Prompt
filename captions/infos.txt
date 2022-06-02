@@ -1,5 +1,5 @@
 # quility 0, 1, 2
-COCO Captions: img, 2
+COCO Captions: 60W, img, 2
 SUB: img, 1
 TextCaps: img, 2
 VG: Box, 2
