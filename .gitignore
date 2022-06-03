@@ -17,6 +17,8 @@ captions/CC3M/captions_extracted.json
 *.tsv
 
 captions/caption_all
+attributes/attribute_all
+objects/object_all
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
