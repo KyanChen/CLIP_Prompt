@@ -13,20 +13,28 @@ nltk_tagger = NLTKTagger()
 
 def get_att_categories(pid, path):
     file = path + f'/part-{pid:05d}-5b54c5d5-bbcf-484d-a2ce-0d6f73df1a36-c000.snappy.parquet'
-    data = list(pd.read_parquet(file)['TEXT'])
-    json.dump(data, open(file.replace('.snappy.parquet', '.json'), 'w'), indent=4)
+    if os.path.exists(file.replace('.snappy.parquet', '.json')):
+        data = json.load(open(file.replace('.snappy.parquet', '.json'), 'r'))
+    else:
+        data = list(pd.read_parquet(file)['TEXT'])
+        json.dump(data, open(file.replace('.snappy.parquet', '.json'), 'w'), indent=4)
     return_data = {'atts': {}, 'categories': {}}
     for text_str in tqdm.tqdm(data):
-        blob = TextBlob(text_str, pos_tagger=nltk_tagger)
-        # print(blob.pos_tags)
-        for word, tag in blob.pos_tags:
-            if tag == 'JJ':
-                return_data['atts'][word] = return_data['atts'].get(word, 0) + 1
-            elif tag == 'NN':
-                return_data['categories'][word] = return_data['categories'].get(word, 0) + 1
-            elif tag == 'NNS':
-                word = Word(word).singularize()
-                return_data['categories'][word] = return_data['categories'].get(word, 0) + 1
+        if text_str is None or pd.isna(text_str):
+            text_str = ''
+        try:
+            blob = TextBlob(text_str, pos_tagger=nltk_tagger)
+            # print(blob.pos_tags)
+            for word, tag in blob.pos_tags:
+                if tag == 'JJ':
+                    return_data['atts'][word] = return_data['atts'].get(word, 0) + 1
+                elif tag == 'NN':
+                    return_data['categories'][word] = return_data['categories'].get(word, 0) + 1
+                elif tag == 'NNS':
+                    word = Word(word).singularize()
+                    return_data['categories'][word] = return_data['categories'].get(word, 0) + 1
+        except Exception as e:
+            print(e)
 
     json.dump(return_data, open(path + f'/split_{pid}_atts_categories.json', 'w'), indent=4)
 
@@ -78,7 +86,7 @@ if __name__ == '__main__':
     [p.start() for p in process_list]
     [p.join() for p in process_list]
 
-    return_data = gather_all(path='caption_all/tmp', split_num=n_process)
+    return_data = gather_all(path='/data1/kyanchen/prompt/data/laion400M', split_num=n_process)
     return_atts = {'num_atts': return_data['num_atts'], 'atts': return_data['atts']}
     return_objects = {'num_categories': return_data['num_categories'], 'categories': return_data['categories']}
     json.dump(return_atts, open(f'extracted_atts.json', 'w'), indent=4)
