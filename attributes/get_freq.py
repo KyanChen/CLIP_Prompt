@@ -45,7 +45,7 @@ if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
     n_process = 32
 
-    src_data = json.load(open('attribute_all/all_attributes.json', 'r'))['attributes']
+    src_data = json.load(open('../gather_infos/all_attributes.json', 'r'))['attributes']
     data_slice_list = []
     n_item_per_slice = len(src_data) // n_process
     for i in range(n_process):
@@ -69,4 +69,4 @@ if __name__ == '__main__':
     [p.join() for p in process_list]
 
     json_data = gather_all(tmp_path, split_num=n_process)
-    json.dump(json_data, open('attribute_all/all_attributes_with_freq.json', 'w'), indent=4)
+    json.dump(json_data, open('../gather_infos/all_attributes_with_freq.json', 'w'), indent=4)
