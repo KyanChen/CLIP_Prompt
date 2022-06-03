@@ -18,6 +18,7 @@ for x in data:
         data_tmp += [x]
 data = data_tmp
 data = [x.strip().lower() for x in data]
+data = [x for x in data if x != '']
 json_data['attributes'] = list(set(data))
 json_data['num'] = len(json_data['attributes'])
 json.dump(json_data, open('attribute_all/all_attributes.json', 'w'), indent=4)
