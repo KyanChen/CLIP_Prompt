@@ -1,5 +1,6 @@
 import json
 
+import tqdm
 
 data_400m = json.load(open('../captions/caption_all/laion400m_extracted_categories.json', 'r'))['categories']
 data_2b = json.load(open('../captions/caption_all/laion2b_extracted_categories.json', 'r'))['categories']
@@ -7,7 +8,7 @@ categories = {}
 
 all_data = [data_400m, data_2b]
 for data_split in all_data:
-    for data in data_split:
+    for data in tqdm.tqdm(data_split):
         key, value = data
         key = key.lower()
         if value < 2:
