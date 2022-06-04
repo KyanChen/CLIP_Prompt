@@ -11,7 +11,7 @@ for data_split in all_data:
     for data in tqdm.tqdm(data_split):
         key, value = data
         key = key.lower()
-        if value < 5:
+        if value < 50:
             continue
         categories[key] = categories.get(key, 0) + value
 

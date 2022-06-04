@@ -10,7 +10,7 @@ for data_split in all_data:
     for data in data_split:
         key, value = data
         key = key.lower()
-        if value < 5:  # 2: 900W; 5: 280W
+        if value < 50:  # 2: 900W; 5: 280W
             continue
         atts[key] = atts.get(key, 0) + value
 
