@@ -1,11 +1,11 @@
 import json
 
 
-data_400m = json.load(open('../captions/caption_all/laion400m_extracted_atts.json', 'r'))['atts']
-data_2b = json.load(open('../captions/caption_all/laion2b_extracted_atts.json', 'r'))['atts']
+data_laion = json.load(open('caption_all/laion_extracted_atts.json', 'r'))['atts']
+data_other = json.load(open('../gather_infos/other_extracted_atts.json', 'r'))['atts']
 atts = {}
 
-all_data = [data_400m, data_2b]
+all_data = [data_laion, data_other]
 for data_split in all_data:
     for data in data_split:
         key, value = data
@@ -16,4 +16,4 @@ for data_split in all_data:
 
 atts = sorted(atts.items(), key=lambda kv: kv[1], reverse=True)
 return_atts = {'num_atts': len(atts), 'atts': atts}
-json.dump(return_atts, open(f'../captions/caption_all/laion_extracted_atts.json', 'w'), indent=4)
+json.dump(return_atts, open(f'caption_all/all_caption_extracted_atts.json', 'w'), indent=4)
