@@ -43,7 +43,7 @@ def gather_all(path, split_num):
 
 if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
-    n_process = 64
+    n_process = 48
 
     src_data = json.load(open('../gather_infos/infos/all_objects.json', 'r'))['objects']
     data_slice_list = []
