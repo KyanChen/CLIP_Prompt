@@ -15,7 +15,7 @@ def get_key_freq(src_keys, target_data, path, pid):
             if pandas.isna(tgt_text):
                 continue
             try:
-                count_num += tgt_text.lower().count(key)
+                count_num += tgt_text.lower().strip().split(' ').count(key)
             except Exception as e:
                 print(e)
         kv_dict[key] = count_num
@@ -43,9 +43,9 @@ def gather_all(path, split_num):
 
 if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
-    n_process = 32
+    n_process = 64
 
-    src_data = json.load(open('../gather_infos/all_attributes.json', 'r'))['attributes']
+    src_data = json.load(open('../gather_infos/infos/all_attributes.json', 'r'))['attributes']
     data_slice_list = []
     n_item_per_slice = len(src_data) // n_process
     for i in range(n_process):
@@ -69,4 +69,4 @@ if __name__ == '__main__':
     [p.join() for p in process_list]
 
     json_data = gather_all(tmp_path, split_num=n_process)
-    json.dump(json_data, open('../gather_infos/all_attributes_with_freq.json', 'w'), indent=4)
+    json.dump(json_data, open('../gather_infos/infos/all_attributes_with_freq.json', 'w'), indent=4)

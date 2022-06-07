@@ -2,7 +2,7 @@ import json
 
 
 data_laion = json.load(open('caption_all/laion_extracted_atts.json', 'r'))['atts']
-data_other = json.load(open('../gather_infos/other_extracted_atts.json', 'r'))['atts']
+data_other = json.load(open('../gather_infos/infos/other_extracted_atts.json', 'r'))['atts']
 atts = {}
 
 all_data = [data_laion, data_other]

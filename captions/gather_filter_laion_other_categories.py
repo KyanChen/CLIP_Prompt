@@ -3,7 +3,7 @@ import json
 import tqdm
 
 data_laion = json.load(open('caption_all/laion_extracted_categories.json', 'r'))['categories']
-data_other = json.load(open('../gather_infos/other_extracted_categories.json', 'r'))['categories']
+data_other = json.load(open('../gather_infos/infos/other_extracted_categories.json', 'r'))['categories']
 categories = {}
 
 all_data = [data_laion, data_other]
