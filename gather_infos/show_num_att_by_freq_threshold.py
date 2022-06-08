@@ -31,9 +31,9 @@ def show_num_by_freq_threshold(in_path):
     fig.tight_layout()
     # plt.show()
     # plt.savefig("atts_cut_scale_1.png", bbox_inches='tight', pad_inches=0)
-    plt.savefig("atts_between_1000_5e4.png", bbox_inches='tight', pad_inches=0)
+    plt.savefig("vis_freq/atts_between_1000_5e4.png", bbox_inches='tight', pad_inches=0)
 
 
 if __name__ == '__main__':
-    in_path = 'infos/all_gather_atts.json'
+    in_path = 'infos/all_gather_atts_filtered.json'
     show_num_by_freq_threshold(in_path)

@@ -50,9 +50,9 @@ def gather_all(path, split_num):
 
 if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
-    n_process = 16
+    n_process = 64
 
-    src_data = json.load(open('../gather_infos/infos/all_attributes.json', 'r'))['attributes'][:16]
+    src_data = json.load(open('../gather_infos/infos/all_attributes.json', 'r'))['attributes']
     data_slice_list = []
     n_item_per_slice = len(src_data) // n_process
     for i in range(n_process):
