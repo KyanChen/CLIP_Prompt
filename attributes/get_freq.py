@@ -22,9 +22,7 @@ def get_key_freq(src_keys, target_data, path, pid):
                 show_times = []
                 for k in key.split(' '):
                     show_times.append(tgt_text_list.count(k))
-                count_num = min(show_times)
-                if count_num !=0:
-                    print(count_num)
+                count_num += min(show_times)
             except Exception as e:
                 print(e)
         kv_dict[key] = count_num
@@ -53,9 +51,9 @@ def gather_all(path, split_num):
 
 if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
-    n_process = 1
+    n_process = 16
 
-    src_data = json.load(open('../gather_infos/infos/all_attributes.json', 'r'))['attributes'][:1]
+    src_data = json.load(open('../gather_infos/infos/all_attributes.json', 'r'))['attributes'][:16]
     data_slice_list = []
     n_item_per_slice = len(src_data) // n_process
     for i in range(n_process):
