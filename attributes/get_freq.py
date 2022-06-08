@@ -18,7 +18,7 @@ def get_key_freq(src_keys, target_data, path, pid):
                 tgt_text_list = tgt_text.lower().strip('.').strip('?').strip('!').strip('\"').strip().split(' ')
                 show_times = []
                 for k in key.split(' '):
-                    show_times.append(tgt_text_list.cout(k))
+                    show_times.append(tgt_text_list.count(k))
                 count_num = min(show_times)
             except Exception as e:
                 print(e)
