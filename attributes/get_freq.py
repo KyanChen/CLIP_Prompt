@@ -15,8 +15,6 @@ def get_key_freq(src_keys, target_data, path, pid):
             if pandas.isna(tgt_text):
                 continue
             try:
-                import pdb
-                pdb.set_trace()
                 tgt_text_list = tgt_text.lower().strip('.').strip('?').strip('!').strip('\"').strip().split(' ')
                 show_times = []
                 for k in key.split(' '):
