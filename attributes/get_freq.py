@@ -9,7 +9,7 @@ import multiprocessing
 def get_key_freq(src_keys, target_data, path, pid):
     kv_dict = {}
     for key in tqdm.tqdm(src_keys):
-        key = key.lower().strip('.').strip('?').strip('!').strip('\"')
+        key = key.lower().strip('.').strip('?').strip('!').strip('\"').strip()
         count_num = 0
         for tgt_text in target_data:
             if pandas.isna(tgt_text):
@@ -17,7 +17,7 @@ def get_key_freq(src_keys, target_data, path, pid):
             try:
                 import pdb
                 pdb.set_trace()
-                tgt_text_list = tgt_text.lower().strip().strip('.').strip('?').strip('!').strip('\"').split(' ')
+                tgt_text_list = tgt_text.lower().strip('.').strip('?').strip('!').strip('\"').strip().split(' ')
                 show_times = []
                 for k in key.split(' '):
                     show_times.append(tgt_text_list.cout(k))
