@@ -9,13 +9,16 @@ import multiprocessing
 def get_key_freq(src_keys, target_data, path, pid):
     kv_dict = {}
     for key in tqdm.tqdm(src_keys):
-        key = key.lower().strip('.').strip('?').strip('!').strip('\"').strip()
+        key = 'white'
+        key = key.lower().strip('.').strip('?').strip('!').strip('\"').strip('`').strip('@').strip('\'').strip()
+        if len(key) < 3:
+            continue
         count_num = 0
         for tgt_text in target_data:
             if pandas.isna(tgt_text):
                 continue
             try:
-                tgt_text_list = tgt_text.lower().strip('.').strip('?').strip('!').strip('\"').strip().split(' ')
+                tgt_text_list = tgt_text.lower().strip('.').strip('?').strip('!').strip('\"').strip('`').strip('@').strip('\'').strip().split(' ')
                 show_times = []
                 for k in key.split(' '):
                     show_times.append(tgt_text_list.count(k))
@@ -47,9 +50,9 @@ def gather_all(path, split_num):
 
 if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
-    n_process = 10
+    n_process = 1
 
-    src_data = json.load(open('../gather_infos/infos/all_attributes.json', 'r'))['attributes'][:100]
+    src_data = json.load(open('../gather_infos/infos/all_attributes.json', 'r'))['attributes'][:1]
     data_slice_list = []
     n_item_per_slice = len(src_data) // n_process
     for i in range(n_process):

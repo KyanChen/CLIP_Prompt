@@ -17,7 +17,7 @@ for idx, data_split in enumerate(all_data):
         key, value = data
         key = key.lower()
         # key, value = 'wooden', 200000
-        if len(key) < 3:  # 425836
+        if len(key) < 2:  # 425836
             continue
         # if idx == 0 and value < 5:  # 254368
         #     continue
