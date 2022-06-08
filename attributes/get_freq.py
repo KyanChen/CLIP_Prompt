@@ -23,6 +23,8 @@ def get_key_freq(src_keys, target_data, path, pid):
                 for k in key.split(' '):
                     show_times.append(tgt_text_list.count(k))
                 count_num = min(show_times)
+                if count_num !=0:
+                    print(count_num)
             except Exception as e:
                 print(e)
         kv_dict[key] = count_num
@@ -42,7 +44,8 @@ def gather_all(path, split_num):
     return_data = {'num_atts': 0, 'atts': {}}
     for i in range(split_num):
         data = json.load(open(path + f'/split_{i}_with_freq.json', 'r'))
-        return_data['atts'].update(data)
+        for k, v in data.items():
+            return_data['atts'][k] = return_data['atts'].get(k, 0) + v
     return_data['atts'] = sorted(return_data['atts'].items(), key=lambda kv: kv[1], reverse=True)
     return_data['num_atts'] = len(return_data['atts'])
     return return_data
