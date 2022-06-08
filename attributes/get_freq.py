@@ -9,7 +9,6 @@ import multiprocessing
 def get_key_freq(src_keys, target_data, path, pid):
     kv_dict = {}
     for key in tqdm.tqdm(src_keys):
-        key = 'white'
         key = key.lower().strip('.').strip('?').strip('!').strip('\"').strip('`').strip('@').strip('\'').strip()
         if len(key) < 3:
             continue
