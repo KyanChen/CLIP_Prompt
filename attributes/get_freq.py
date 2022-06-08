@@ -9,13 +9,19 @@ import multiprocessing
 def get_key_freq(src_keys, target_data, path, pid):
     kv_dict = {}
     for key in tqdm.tqdm(src_keys):
-        key = key.lower()
+        key = key.lower().strip('.').strip('?').strip('!').strip('\"')
         count_num = 0
         for tgt_text in target_data:
             if pandas.isna(tgt_text):
                 continue
             try:
-                count_num += tgt_text.lower().strip().split(' ').count(key)
+                import pdb
+                pdb.set_trace()
+                tgt_text_list = tgt_text.lower().strip().split(' ')
+                show_times = []
+                for k in key.split(' '):
+                    show_times.append(tgt_text_list.cout(k))
+                count_num = min(show_times)
             except Exception as e:
                 print(e)
         kv_dict[key] = count_num
@@ -43,7 +49,7 @@ def gather_all(path, split_num):
 
 if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
-    n_process = 64
+    n_process = 1
 
     src_data = json.load(open('../gather_infos/infos/all_attributes.json', 'r'))['attributes']
     data_slice_list = []

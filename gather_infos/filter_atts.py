@@ -7,9 +7,9 @@ atts = {}
 for data in datas:
     key, value = data
     key = key.lower()
-    if value < 50:  # 2: 900W; 5: 280W
-        continue
-    if len(key) < 2:
+    # if value < 5:  # 2: 900W; 5: 280W
+    #     continue
+    if len(key) < 3:
         continue
     atts[key] = atts.get(key, 0) + value
 
