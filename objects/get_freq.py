@@ -9,13 +9,19 @@ import multiprocessing
 def get_key_freq(src_keys, target_data, path, pid):
     kv_dict = {}
     for key in tqdm.tqdm(src_keys):
-        key = key.lower()
+        key = key.lower().strip('.').strip('?').strip('!').strip('\"').strip('`').strip('@').strip('\'').strip()
+        if len(key) < 3:
+            continue
         count_num = 0
         for tgt_text in target_data:
             if pandas.isna(tgt_text):
                 continue
             try:
-                count_num += tgt_text.lower().strip().split(' ').count(key)
+                tgt_text_list = tgt_text.lower().strip('.').strip('?').strip('!').strip('\"').strip('`').strip('@').strip('\'').strip().split(' ')
+                show_times = []
+                for k in [x.strip() for x in key.split(' ')]:
+                    show_times.append(tgt_text_list.count(k))
+                count_num += min(show_times)
             except Exception as e:
                 print(e)
         kv_dict[key] = count_num
@@ -32,18 +38,19 @@ def split_json_data(text_list, split_num, path):
 
 
 def gather_all(path, split_num):
-    return_data = {'num_atts': 0, 'atts': {}}
+    return_data = {'num_objects': 0, 'objects': {}}
     for i in range(split_num):
         data = json.load(open(path + f'/split_{i}_with_freq.json', 'r'))
-        return_data['atts'].update(data)
-    return_data['atts'] = sorted(return_data['atts'].items(), key=lambda kv: kv[1], reverse=True)
-    return_data['num_atts'] = len(return_data['atts'])
+        for k, v in data.items():
+            return_data['objects'][k] = return_data['objects'].get(k, 0) + v
+    return_data['objects'] = sorted(return_data['objects'].items(), key=lambda kv: kv[1], reverse=True)
+    return_data['num_objects'] = len(return_data['objects'])
     return return_data
 
 
 if __name__ == '__main__':
     multiprocessing.set_start_method('spawn')
-    n_process = 48
+    n_process = 64
 
     src_data = json.load(open('../gather_infos/infos/all_objects.json', 'r'))['objects']
     data_slice_list = []
