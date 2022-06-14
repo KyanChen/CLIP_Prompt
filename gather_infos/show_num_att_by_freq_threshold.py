@@ -7,9 +7,9 @@ def show_num_by_freq_threshold(in_path):
     atts = json.load(open(in_path, 'r'))['atts']
     atts_freq = [x[1] for x in atts]
     atts_freq = np.array(atts_freq)
-    max_value = np.max(atts_freq) * 1
-    # xs = np.linspace(100, max_value, num=100)  # the label locations
-    xs = np.linspace(1000, 5e4, num=100)  # the label locations
+    max_value = np.max(atts_freq)
+    xs = np.linspace(10, max_value, num=10000)  # the label locations
+    # xs = np.linspace(1000, 5e4, num=100)  # the label locations
 
     ys = []
     for x in xs:
@@ -17,21 +17,26 @@ def show_num_by_freq_threshold(in_path):
         ys.append(num_atts)
     ys = np.array(ys)
 
-    fig, ax = plt.subplots(figsize=(15, 10))
-    rects1 = ax.plot(xs, ys, label='num atts', linewidth=2, color='red')
+    fig, ax = plt.subplots(figsize=(10, 10))
+    rects1 = ax.plot(ys, xs, label='attributes frequency', linewidth=2, color='red')
     plt.margins(x=0)
-    ax.set_xlabel('att freqency')
-    ax.set_ylabel('num atts')
-    ax.set_title('num atts by freq thres')
+    ax.set_xlabel('top-k attributes')
+    ax.set_ylabel('attributes frequency')
+    ax.set_xlim(100, 1e4)
+    ax.set_ylim(0, 1e6)
+
+    ax.set_xticks(np.arange(0, 5e4, step=5000))
+    ax.set_yticks(np.arange(0, 1e6, step=5e4))
+    # ax.set_title('num atts by freq thres')
     # ax.set_xticks(x, labels, rotation=90)
     ax.legend()
     ax.grid()
     # ax.bar_label(rects1, padding=3)
     # ax.bar_label(rects2, padding=3)
     fig.tight_layout()
-    # plt.show()
+    plt.show()
     # plt.savefig("atts_cut_scale_1.png", bbox_inches='tight', pad_inches=0)
-    plt.savefig("vis_freq/atts_between_1000_5e4.png", bbox_inches='tight', pad_inches=0)
+    # plt.savefig("vis_freq/atts_vis.png", bbox_inches='tight', pad_inches=0)
 
 
 if __name__ == '__main__':

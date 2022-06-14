@@ -1,14 +1,14 @@
 import json
 
 
-datas = json.load(open('infos/all_objects_with_freq.json', 'r'))['atts']
+datas = json.load(open('infos/all_objects_with_freq.json', 'r'))['objects']
 categories = {}
 
 for data in datas:
     key, value = data
     key = key.lower()
-    if value < 50:  # 2: 900W; 5: 280W
-        continue
+    # if value < 50:  # 2: 900W; 5: 280W
+    #     continue
     if len(key) < 2:
         continue
     categories[key] = categories.get(key, 0) + value

@@ -50,7 +50,7 @@ if __name__ == '__main__':
     src_data = json.load(open('attributes.json', 'r', encoding='gbk'))
     src_keys = [m.split(',')[0] for x in src_data['attribute_tree'] for m in list(x.values())[0]]
 
-    target_data = json.load(open('../../gather_infos/infos/all_gather_atts_filtered.json', 'r'))['atts']
+    target_data = json.load(open('../../gather_infos/infos/all_gather_atts.json', 'r'))['atts']
     target_data_dict = {}
     for k, v in target_data:
         target_data_dict[k] = v

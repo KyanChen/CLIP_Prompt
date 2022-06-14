@@ -13,7 +13,7 @@ atts = {}
 for data in tqdm.tqdm(datas):
     key, value = data
     key = key.lower()
-    if value < 100:
+    if value < 5:
         continue
     blob = TextBlob(key, pos_tagger=nltk_tagger)
     tags = [x.split('/')[1] for x in blob.parse().split(' ')]
