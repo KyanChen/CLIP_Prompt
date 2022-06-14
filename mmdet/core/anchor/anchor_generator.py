@@ -188,8 +188,8 @@ class AnchorGenerator:
         base_anchors = [
             x_center - 0.5 * ws, y_center - 0.5 * hs, x_center + 0.5 * ws,
             y_center + 0.5 * hs
-        ]
-        base_anchors = torch.stack(base_anchors, dim=-1)
+        ]  # 4x[tensor(lt1, lt2, lt3)]
+        base_anchors = torch.stack(base_anchors, dim=-1)  # 3x4, 3 scale, 4 lt, rt, lb, rb
 
         return base_anchors
 
@@ -236,7 +236,7 @@ class AnchorGenerator:
             anchors = self.single_level_grid_priors(
                 featmap_sizes[i], level_idx=i, dtype=dtype, device=device)
             multi_level_anchors.append(anchors)
-        return multi_level_anchors
+        return multi_level_anchors  # 5x[Nx4]
 
     def single_level_grid_priors(self,
                                  featmap_size,
@@ -260,9 +260,9 @@ class AnchorGenerator:
             torch.Tensor: Anchors in the overall feature maps.
         """
 
-        base_anchors = self.base_anchors[level_idx].to(device).to(dtype)
+        base_anchors = self.base_anchors[level_idx].to(device).to(dtype)  #3x4, 3个基础框
         feat_h, feat_w = featmap_size
-        stride_w, stride_h = self.strides[level_idx]
+        stride_w, stride_h = self.strides[level_idx]  #降采样倍数
         # First create Range with the default dtype, than convert to
         # target `dtype` for onnx exporting.
         shift_x = torch.arange(0, feat_w, device=device).to(dtype) * stride_w
@@ -273,8 +273,8 @@ class AnchorGenerator:
         # first feat_w elements correspond to the first row of shifts
         # add A anchors (1, A, 4) to K shifts (K, 1, 4) to get
         # shifted anchors (K, A, 4), reshape to (K*A, 4)
-
-        all_anchors = base_anchors[None, :, :] + shifts[:, None, :]
+        # base_anchors: 3x4, shifts:(HxW)x4
+        all_anchors = base_anchors[None, :, :] + shifts[:, None, :]  # (HxW)x3x4
         all_anchors = all_anchors.view(-1, 4)
         # first A rows correspond to A anchors of (0, 0) in feature map,
         # then (0, 1), (0, 2), ...

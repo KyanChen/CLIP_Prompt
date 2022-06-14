@@ -32,7 +32,7 @@ def multiclass_nms(multi_bboxes,
         tuple: (dets, labels, indices (optional)), tensors of shape (k, 5),
             (k), and (k). Dets are boxes with scores. Labels are 0-based.
     """
-    num_classes = multi_scores.size(1) - 1
+    num_classes = multi_scores.size(1) - 1  # 81 - 1
     # exclude background category
     if multi_bboxes.shape[1] > 4:
         bboxes = multi_bboxes.view(multi_scores.size(0), -1, 4)
@@ -45,9 +45,9 @@ def multiclass_nms(multi_bboxes,
     labels = torch.arange(num_classes, dtype=torch.long, device=scores.device)
     labels = labels.view(1, -1).expand_as(scores)
 
-    bboxes = bboxes.reshape(-1, 4)
-    scores = scores.reshape(-1)
-    labels = labels.reshape(-1)
+    bboxes = bboxes.reshape(-1, 4)  # Nx4
+    scores = scores.reshape(-1)  # N
+    labels = labels.reshape(-1)  # N
 
     if not torch.onnx.is_in_onnx_export():
         # NonZero not supported  in TensorRT

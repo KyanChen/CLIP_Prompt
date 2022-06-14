@@ -49,9 +49,10 @@ class MaskRCNNCLIP(BaseDetector):
 
     def train(self, mode=True):
         if mode:
-            self.backbone = self.backbone.eval()
-            self.neck = self.neck.eval()
-            self.rpn_head = self.rpn_head.eval()
+            self.backbone.eval()
+            self.neck.eval()
+            self.rpn_head.eval()
+            self.roi_head.eval()
 
     async def async_simple_test(self, img, img_metas, **kwargs):
         raise NotImplementedError
@@ -60,7 +61,6 @@ class MaskRCNNCLIP(BaseDetector):
     def simple_test(self, img, img_metas, **kwargs):
         pass
 
-    @abstractmethod
     def aug_test(self, imgs, img_metas, **kwargs):
         """Test function with test time augmentation."""
         pass
@@ -315,31 +315,40 @@ class MaskRCNNCLIP(BaseDetector):
             dict[str, Tensor]: a dictionary of loss components
         """
         with torch.no_grad():
-            x = self.extract_feat(img)
+            x = self.extract_feat(img)  # 5x[Bx256xHxW]
+            proposal_list = self.rpn_head.simple_test_rpn(x, img_metas)  # Bx[tensor(Nx5)]
 
-        losses = dict()
+            results, det_labels, not_scaled_boxes = self.roi_head.simple_test(
+                x, proposal_list, img_metas, rescale=True, keep_not_scale=True
+            )
+        # select box proposals
+        att_proposal_list = None
 
-        # RPN forward and loss
-        if self.with_rpn:
-            # proposal_cfg = self.train_cfg.get('rpn_proposal', self.test_cfg.rpn)
-            # rpn_losses, proposal_list = self.rpn_head.forward_train(
-            #     x,
-            #     img_metas,
-            #     gt_bboxes,
-            #     gt_labels=None,
-            #     gt_bboxes_ignore=gt_bboxes_ignore,
-            #     proposal_cfg=proposal_cfg,
-            #     **kwargs)
-            # losses.update(rpn_losses)
-            with torch.no_grad():
-                proposal_list = self.rpn_head.simple_test_rpn(x, img_metas)
-
-        # roi_losses = self.roi_head.forward_train(x, img_metas, proposal_list,
-        #                                          gt_bboxes, gt_labels,
-        #                                          gt_bboxes_ignore, gt_masks,
-        #                                          **kwargs)
-        # losses.update(roi_losses)
-        results = self.roi_head.simple_test(x, proposal_list, img_metas, rescale=True)
+        # rois = bbox2roi(proposals)  # Nx5, img_id+4
+        #
+        # if rois.shape[0] == 0:
+        #     batch_size = len(proposals)
+        #     det_bbox = rois.new_zeros(0, 5)
+        #     det_label = rois.new_zeros((0,), dtype=torch.long)
+        #     if rcnn_test_cfg is None:
+        #         det_bbox = det_bbox[:, :4]
+        #         det_label = rois.new_zeros(
+        #             (0, self.bbox_head.fc_cls.out_features))
+        #     # There is no proposal in the whole batch
+        #     return [det_bbox] * batch_size, [det_label] * batch_size
+        #
+        # bbox_results = self._bbox_forward(x, rois)
+        # """Box head forward function used in both training and testing."""
+        # # TODO: a more flexible way to decide which feature maps to use
+        # bbox_feats = self.bbox_roi_extractor(
+        #     x[:self.bbox_roi_extractor.num_inputs], rois)
+        # if self.with_shared_head:
+        #     bbox_feats = self.shared_head(bbox_feats)
+        # cls_score, bbox_pred = self.bbox_head(bbox_feats)
+        #
+        # bbox_results = dict(
+        #     cls_score=cls_score, bbox_pred=bbox_pred, bbox_feats=bbox_feats)
+        # return bbox_results
 
         return losses
 

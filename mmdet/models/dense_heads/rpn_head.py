@@ -148,12 +148,12 @@ class RPNHead(AnchorHead):
         mlvl_valid_anchors = []
         nms_pre = cfg.get('nms_pre', -1)
         for level_idx in range(len(cls_score_list)):
-            rpn_cls_score = cls_score_list[level_idx]
-            rpn_bbox_pred = bbox_pred_list[level_idx]
+            rpn_cls_score = cls_score_list[level_idx]  # 3xHxW
+            rpn_bbox_pred = bbox_pred_list[level_idx]  # 12xHxW
             assert rpn_cls_score.size()[-2:] == rpn_bbox_pred.size()[-2:]
             rpn_cls_score = rpn_cls_score.permute(1, 2, 0)
             if self.use_sigmoid_cls:
-                rpn_cls_score = rpn_cls_score.reshape(-1)
+                rpn_cls_score = rpn_cls_score.reshape(-1)  # (3xHxW)=N_Prior
                 scores = rpn_cls_score.sigmoid()
             else:
                 rpn_cls_score = rpn_cls_score.reshape(-1, 2)
@@ -211,12 +211,12 @@ class RPNHead(AnchorHead):
                 are bounding box positions (tl_x, tl_y, br_x, br_y) and the
                 5-th column is a score between 0 and 1.
         """
-        scores = torch.cat(mlvl_scores)
-        anchors = torch.cat(mlvl_valid_anchors)
-        rpn_bbox_pred = torch.cat(mlvl_bboxes)
+        scores = torch.cat(mlvl_scores)  # 多尺度的结果综合 N
+        anchors = torch.cat(mlvl_valid_anchors)  # Nx4
+        rpn_bbox_pred = torch.cat(mlvl_bboxes)  # Nx4
         proposals = self.bbox_coder.decode(
-            anchors, rpn_bbox_pred, max_shape=img_shape)
-        ids = torch.cat(level_ids)
+            anchors, rpn_bbox_pred, max_shape=img_shape)  # Nx4
+        ids = torch.cat(level_ids)  # N,不同尺度的标签
 
         if cfg.min_bbox_size >= 0:
             w = proposals[:, 2] - proposals[:, 0]

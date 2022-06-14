@@ -82,7 +82,7 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
 
         num_levels = len(cls_scores)
 
-        featmap_sizes = [cls_scores[i].shape[-2:] for i in range(num_levels)]
+        featmap_sizes = [cls_scores[i].shape[-2:] for i in range(num_levels)]  #5x[HxW]
         mlvl_priors = self.prior_generator.grid_priors(
             featmap_sizes,
             dtype=cls_scores[0].dtype,
@@ -92,8 +92,8 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
 
         for img_id in range(len(img_metas)):
             img_meta = img_metas[img_id]
-            cls_score_list = select_single_mlvl(cls_scores, img_id)
-            bbox_pred_list = select_single_mlvl(bbox_preds, img_id)
+            cls_score_list = select_single_mlvl(cls_scores, img_id)  # cls_scores: 5x[Bx(3x1)xHxW]
+            bbox_pred_list = select_single_mlvl(bbox_preds, img_id)  # bbox_preds: 5x[Bx(3x4)xHxW]
             if with_score_factors:
                 score_factor_list = select_single_mlvl(score_factors, img_id)
             else:
@@ -103,7 +103,7 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                                               score_factor_list, mlvl_priors,
                                               img_meta, cfg, rescale, with_nms,
                                               **kwargs)
-            result_list.append(results)
+            result_list.append(results)  # Nx5, 1000x5, 4+1
         return result_list
 
     def _get_bboxes_single(self,

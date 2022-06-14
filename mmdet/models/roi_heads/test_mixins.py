@@ -73,7 +73,7 @@ class BBoxTestMixin:
                 The length of both lists should be equal to batch_size.
         """
 
-        rois = bbox2roi(proposals)
+        rois = bbox2roi(proposals)  # Nx5, img_id+4
 
         if rois.shape[0] == 0:
             batch_size = len(proposals)

@@ -1,14 +1,35 @@
 import torch
 
 from mmdet.core import bbox2result, bbox2roi, build_assigner, build_sampler
-from ..builder import HEADS, build_head, build_roi_extractor
-from ..roi_heads.base_roi_head import BaseRoIHead
-from ..roi_heads.test_mixins import BBoxTestMixin, MaskTestMixin
+from ..builder import NECKS, build_neck, build_roi_extractor
+from .base_roi_head import BaseRoIHead
+from .test_mixins import BBoxTestMixin, MaskTestMixin
 
 
-@HEADS.register_module()
-class RoIHeadWoMask(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
-    """Simplest base roi head including one bbox head and one mask head."""
+@NECKS.register_module()
+class ProposalEncoder(BaseRoIHead, BBoxTestMixin):
+    def __init__(self,
+                 bbox_roi_extractor=None,
+                 bbox_head=None,
+                 shared_head=None,
+                 train_cfg=None,
+                 test_cfg=None,
+                 pretrained=None,
+                 init_cfg=None):
+        super(BaseRoIHead, self).__init__(init_cfg)
+        self.train_cfg = train_cfg
+        self.test_cfg = test_cfg
+        if shared_head is not None:
+            shared_head.pretrained = pretrained
+            self.shared_head = build_shared_head(shared_head)
+
+        if bbox_head is not None:
+            self.init_bbox_head(bbox_roi_extractor, bbox_head)
+
+        if mask_head is not None:
+            self.init_mask_head(mask_roi_extractor, mask_head)
+
+        self.init_assigner_sampler()
 
     def init_assigner_sampler(self):
         """Initialize assigner and sampler."""
@@ -121,10 +142,10 @@ class RoIHeadWoMask(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
             x[:self.bbox_roi_extractor.num_inputs], rois)
         if self.with_shared_head:
             bbox_feats = self.shared_head(bbox_feats)
-        cls_score, bbox_pred = self.bbox_head(bbox_feats)  # cls_score: 2000x81, bbox_pred: 2000x320
+        cls_score, bbox_pred = self.bbox_head(bbox_feats)
 
         bbox_results = dict(
-            cls_score=cls_score, bbox_pred=bbox_pred, bbox_feats=bbox_feats)  # bbox_feats: 2000x256x7x7
+            cls_score=cls_score, bbox_pred=bbox_pred, bbox_feats=bbox_feats)
         return bbox_results
 
     def _bbox_forward_train(self, x, sampling_results, gt_bboxes, gt_labels,
@@ -224,102 +245,46 @@ class RoIHeadWoMask(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
                     proposal_list,
                     img_metas,
                     proposals=None,
-                    rescale=False,
-                    keep_not_scale=False):
+                    rescale=False):
+        """Test without augmentation.
 
+        Args:
+            x (tuple[Tensor]): Features from upstream network. Each
+                has shape (batch_size, c, h, w).
+            proposal_list (list(Tensor)): Proposals from rpn head.
+                Each has shape (num_proposals, 5), last dimension
+                5 represent (x1, y1, x2, y2, score).
+            img_metas (list[dict]): Meta information of images.
+            rescale (bool): Whether to rescale the results to
+                the original image. Default: True.
+
+        Returns:
+            list[list[np.ndarray]] or list[tuple]: When no mask branch,
+            it is bbox results of each image and classes with type
+            `list[list[np.ndarray]]`. The outer list
+            corresponds to each image. The inner list
+            corresponds to each class. When the model has mask branch,
+            it contains bbox results and mask results.
+            The outer list corresponds to each image, and first element
+            of tuple is bbox results, second element is mask results.
+        """
         assert self.with_bbox, 'Bbox head must be implemented.'
 
-        det_bboxes, det_labels, not_scaled_box = self.simple_test_bboxes(
-            x, img_metas, proposal_list, self.test_cfg, rescale=rescale, keep_not_scale=keep_not_scale)
+        det_bboxes, det_labels = self.simple_test_bboxes(
+            x, img_metas, proposal_list, self.test_cfg, rescale=rescale)
 
         bbox_results = [
             bbox2result(det_bboxes[i], det_labels[i],
                         self.bbox_head.num_classes)
             for i in range(len(det_bboxes))
-        ]  #N-imgx[80xnarray(nx5)]
+        ]
 
         if not self.with_mask:
-            return bbox_results, det_labels, not_scaled_box
+            return bbox_results
         else:
             segm_results = self.simple_test_mask(
                 x, img_metas, det_bboxes, det_labels, rescale=rescale)
             return list(zip(bbox_results, segm_results))
-
-    def simple_test_bboxes(self,
-                           x,
-                           img_metas,
-                           proposals,
-                           rcnn_test_cfg,
-                           rescale=False,
-                           keep_not_scale=False):
-        rois = bbox2roi(proposals)  # Nx5, img_id+4
-
-        if rois.shape[0] == 0:
-            batch_size = len(proposals)
-            det_bbox = rois.new_zeros(0, 5)
-            det_label = rois.new_zeros((0, ), dtype=torch.long)
-            if rcnn_test_cfg is None:
-                det_bbox = det_bbox[:, :4]
-                det_label = rois.new_zeros(
-                    (0, self.bbox_head.fc_cls.out_features))
-            # There is no proposal in the whole batch
-            # scaled boxes for output, labels, not scaled boxes for attribute learning, type same as proposal list[tensor] (n, 5), box+cls
-            return [det_bbox] * batch_size, [det_label] * batch_size,  [rois.new_zeros(0, 5)] * batch_size
-
-        bbox_results = self._bbox_forward(x, rois)
-        img_shapes = tuple(meta['img_shape'] for meta in img_metas)
-        scale_factors = tuple(meta['scale_factor'] for meta in img_metas)
-
-        # split batch bbox prediction back to each image
-        cls_score = bbox_results['cls_score']  # 2000x81
-        bbox_pred = bbox_results['bbox_pred']  # 2000x320
-        num_proposals_per_img = tuple(len(p) for p in proposals)
-        rois = rois.split(num_proposals_per_img, 0)
-        cls_score = cls_score.split(num_proposals_per_img, 0)
-
-        # some detector with_reg is False, bbox_pred will be None
-        if bbox_pred is not None:
-            # TODO move this to a sabl_roi_head
-            # the bbox prediction of some detectors like SABL is not Tensor
-            if isinstance(bbox_pred, torch.Tensor):
-                bbox_pred = bbox_pred.split(num_proposals_per_img, 0)
-            else:
-                bbox_pred = self.bbox_head.bbox_pred_split(
-                    bbox_pred, num_proposals_per_img)
-        else:
-            bbox_pred = (None, ) * len(proposals)
-
-        # apply bbox post-processing to each image individually
-        det_bboxes = []
-        det_labels = []
-        not_scaled_boxes = []
-        for i in range(len(proposals)):
-            if rois[i].shape[0] == 0:
-                # There is no proposal in the single image
-                det_bbox = rois[i].new_zeros(0, 5)
-                det_label = rois[i].new_zeros((0, ), dtype=torch.long)
-                if rcnn_test_cfg is None:
-                    det_bbox = det_bbox[:, :4]
-                    det_label = rois[i].new_zeros(
-                        (0, self.bbox_head.fc_cls.out_features))
-                not_scaled_box = rois[i].new_zeros(0, 5)
-
-            else:
-                det_bbox, det_label, not_scaled_box = self.bbox_head.get_bboxes(
-                    rois[i],
-                    cls_score[i],
-                    bbox_pred[i],
-                    img_shapes[i],
-                    scale_factors[i],
-                    rescale=rescale,
-                    cfg=rcnn_test_cfg,
-                    keep_not_scale=keep_not_scale
-                )
-
-            det_bboxes.append(det_bbox)
-            det_labels.append(det_label)
-            not_scaled_boxes.append(not_scaled_box)
-        return det_bboxes, det_labels, not_scaled_boxes
 
     def aug_test(self, x, proposal_list, img_metas, rescale=False):
         """Test with augmentations.
