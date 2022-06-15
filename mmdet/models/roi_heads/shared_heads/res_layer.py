@@ -30,6 +30,7 @@ class ResLayer(BaseModule):
         self.norm_cfg = norm_cfg
         self.stage = stage
         self.fp16_enabled = False
+        # 50: (Bottleneck, (3, 4, 6, 3)),
         block, stage_blocks = ResNet.arch_settings[depth]
         stage_block = stage_blocks[stage]
         planes = 64 * 2**stage

@@ -52,6 +52,7 @@ class TextEncoder(BaseModule):
         x = x.permute(1, 0, 2)  # NLD -> LND
         x = self.transformer(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
+
         x = self.ln_final(x).type(self.dtype)  # 620 77 512
 
         # x.shape = [batch_size, n_ctx, transformer.width]
