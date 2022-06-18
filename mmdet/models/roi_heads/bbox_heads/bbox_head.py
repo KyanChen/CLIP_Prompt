@@ -378,7 +378,7 @@ class BBoxHead(BaseModule):
                                                         cfg.max_per_img, return_inds=True)
             if keep_not_scale:
                 not_scaled_bboxes = not_scaled_bboxes.view(-1, 4)[inds]
-                return det_bboxes, det_labels, not_scaled_bboxes[inds]
+                return det_bboxes, det_labels, not_scaled_bboxes
 
             return det_bboxes, det_labels
 

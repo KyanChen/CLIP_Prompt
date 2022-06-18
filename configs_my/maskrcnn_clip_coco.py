@@ -24,6 +24,8 @@ mp_start_method = 'fork'
 #   - `base_batch_size` = (8 GPUs) x (2 samples per GPU).
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
+attribute_id_map = '/Users/kyanchen/Code/CLIP_Prompt/attributes/COCO/attribute_id_map.json'
+
 # model settings
 model = dict(
     type='MaskRCNNCLIP',
@@ -59,7 +61,7 @@ model = dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
         loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
     roi_head=dict(
-        type='StandardRoIHead',
+        type='RoIHeadWoMask',
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
@@ -84,35 +86,41 @@ model = dict(
     ),
     proposal_encoder=dict(
         type='ProposalEncoder',
-        shared_head=dict(
-            type='ResLayer',
-            depth=50,
-            stage=3,
-            stride=1,
-            norm_eval=False
-        ),
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
             featmap_strides=[4, 8, 16, 32, 64]
         ),
+        shared_head=dict(
+            type='ResLayer',
+            depth=50,
+            stage=3,
+            stride=1,
+            norm_eval=False,
+            inplanes=256,
+            planes=128,
+        ),
+        in_channels=512,
+        out_channels=1024,
     ),
     attribute_encoder=dict(
-        type='Attribute_Encoder',
-        shared_head=dict(
-            type='ResLayer',
-            depth=50,
-            stage=3,
-            stride=1,
-            norm_eval=False
-        ),
-        bbox_roi_extractor=dict(
-            type='SingleRoIExtractor',
-            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
-            out_channels=256,
-            featmap_strides=[4, 8, 16, 32, 64]
-        ),
+        type='AttributeEncoder',
+        attribute_id_map=attribute_id_map,
+        n_ctx=16,
+        prompt_num=8,
+        class_token_position='mid',
+        context_length=32,
+        model_dim=512,
+        out_channels=1024,
+    ),
+    attribute_pred_head=dict(
+        type='AttributePredHead',
+        loss_cls=dict(
+            type='CrossEntropyLoss',
+            use_sigmoid=True,
+            loss_weight=1.0
+        )
     ),
     # model training and testing settings
     train_cfg=dict(
@@ -172,8 +180,6 @@ model = dict(
 
 
 # dataset settings
-dataset_type = 'CocoCLIPDataset'
-data_root = 'D:/Dataset/COCO'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
@@ -181,10 +187,10 @@ img_norm_cfg = dict(
 # multiscale_mode='range'
 train_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(
-        type='LoadAnnotations',
-        with_bbox=True
-    ),
+    # dict(
+    #     type='LoadAnnotations',
+    #     with_bbox=True
+    # ),
         # with_mask=True,
         # poly2mask=False),
     dict(
@@ -198,7 +204,7 @@ train_pipeline = [
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     # dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
+    dict(type='Collect', keys=['img', 'category_attribute_pair']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -217,23 +223,29 @@ test_pipeline = [
 ]
 
 # Use RepeatDataset to speed up training
+caption_root = '/Users/kyanchen/Code/CLIP_Prompt/captions/COCO'
+category_id_map = '/Users/kyanchen/Code/CLIP_Prompt/objects/MSCOCO/category_id_map.json'
+dataset_type = 'CocoCLIPDataset'
+data_root = '/Users/kyanchen/Code/CLIP_Prompt/data/COCO'
 data = dict(
     samples_per_gpu=2,
     workers_per_gpu=1,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + '/instances_val2017.json',
-        img_prefix=data_root + '/val2017/',
+        caption_ann_file=caption_root+'/captions_val2014.json',
+        category_id_map=category_id_map,
+        attribute_id_map=attribute_id_map,
+        img_prefix=data_root + '/val2014/',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + 'val2017/',
+        img_prefix=data_root + '/val2014/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + 'val2017/',
+        img_prefix=data_root + '/val2014/',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric=['bbox'])
 
@@ -250,5 +262,5 @@ lr_config = dict(
     warmup_ratio=0.001,
     step=[9, 11])
 runner = dict(type='EpochBasedRunner', max_epochs=12)
-load_from = data_root+'/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
+load_from = '/Users/kyanchen/Code/CLIP_Prompt/pretrained/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
 resume_from = None

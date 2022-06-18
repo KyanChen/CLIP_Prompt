@@ -225,7 +225,9 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
                     proposal_list,
                     img_metas,
                     proposals=None,
-                    rescale=False):
+                    rescale=False,
+                    keep_not_scale=False,
+                    ):
         """Test without augmentation.
 
         Args:

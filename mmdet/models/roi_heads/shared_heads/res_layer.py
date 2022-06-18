@@ -22,6 +22,8 @@ class ResLayer(BaseModule):
                  norm_eval=True,
                  with_cp=False,
                  dcn=None,
+                 inplanes=None,
+                 planes=None,
                  pretrained=None,
                  init_cfg=None):
         super(ResLayer, self).__init__(init_cfg)
@@ -33,8 +35,8 @@ class ResLayer(BaseModule):
         # 50: (Bottleneck, (3, 4, 6, 3)),
         block, stage_blocks = ResNet.arch_settings[depth]
         stage_block = stage_blocks[stage]
-        planes = 64 * 2**stage
-        inplanes = 64 * 2**(stage - 1) * block.expansion
+        planes = planes or 64 * 2**stage
+        inplanes = inplanes or 64 * 2**(stage - 1) * block.expansion
 
         res_layer = _ResLayer(
             block,

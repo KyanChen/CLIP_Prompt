@@ -1,5 +1,8 @@
 from abc import abstractmethod
+from collections import OrderedDict
+from distutils import dist
 
+from mmcv.parallel import DataContainer
 from mmcv.runner import auto_fp16
 
 from ..builder import DETECTORS, build_backbone, build_head, build_neck
@@ -14,6 +17,9 @@ class MaskRCNNCLIP(BaseDetector):
                  backbone,
                  rpn_head,
                  roi_head,
+                 proposal_encoder,
+                 attribute_encoder,
+                 attribute_pred_head,
                  train_cfg,
                  test_cfg,
                  neck=None,
@@ -25,7 +31,6 @@ class MaskRCNNCLIP(BaseDetector):
                           'please use "init_cfg" instead')
             backbone.pretrained = pretrained
         self.backbone = build_backbone(backbone)
-
         if neck is not None:
             self.neck = build_neck(neck)
 
@@ -44,6 +49,10 @@ class MaskRCNNCLIP(BaseDetector):
             roi_head.pretrained = pretrained
             self.roi_head = build_head(roi_head)
 
+        self.proposal_encoder = build_neck(proposal_encoder)
+        self.attribute_encoder = build_neck(attribute_encoder)
+        self.attribute_pred_head = build_head(attribute_pred_head)
+
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
@@ -54,34 +63,8 @@ class MaskRCNNCLIP(BaseDetector):
             self.rpn_head.eval()
             self.roi_head.eval()
 
-    async def async_simple_test(self, img, img_metas, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
-    def simple_test(self, img, img_metas, **kwargs):
-        pass
-
     def aug_test(self, imgs, img_metas, **kwargs):
-        """Test function with test time augmentation."""
         pass
-
-    async def aforward_test(self, *, img, img_metas, **kwargs):
-        for var, name in [(img, 'img'), (img_metas, 'img_metas')]:
-            if not isinstance(var, list):
-                raise TypeError(f'{name} must be a list, but got {type(var)}')
-
-        num_augs = len(img)
-        if num_augs != len(img_metas):
-            raise ValueError(f'num of augmentations ({len(img)}) '
-                             f'!= num of image metas ({len(img_metas)})')
-        # TODO: remove the restriction of samples_per_gpu == 1 when prepared
-        samples_per_gpu = img[0].size(0)
-        assert samples_per_gpu == 1
-
-        if num_augs == 1:
-            return await self.async_simple_test(img[0], img_metas[0], **kwargs)
-        else:
-            raise NotImplementedError
 
     def forward_test(self, imgs, img_metas, **kwargs):
         """
@@ -129,15 +112,6 @@ class MaskRCNNCLIP(BaseDetector):
 
     @auto_fp16(apply_to=('img',))
     def forward(self, img, img_metas, return_loss=True, **kwargs):
-        """Calls either :func:`forward_train` or :func:`forward_test` depending
-        on whether ``return_loss`` is ``True``.
-
-        Note this setting will change the expected inputs. When
-        ``return_loss=True``, img and img_meta are single-nested (i.e. Tensor
-        and List[dict]), and when ``resturn_loss=False``, img and img_meta
-        should be double nested (i.e.  List[Tensor], List[List[dict]]), with
-        the outer list indicating test time augmentations.
-        """
         if torch.onnx.is_in_onnx_export():
             assert len(img_metas) == 1
             return self.onnx_export(img[0], img_metas[0])
@@ -193,32 +167,6 @@ class MaskRCNNCLIP(BaseDetector):
         return loss, log_vars
 
     def train_step(self, data, optimizer):
-        """The iteration step during training.
-
-        This method defines an iteration step during training, except for the
-        back propagation and optimizer updating, which are done in an optimizer
-        hook. Note that in some complicated cases or models, the whole process
-        including back propagation and optimizer updating is also defined in
-        this method, such as GAN.
-
-        Args:
-            data (dict): The output of dataloader.
-            optimizer (:obj:`torch.optim.Optimizer` | dict): The optimizer of
-                runner is passed to ``train_step()``. This argument is unused
-                and reserved.
-
-        Returns:
-            dict: It should contain at least 3 keys: ``loss``, ``log_vars``, \
-                ``num_samples``.
-
-                - ``loss`` is a tensor for back propagation, which can be a
-                  weighted sum of multiple losses.
-                - ``log_vars`` contains all the variables to be sent to the
-                  logger.
-                - ``num_samples`` indicates the batch size (when the model is
-                  DDP, it means the batch size on each GPU), which is used for
-                  averaging the logs.
-        """
         losses = self(**data)
         loss, log_vars = self._parse_losses(losses)
 
@@ -277,43 +225,32 @@ class MaskRCNNCLIP(BaseDetector):
         outs = outs + (roi_outs,)
         return outs
 
-    def forward_train(self,
-                      img,
-                      img_metas,
-                      gt_bboxes,
-                      gt_labels,
-                      gt_bboxes_ignore=None,
-                      gt_masks=None,
-                      proposals=None,
-                      **kwargs):
-        """
-        Args:
-            img (Tensor): of shape (N, C, H, W) encoding input images.
-                Typically these should be mean centered and std scaled.
+    def select_proposal_list(self, det_labels, not_scaled_boxes, category_attribute_pair, img_metas):
+        returned_proposal_list = []
+        returned_proposal_att = []
+        for img_id, img_category_attribute_pair in enumerate(category_attribute_pair):
+            det_label = det_labels[img_id]
+            select_proposal = []
+            select_att = []
+            for idx, categories_id in enumerate(img_category_attribute_pair.keys()):
+                select_proposals = not_scaled_boxes[img_id][det_label == categories_id]
+                if len(select_proposals):
+                    select_proposal.append(select_proposals[0:1])  # 取置信度最大的一个
+                    select_att.append(img_category_attribute_pair[categories_id])
+            if len(select_proposal):
+                select_proposal = torch.cat(select_proposal)
+            else:
+                select_proposal = not_scaled_boxes[0].new_zeros(0, 5)
+            returned_proposal_list.append(select_proposal)
+            returned_proposal_att.append(select_att)
 
-            img_metas (list[dict]): list of image info dict where each dict
-                has: 'img_shape', 'scale_factor', 'flip', and may also contain
-                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
-                For details on the values of these keys see
-                `mmdet/datasets/pipelines/formatting.py:Collect`.
+        return returned_proposal_list, returned_proposal_att
 
-            gt_bboxes (list[Tensor]): Ground truth bboxes for each image with
-                shape (num_gts, 4) in [tl_x, tl_y, br_x, br_y] format.
-
-            gt_labels (list[Tensor]): class indices corresponding to each box
-
-            gt_bboxes_ignore (None | list[Tensor]): specify which bounding
-                boxes can be ignored when computing the loss.
-
-            gt_masks (None | Tensor) : true segmentation masks for each box
-                used if the architecture supports a segmentation task.
-
-            proposals : override rpn proposals with custom proposals. Use when
-                `with_rpn` is False.
-
-        Returns:
-            dict[str, Tensor]: a dictionary of loss components
-        """
+    def forward_train(self, img, img_metas, category_attribute_pair, **kwargs):
+        if isinstance(img, DataContainer):
+            img = img.data[0]
+            img_metas = img_metas.data[0]
+            category_attribute_pair = category_attribute_pair.data[0]
         with torch.no_grad():
             x = self.extract_feat(img)  # 5x[Bx256xHxW]
             proposal_list = self.rpn_head.simple_test_rpn(x, img_metas)  # Bx[tensor(Nx5)]
@@ -321,35 +258,25 @@ class MaskRCNNCLIP(BaseDetector):
             results, det_labels, not_scaled_boxes = self.roi_head.simple_test(
                 x, proposal_list, img_metas, rescale=True, keep_not_scale=True
             )
+
         # select box proposals
-        att_proposal_list = None
+        att_proposal_list, proposal_att_list = self.select_proposal_list(
+            det_labels, not_scaled_boxes, category_attribute_pair, img_metas
+        )  # Bx[tensor(Nx5)]
 
-        # rois = bbox2roi(proposals)  # Nx5, img_id+4
-        #
-        # if rois.shape[0] == 0:
-        #     batch_size = len(proposals)
-        #     det_bbox = rois.new_zeros(0, 5)
-        #     det_label = rois.new_zeros((0,), dtype=torch.long)
-        #     if rcnn_test_cfg is None:
-        #         det_bbox = det_bbox[:, :4]
-        #         det_label = rois.new_zeros(
-        #             (0, self.bbox_head.fc_cls.out_features))
-        #     # There is no proposal in the whole batch
-        #     return [det_bbox] * batch_size, [det_label] * batch_size
-        #
-        # bbox_results = self._bbox_forward(x, rois)
-        # """Box head forward function used in both training and testing."""
-        # # TODO: a more flexible way to decide which feature maps to use
-        # bbox_feats = self.bbox_roi_extractor(
-        #     x[:self.bbox_roi_extractor.num_inputs], rois)
-        # if self.with_shared_head:
-        #     bbox_feats = self.shared_head(bbox_feats)
-        # cls_score, bbox_pred = self.bbox_head(bbox_feats)
-        #
-        # bbox_results = dict(
-        #     cls_score=cls_score, bbox_pred=bbox_pred, bbox_feats=bbox_feats)
-        # return bbox_results
+        proposal_flatten_features, bbox_feats = self.proposal_encoder(x, att_proposal_list)
 
+        attribute_idxs = torch.cat([single_proposal_att for single_img_atts in proposal_att_list for single_proposal_att in single_img_atts])
+        unique_attribute_idxs = torch.unique(attribute_idxs)
+        neg_attribute_idxs = torch.randperm(self.attribute_encoder.num_attributes)[:len(unique_attribute_idxs)]
+        unique_attribute_idxs = torch.unique(torch.cat((unique_attribute_idxs, neg_attribute_idxs)))
+        proposal_attribute_features = self.attribute_encoder.forward_train(unique_attribute_idxs)  # 6x1024
+        proposal_flatten_features = proposal_flatten_features.squeeze(dim=-1).squeeze(dim=-1)  # 2x1024
+        losses = {}
+        loss, logits_per_image, logits_per_text = self.attribute_pred_head.forward_train(
+            proposal_flatten_features, proposal_attribute_features, proposal_att_list, unique_attribute_idxs
+        )
+        losses.update(loss)
         return losses
 
     async def async_simple_test(self,

@@ -315,6 +315,7 @@ class RoIHeadWoMask(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
                     cfg=rcnn_test_cfg,
                     keep_not_scale=keep_not_scale
                 )
+                not_scaled_box = torch.cat((not_scaled_box, det_bbox[:, -1:]), dim=1)
 
             det_bboxes.append(det_bbox)
             det_labels.append(det_label)

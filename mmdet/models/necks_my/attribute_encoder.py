@@ -1,3 +1,5 @@
+import json
+
 import torch
 from einops import repeat, rearrange
 from mmcv.cnn import ConvModule
@@ -23,6 +25,7 @@ import regex as re
 class AttributeEncoder(BaseModule):
     def __init__(
             self,
+            attribute_id_map,
             n_ctx=16,
             prompt_num=8,
             class_token_position='mid',
@@ -38,14 +41,13 @@ class AttributeEncoder(BaseModule):
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
-        vocab_size = 123
-
         self.class_token_position = class_token_position
         self.prompt_num = prompt_num
         self.context_length = context_length
         self.model_dim = model_dim
 
         self.tokenizer = SimpleTokenizer()
+        vocab_size = len(self.tokenizer.encoder)
         ctx_vectors = torch.empty(prompt_num, n_ctx, model_dim)
         nn.init.normal_(ctx_vectors, std=0.02)
         prompt_prefix = " ".join(["X"] * n_ctx)
@@ -88,17 +90,21 @@ class AttributeEncoder(BaseModule):
             nn.Linear(model_dim, model_dim*2),
             nn.Dropout(p=0.1),
             nn.ReLU(),
-            nn.Linear(model_dim, out_channels),
+            nn.Linear(model_dim*2, out_channels),
         )
 
-        attributes_dict = self.get_attributes()
-        attributes = attributes_dict.values()
+        self.attribute_id_map = json.load(open(attribute_id_map, 'r'))
 
-        per_attribute_lens = [len(self.tokenizer.encode(attribute)) for attribute in attributes]
-        prompts = [prompt_prefix + " " + attribute + "?" for attribute in attributes]
-        tokenized_prompts = torch.cat([self.tokenizer.encode(p) for p in prompts])  # N_Attribute len_seq
+        sub_attributes = self.attribute_id_map['attribute2id'].keys()
+        self.sub_attributes2id = {sub_attribute: idx for idx, sub_attribute in enumerate(sub_attributes)}
+        self.num_sub_attributes = self.attribute_id_map['num_sub_attributes']
+        self.num_attributes = self.attribute_id_map['num_attributes']
 
-        self.src_key_padding_mask = tokenized_prompts == eos
+        per_attribute_lens = [len(self.tokenizer.encode(attribute)) for attribute in sub_attributes]
+        prompts = [prompt_prefix + " " + attribute + "?" for attribute in sub_attributes]
+        tokenized_prompts = torch.cat([self.tokenize(p) for p in prompts])  # N_Attribute len_seq
+
+        self.src_key_padding_mask = tokenized_prompts == 0  # regard 0 as PAD
         embedding = self.token_embedding(tokenized_prompts)
 
         # These token vectors will be saved when in save_model(),
@@ -107,10 +113,47 @@ class AttributeEncoder(BaseModule):
         self.register_buffer("token_prefix", embedding[:, :1, :])  # SOS, N_Att 1 model_dim
         self.register_buffer("token_suffix", embedding[:, 1 + n_ctx:, :])  # ATT, EOS
 
-        self.n_attribute = len(attributes_dict)
         self.n_ctx = n_ctx
         self.tokenized_prompts = tokenized_prompts  # torch.Tensor
-        self.per_attribute_lens = per_attribute_lens
+        self.per_attribute_lens = torch.tensor(per_attribute_lens)
+
+    def tokenize(self, texts, context_length=32, truncate=False):
+        """
+        Returns the tokenized representation of given input string(s)
+
+        Parameters
+        ----------
+        texts : Union[str, List[str]]
+            An input string or a list of input strings to tokenize
+
+        context_length : int
+            The context length to use; all CLIP models use 77 as the context length
+
+        truncate: bool
+            Whether to truncate the text in case its encoding is longer than the context length
+
+        Returns
+        -------
+        A two-dimensional tensor containing the resulting tokens, shape = [number of input strings, context_length]
+        """
+        if isinstance(texts, str):
+            texts = [texts]
+
+        sot_token = self.tokenizer.encoder["<|startoftext|>"]
+        eot_token = self.tokenizer.encoder["<|endoftext|>"]
+        all_tokens = [[sot_token] + self.tokenizer.encode(text) + [eot_token] for text in texts]
+        result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
+
+        for i, tokens in enumerate(all_tokens):
+            if len(tokens) > context_length:
+                if truncate:
+                    tokens = tokens[:context_length]
+                    tokens[-1] = eot_token
+                else:
+                    raise RuntimeError(f"Input {texts[i]} is too long for context length {context_length}")
+            result[i, :len(tokens)] = torch.tensor(tokens)
+
+        return result
 
     def build_attribute_encoder(
             self, num_encoder_layers=3, dim_feedforward=2048
@@ -172,13 +215,24 @@ class AttributeEncoder(BaseModule):
         decoder = TransformerDecoder(decoder_layer, num_decoder_layers, decoder_norm)
         return decoder
 
-    def get_attributes(self, path=None):
-        return {0: 'red'}
+    def attribute2subattribute_idxs(self, attribute_idxs):
+        selected_attribute_idxs = []
+        for attribute_idx in attribute_idxs:
+            attributes = self.attribute_id_map['id2attribute'][repr(attribute_idx.item())]
+            attribute = attributes[torch.randint(len(attributes), []).item()]
+            selected_attribute_idxs.append(self.sub_attributes2id[attribute])
+        return torch.tensor(selected_attribute_idxs)
 
-    def forward_train(self, attribute_idxs, proposal_list, **kwargs):
+    def forward(self, attribute_idxs, **kwargs):
+        return self.forward_train(attribute_idxs, **kwargs)
+
+    def forward_train(self, attribute_idxs, **kwargs):
+        # attribute_idxs is attribute not sub_attribute
+        attribute_idxs = self.attribute2subattribute_idxs(attribute_idxs)
         # attribute_ids B
         prefix = self.token_prefix[attribute_idxs]  # BxLxC
         suffix = self.token_suffix[attribute_idxs]  # # BxLxC
+        attribute_lens = self.per_attribute_lens[attribute_idxs]
         ctx = self.ctx  # 8x16x512
         prefix = repeat(prefix, 'B L C -> B prompt_num L C', prompt_num=self.prompt_num)
         suffix = repeat(suffix, 'B L C -> B prompt_num L C', prompt_num=self.prompt_num)
@@ -194,15 +248,15 @@ class AttributeEncoder(BaseModule):
                 dim=-2,
             )
 
-        elif self.class_token_position == "middle":
+        elif self.class_token_position == "mid":
             half_n_ctx = self.n_ctx // 2
             prompts = []
-            for i in attribute_idxs:
-                attribute_len = self.per_attribute_lens[i]
+            for i in range(len(attribute_idxs)):
+                attribute_len = attribute_lens[i]
                 prefix_i = prefix[i: i + 1, ...]
                 att_i = suffix[i: i + 1, :, :attribute_len, :]
                 suffix_i = suffix[i: i + 1, :, attribute_len:, :]
-                ctx_i_half1 = ctx[i: i + 1, :, half_n_ctx, :]
+                ctx_i_half1 = ctx[i: i + 1, :, :half_n_ctx, :]
                 ctx_i_half2 = ctx[i: i + 1, :, half_n_ctx:, :]
                 prompt = torch.cat(
                     [
@@ -244,19 +298,19 @@ class AttributeEncoder(BaseModule):
         x_encoded = rearrange(x, 'B prompt_num L C -> (B prompt_num) L C')
         src_key_padding_mask = self.src_key_padding_mask[attribute_idxs]  # BxLxC
         src_key_padding_mask_expand = repeat(
-            src_key_padding_mask, 'B L C -> (B prompt_num) L C', prompt_num=self.prompt_num
+            src_key_padding_mask, 'B L -> (B prompt_num) L', prompt_num=self.prompt_num
         )
         x_memory = self.attribute_encoder(
             x_encoded, src_key_padding_mask=src_key_padding_mask_expand
         )  # (B prompt_num) L C
-        seq_representation = rearrange(
+        seq_representation = repeat(
             self.seq_representation, 'L C -> (B prompt_num) L C', B=attribute_idxs.size(0), prompt_num=self.prompt_num
         )  # (B prompt_num) 1 C
 
         squeezed_seq_x = self.seq_squeezer(
             seq_representation, x_memory, memory_key_padding_mask=src_key_padding_mask_expand
         )  # (B prompt_num) 1 C
-        squeezed_seq_x = rearrange(squeezed_seq_x, '(B prompt_num) L C -> B (prompt_num L) C')
+        squeezed_seq_x = rearrange(squeezed_seq_x, '(B prompt_num) L C -> B (prompt_num L) C', prompt_num=self.prompt_num)
 
         prompt_attention_map = repeat(
             self.prompt_attention_map, 'prompt_num C -> B prompt_num C', B=attribute_idxs.size(0)
@@ -267,15 +321,16 @@ class AttributeEncoder(BaseModule):
 
         x_memory = rearrange(x_memory, '(B prompt_num) L C -> B prompt_num L C', B=attribute_idxs.size(0))
         # x = x * prompts_weight[..., None, None]
-        x_memory = x * prompt_attention_vector  # (B prompt_num) L C
+        x_memory = x_memory * prompt_attention_vector[..., None, None]  # (B prompt_num) L C
         x_memory = torch.sum(x_memory, dim=1).squeeze(dim=1)  # B L C
 
         attribute_representation = repeat(self.attribute_representation, 'L C -> B L C', B=attribute_idxs.size(0))
+        attribute_representation = torch.cat((attribute_representation, x_memory), dim=1)
         x = self.attribute_decoder(
-            x_memory, attribute_representation, memory_key_padding_mask=src_key_padding_mask
+            attribute_representation, x_memory, memory_key_padding_mask=src_key_padding_mask
         )  # B 1 model_dim
 
-        text_feature = self.attribute_proj_head(x).squeeze(dim=1)
+        text_feature = self.attribute_proj_head(x[:, 0])
 
         return text_feature
 
@@ -333,7 +388,7 @@ def whitespace_clean(text):
 
 class SimpleTokenizer:
     def __init__(self, bpe_path="bpe_simple_vocab_16e6.txt.gz"):
-        if os.path.exists(bpe_path):
+        if not os.path.exists(bpe_path):
             bpe_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bpe_simple_vocab_16e6.txt.gz")
         assert os.path.exists(bpe_path)
         self.byte_encoder = bytes_to_unicode()  # dict int:char
@@ -346,7 +401,7 @@ class SimpleTokenizer:
         for merge in merges:
             vocab.append(''.join(merge))
         vocab.extend(['<|startoftext|>', '<|endoftext|>'])
-        self.encoder = dict(zip(vocab, range(len(vocab))))
+        self.encoder = dict(zip(vocab, range(len(vocab))))  # 49408
         self.decoder = {v: k for k, v in self.encoder.items()}
         self.bpe_ranks = dict(zip(merges, range(len(merges))))
         self.cache = {'<|startoftext|>': '<|startoftext|>', '<|endoftext|>': '<|endoftext|>'}
