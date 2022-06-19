@@ -48,8 +48,8 @@ class CocoCLIPDataset(CustomDataset):
             self.caption_infos = [self.caption_infos[i] for i in valid_inds]
             self._set_group_flag()
 
-        self.img_ids = self.img_ids[:2]
-        self.caption_infos = self.caption_infos[:2]
+        # self.img_ids = self.img_ids[:2]
+        # self.caption_infos = self.caption_infos[:2]
 
         # processing pipeline
         self.pipeline = Compose(pipeline)

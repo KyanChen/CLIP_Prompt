@@ -1,7 +1,7 @@
 checkpoint_config = dict(interval=20)
 # yapf:disable
 log_config = dict(
-    interval=1,
+    interval=50,
     hooks=[
         dict(type='TextLoggerHook'),
         dict(type='TensorboardLoggerHook')
@@ -223,30 +223,38 @@ test_pipeline = [
 ]
 
 # Use RepeatDataset to speed up training
-caption_root = 'D:/Dataset/COCO'
+caption_root = '../data/COCO/annotations'
 category_id_map = '../objects/MSCOCO/category_id_map.json'
 dataset_type = 'CocoCLIPDataset'
-data_root = 'D:/Dataset/COCO'
+img_root = '../data/COCO'
 data = dict(
-    samples_per_gpu=4,
-    workers_per_gpu=1,
+    samples_per_gpu=8,
+    workers_per_gpu=4,
     train=dict(
         type=dataset_type,
         caption_ann_file=caption_root+'/captions_val2014.json',
         category_id_map=category_id_map,
         attribute_id_map=attribute_id_map,
-        img_prefix=data_root + '/val2014/',
-        pipeline=train_pipeline),
+        img_prefix=img_root + '/val2014/',
+        pipeline=train_pipeline
+    ),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + '/val2014/',
-        pipeline=test_pipeline),
+        caption_ann_file=caption_root + '/captions_val2014.json',
+        category_id_map=category_id_map,
+        attribute_id_map=attribute_id_map,
+        img_prefix=img_root + '/val2014/',
+        pipeline=train_pipeline
+    ),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + '/val2014/',
-        pipeline=test_pipeline))
+        caption_ann_file=caption_root + '/captions_val2014.json',
+        category_id_map=category_id_map,
+        attribute_id_map=attribute_id_map,
+        img_prefix=img_root + '/val2014/',
+        pipeline=train_pipeline
+    )
+)
 evaluation = dict(interval=5, metric=['bbox'])
 
 # optimizer
@@ -261,8 +269,8 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[50, 80])
-runner = dict(type='EpochBasedRunner', max_epochs=100)
-# load_from = '/Users/kyanchen/Code/CLIP_Prompt/pretrained/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
-load_from = 'D:/Dataset/COCO/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
+    step=[100, 150])
+runner = dict(type='EpochBasedRunner', max_epochs=200)
+load_from = '../pretrained/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
+# load_from = 'D:/Dataset/COCO/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
 resume_from = None
