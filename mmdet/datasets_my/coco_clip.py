@@ -141,20 +141,24 @@ class CocoCLIPDataset(CustomDataset):
 
             caption = punc_filter(caption)
             caption = caption.lower()
+            t = caption
             for category, id in self.category_id_map['category2id'].items():
                 rule = re.compile(rf'\b{category}\b')
                 caption = rule.sub(f'c{id}c', caption)
             for attribute, id in self.attribute_id_map['attribute2id'].items():
                 rule = re.compile(rf'\b{attribute}\b')
                 caption = rule.sub(f'a{id}a', caption)
-
-            for idx, char_x in enumerate(caption.split(' ')):
-                if re.match(r'\bc\d{1,}c\b', char_x):
-                    categories.append(int(char_x.replace('c', '')))
-                    categories_index.append(idx)
-                if re.match(r'\ba\d{1,}a\b', char_x):
-                    attributes.append(int(char_x.replace('a', '')))
-                    attributes_index.append(idx)
+            try:
+                for idx, char_x in enumerate(caption.split(' ')):
+                    if re.match(r'\bc\d{1,}c\b', char_x):
+                        categories.append(int(char_x.replace('c', '')))
+                        categories_index.append(idx)
+                    if re.match(r'\ba\d{1,}a\b', char_x):
+                        attributes.append(int(char_x.replace('a', '')))
+                        attributes_index.append(idx)
+            except:
+                print(caption)
+                print(t)
             # assign
             categories_index = np.array(categories_index).reshape(1, -1)
             attributes_index = np.array(attributes_index).reshape(-1, 1)
