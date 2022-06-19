@@ -51,7 +51,7 @@ class CocoCLIPAnnDataset(CustomDataset):
         for patch_id in self.attributes_dataset['ann_vecs'].keys():
             if self.attributes_dataset['split'][patch_id] == split:
                 self.patch_ids.append(patch_id)
-
+        self.patch_ids = self.patch_ids[:2]
         # list of attribute names
         self.attributes = sorted(
             self.attributes_dataset['attributes'], key=lambda x: x['id'])
@@ -102,7 +102,8 @@ class CocoCLIPAnnDataset(CustomDataset):
         return np.stack(gt_labels, axis=0)
 
     def evaluate(self,
-                 results
+                 results,
+                 **kwargs
                  ):
         results = np.array(results)
         preds = torch.from_numpy(results)
