@@ -24,8 +24,8 @@ find_unused_parameters = True
 #   - `base_batch_size` = (8 GPUs) x (2 samples per GPU).
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
-attribute_id_map = '../attributes/COCO/attribute_id_map.json'
-
+# attribute_id_map = '../attributes/COCO/attribute_id_map.json'
+attribute_id_map = '/Users/kyanchen/Code/CLIP_Prompt/attributes/COCO/attribute_id_map.json'
 # model settings
 model = dict(
     type='MaskRCNNCLIP',
@@ -225,7 +225,10 @@ test_pipeline = [
 
 # Use RepeatDataset to speed up training
 caption_root = '../data/COCO/annotations'
-category_id_map = '../objects/MSCOCO/category_id_map.json'
+caption_root = '/Users/kyanchen/Code/CLIP_Prompt/captions/COCO'
+# category_id_map = '../objects/MSCOCO/category_id_map.json'
+category_id_map = '/Users/kyanchen/Code/CLIP_Prompt/objects/MSCOCO/category_id_map.json'
+
 dataset_type = 'CocoCLIPDataset'
 img_root = '../data/COCO'
 data = dict(
@@ -234,10 +237,11 @@ data = dict(
     persistent_workers=True,
     train=dict(
         type=dataset_type,
-        caption_ann_file=caption_root+'/captions_train2014.json',
+        ca_pairs=caption_root+'/category_attribute_pairs.json',
+        caption_ann_file=caption_root+'/captions_val2014.json',
         category_id_map=category_id_map,
         attribute_id_map=attribute_id_map,
-        img_prefix=img_root + '/train2014/',
+        img_prefix=img_root + '/val2014/',
         pipeline=train_pipeline
     ),
     val=dict(

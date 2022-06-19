@@ -2,6 +2,7 @@ import contextlib
 import io
 import itertools
 import logging
+import os.path
 import os.path as osp
 import tempfile
 import warnings
@@ -26,10 +27,11 @@ from string import punctuation
 @DATASETS.register_module()
 class CocoCLIPDataset(CustomDataset):
     def __init__(self,
-                 caption_ann_file,
                  pipeline,
-                 category_id_map,
-                 attribute_id_map,
+                 caption_ann_file,
+                 ca_pairs=None,
+                 category_id_map=None,
+                 attribute_id_map=None,
                  img_prefix='',
                  test_mode=False,
                  file_client_args=dict(backend='disk')):
@@ -39,6 +41,9 @@ class CocoCLIPDataset(CustomDataset):
         self.file_client = mmcv.FileClient(**file_client_args)
 
         self.caption_infos = self.load_annotations(self.caption_ann_file)
+        self.ca_pairs = None
+        if ca_pairs is not None and os.path.exists(ca_pairs):
+            self.ca_pairs = mmcv.load(ca_pairs)
         self.category_id_map = self.load_id_map(category_id_map)
         self.attribute_id_map = self.load_id_map(attribute_id_map)
 
@@ -178,11 +183,41 @@ class CocoCLIPDataset(CustomDataset):
 
     def prepare_train_img(self, idx):
         img_info = self.caption_infos[idx]
-        ann_info = self.get_ann_info(idx)
         results = dict(img_info=img_info)
         results['img_prefix'] = self.img_prefix
         # results['img_info']['filename'] = results['img_info']['filename'].replace('jpg', 'jpeg')
-        results['category_attribute_pair'] = self.get_category_attribute_pair(ann_info['captions'])
+        if self.ca_pairs is not None:
+            category_attribute_pair_tmp = self.ca_pairs[repr(img_info['id'])]
+            returned_labels = {}
+            for k, v in category_attribute_pair_tmp.items():
+                if len(v) > 0:
+                    returned_labels[k] = torch.tensor(v)
+            results['category_attribute_pair'] = returned_labels
+        else:
+            ann_info = self.get_ann_info(idx)
+            results['category_attribute_pair'] = self.get_category_attribute_pair(ann_info['captions'])
+
+        results = self.pipeline(results)
+        results['category_attribute_pair'] = DataContainer(results['category_attribute_pair'], cpu_only=True)
+
+        return results
+
+    def prepare_test_img(self, idx):
+        img_info = self.caption_infos[idx]
+        results = dict(img_info=img_info)
+        results['img_prefix'] = self.img_prefix
+        # results['img_info']['filename'] = results['img_info']['filename'].replace('jpg', 'jpeg')
+        if self.ca_pairs is not None:
+            category_attribute_pair_tmp = self.ca_pairs[repr(img_info['id'])]
+            returned_labels = {}
+            for k, v in category_attribute_pair_tmp.items():
+                if len(v) > 0:
+                    returned_labels[k] = torch.tensor(v)
+            results['category_attribute_pair'] = returned_labels
+        else:
+            ann_info = self.get_ann_info(idx)
+            results['category_attribute_pair'] = self.get_category_attribute_pair(ann_info['captions'])
+
         results = self.pipeline(results)
         results['category_attribute_pair'] = DataContainer(results['category_attribute_pair'], cpu_only=True)
 

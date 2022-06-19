@@ -40,7 +40,8 @@ class AttributePredHead(BaseModule):
         p_samples = torch.sum(gt_labels)
         losses = {
             "loss": loss,
-            "recall": t_p_samples / p_samples
+            "recall": t_p_samples / p_samples,
+            'precision': t_p_samples / torch.sum(pred_att)
         }
         return losses
 
