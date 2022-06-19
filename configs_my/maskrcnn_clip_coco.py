@@ -17,7 +17,7 @@ workflow = [('train', 1)]
 opencv_num_threads = 0
 # set multi-process start method as `fork` to speed up the training
 mp_start_method = 'fork'
-find_unused_parameters = True
+# find_unused_parameters = True
 # Default setting for scaling LR automatically
 #   - `enable` means enable scaling LR automatically
 #       or not by default.
@@ -261,7 +261,13 @@ evaluation = dict(interval=5, metric=['bbox'])
 
 # optimizer
 # optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
-optimizer = dict(type='AdamW', lr=1e-4)
+
+optimizer = dict(
+    constructor='SubModelConstructor',
+    sub_model=['proposal_encoder', 'attribute_encoder', 'attribute_pred_head'],
+    type='AdamW',
+    lr=1e-4
+)
 optimizer_config = dict(grad_clip=None)
 
 # learning policy
