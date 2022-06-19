@@ -31,7 +31,7 @@ class SubModelConstructor(DefaultOptimizerConstructor):
             print('')
             print('Needed train models:')
             for needed_train_sub_model in needed_train_sub_models:
-                print(needed_train_sub_model, end=', ')
+                print(needed_train_sub_model._get_name(), end=', ')
 
         # if no paramwise option is specified, just use the global setting
         if not self.paramwise_cfg:
