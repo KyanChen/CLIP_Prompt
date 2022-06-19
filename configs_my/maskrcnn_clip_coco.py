@@ -282,8 +282,8 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[100, 150])
-runner = dict(type='EpochBasedRunner', max_epochs=200)
+    step=[50, 80])
+runner = dict(type='EpochBasedRunner', max_epochs=100)
 load_from = '../pretrain/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
 # load_from = 'D:/Dataset/COCO/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
 resume_from = None
