@@ -93,11 +93,30 @@ class CocoCLIPAnnDataset(CustomDataset):
         # results['gt_bboxes'] = results['gt_bboxes']
         return results
 
+    def get_labels(self):
+        gt_labels = []
+        for patch_id in self.patch_ids:
+            attrs = self.attributes_dataset['ann_vecs'][patch_id]
+            attrs = (attrs >= 0.5).astype(np.float)
+            gt_labels.append(attrs)
+        return np.stack(gt_labels, axis=0)
+
     def evaluate(self,
-                 results,
-                 metric='mAP',
-                 logger=None,
-                 proposal_nums=(100, 300, 1000),
-                 iou_thr=0.5,
-                 scale_ranges=None):
-        pass
+                 results
+                 ):
+        results = np.array(results)
+        preds = torch.from_numpy(results)
+        gts = self.get_labels()
+        gts = torch.from_numpy(gts)
+
+        pred_prob = preds.sigmoid()
+        pred_att = pred_prob > 0.5
+
+        t_p_samples = torch.sum(pred_att * gts)
+        p_samples = torch.sum(gts)
+
+        result = {
+            "recall": t_p_samples / p_samples,
+            'precision': t_p_samples / torch.sum(pred_att)
+        }
+        return result

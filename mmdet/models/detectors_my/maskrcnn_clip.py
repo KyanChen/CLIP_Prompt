@@ -22,6 +22,7 @@ class MaskRCNNCLIP(BaseDetector):
                  attribute_pred_head,
                  train_cfg,
                  test_cfg,
+                 with_proposal_ann=False,
                  neck=None,
                  pretrained=None,
                  init_cfg=None):
@@ -30,6 +31,8 @@ class MaskRCNNCLIP(BaseDetector):
             warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
             backbone.pretrained = pretrained
+        self.with_proposal_ann = with_proposal_ann
+
         self.backbone = build_backbone(backbone)
         if neck is not None:
             self.neck = build_neck(neck)
@@ -108,6 +111,8 @@ class MaskRCNNCLIP(BaseDetector):
             return self.onnx_export(img[0], img_metas[0])
 
         if return_loss:
+            if self.with_proposal_ann:
+                return self.forward_train_with_proposal_ann(img, img_metas, **kwargs)
             return self.forward_train(img, img_metas, **kwargs)
         else:
             return self.forward_test(img, img_metas, **kwargs)
@@ -272,6 +277,33 @@ class MaskRCNNCLIP(BaseDetector):
         losses.update(loss)
         return losses
 
+    def forward_train_with_proposal_ann(self, img, img_metas, gt_bboxes, attrs, **kwargs):
+        with torch.no_grad():
+            x = self.extract_feat(img)  # 5x[Bx256xHxW]
+
+
+        proposal_flatten_features, bbox_feats = self.proposal_encoder(x, gt_bboxes)
+        proposal_flatten_features = proposal_flatten_features.squeeze(dim=-1).squeeze(dim=-1)  # 2x1024
+
+        attribute_idxs = torch.nonzero(attrs)
+        proposal_att_list = []
+        for proposal_idx in range(len(gt_bboxes)):
+            proposal_att_list.append([attribute_idxs[attribute_idxs[:, 0] == proposal_idx][:, 1]])
+
+        unique_attribute_idxs = torch.unique(attribute_idxs[:, 1])
+        neg_attribute_idxs = torch.randperm(self.attribute_encoder.num_attributes)[:len(unique_attribute_idxs)]
+        unique_attribute_idxs = torch.unique(torch.cat((unique_attribute_idxs, neg_attribute_idxs)))
+        proposal_attribute_features = self.attribute_encoder.forward_train(unique_attribute_idxs, device=img.device)  # 6x1024
+
+
+        losses = {}
+        loss, logits_per_image, logits_per_text = self.attribute_pred_head.forward_train(
+            proposal_flatten_features, proposal_attribute_features, proposal_att_list, unique_attribute_idxs
+        )
+
+        losses.update(loss)
+        return losses
+
     async def async_simple_test(self,
                                 img,
                                 img_meta,
@@ -293,14 +325,28 @@ class MaskRCNNCLIP(BaseDetector):
     def simple_test(self, img, img_metas, gt_bboxes, **kwargs):
         """Test without augmentation."""
         # img: 2 3 800 1216, gt_bboxes 2*list[tensor(1,4)]
-        assert self.with_bbox, 'Bbox head must be implemented.'
-        x = self.extract_feat(img)
-        if proposals is None:
-            proposal_list = self.rpn_head.simple_test_rpn(x, img_metas)
-        else:
-            proposal_list = proposals
+        x = self.extract_feat(img)  # 5x[Bx256xHxW]
+        # proposal_list = self.rpn_head.simple_test_rpn(x, img_metas)  # Bx[tensor(Nx5)]
+        #
+        # results, det_labels, not_scaled_boxes = self.roi_head.simple_test(
+        #     x, proposal_list, img_metas, rescale=True, keep_not_scale=True
+        # )
+        #
+        # # select box proposals
+        # att_proposal_list, proposal_att_list = self.select_proposal_list(
+        #     det_labels, not_scaled_boxes, category_attribute_pair, img_metas
+        # )  # Bx[tensor(Nx5)]
+
+        proposal_flatten_features, bbox_feats = self.proposal_encoder(x, gt_bboxes)
+        proposal_flatten_features = proposal_flatten_features.squeeze(dim=-1).squeeze(dim=-1)  # 2x1024
+
+        unique_attribute_idxs = torch.arange(self.attribute_encoder.num_attributes)
+        proposal_attribute_features = self.attribute_encoder.forward_train(unique_attribute_idxs, device=img.device)  # 204x1024
 
 
-        return self.roi_head.simple_test(
-            x, proposal_list, img_metas, rescale=rescale)
+        logits_per_image = self.attribute_pred_head.simple_test(
+            proposal_flatten_features, proposal_attribute_features
+        )
+
+        return logits_per_image
 

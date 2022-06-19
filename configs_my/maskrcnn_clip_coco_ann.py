@@ -30,6 +30,7 @@ attribute_id_map = 'I:/CodeRep/CLIP_Prompt/attributes/COCO/attribute_id_map.json
 # model settings
 model = dict(
     type='MaskRCNNCLIP',
+    with_proposal_ann=True,
     backbone=dict(
         type='ResNet',
         depth=50,
@@ -189,12 +190,7 @@ img_norm_cfg = dict(
 # multiscale_mode='range'
 train_pipeline = [
     dict(type='LoadImageFromFile'),
-    # dict(
-    #     type='LoadAnnotations',
-    #     with_bbox=True
-    # ),
-        # with_mask=True,
-        # poly2mask=False),
+    dict(type='LoadAnnotations', with_bbox=True, with_label=False),
     dict(
         type='Resize',
         # img_scale=[(1333, 640), (1333, 800)],
@@ -206,7 +202,8 @@ train_pipeline = [
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     # dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
-    dict(type='Collect', keys=['img', 'category_attribute_pair']),
+    dict(type='ToTensor', keys=['attrs']),
+    dict(type='Collect', keys=['img', 'attrs', 'gt_bboxes']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -241,7 +238,7 @@ data = dict(
         type=dataset_type,
         attributes_file='D:/Dataset/COCO/attributes_2014.pkl',
         annotations_file="D:/Dataset/COCO/instances_val2014.json",
-        pipeline=test_pipeline,
+        pipeline=train_pipeline,
         attribute_id_map='I:/CodeRep/CLIP_Prompt/attributes/COCO/attribute_id_map.json',
         img_prefix="D:/Dataset/COCO/val2014",
         test_mode=True,

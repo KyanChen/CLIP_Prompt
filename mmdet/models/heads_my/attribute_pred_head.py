@@ -70,6 +70,17 @@ class AttributePredHead(BaseModule):
         # shape = [global_batch_size, global_batch_size]
         return loss, logits_per_image, logits_per_text
 
+    def simple_test(self, proposal_flatten_features, proposal_attribute_features):
+        roi_features = proposal_flatten_features / proposal_flatten_features.norm(dim=-1, keepdim=True)
+        att_features = proposal_attribute_features / proposal_attribute_features.norm(dim=-1, keepdim=True)
+
+        logit_scale = self.logit_scale.exp()
+        logits = logit_scale * roi_features @ att_features.t()  # 2x620
+
+        pred = list(logits.detach().cpu().numpy())
+
+        return pred
+
 
     def forward(self, feats):
         return feats
