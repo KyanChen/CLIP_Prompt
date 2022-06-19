@@ -60,7 +60,20 @@ class CocoCLIPAnnDataset(CustomDataset):
     def __len__(self):
         return len(self.patch_ids)
 
-    def __getitem__(self, index):
+    def _rand_another(self):
+        return np.random.randint(len(self))
+
+    def __getitem__(self, idx):
+        if self.test_mode:
+            return self.prepare_train_img(idx)
+        while True:
+            data = self.prepare_train_img(idx)
+            if data is None:
+                idx = self._rand_another()
+                continue
+            return data
+
+    def prepare_train_img(self, index):
         patch_id = self.patch_ids[index]
 
         attrs = self.attributes_dataset['ann_vecs'][patch_id]
