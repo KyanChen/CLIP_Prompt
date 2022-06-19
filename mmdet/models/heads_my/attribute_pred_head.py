@@ -42,8 +42,8 @@ class AttributePredHead(BaseModule):
             "loss": loss,
             "recall": t_p_samples / p_samples,
             'precision': t_p_samples / torch.sum(pred_att),
-            'tp': t_p_samples,
-            'positive_sample': torch.sum(pred_att)
+            'tp': t_p_samples.float(),
+            'positive_sample': torch.sum(pred_att).float()
 
         }
         return losses
