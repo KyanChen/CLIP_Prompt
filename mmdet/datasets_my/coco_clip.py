@@ -175,7 +175,7 @@ class CocoCLIPDataset(CustomDataset):
         ann_info = self.get_ann_info(idx)
         results = dict(img_info=img_info)
         results['img_prefix'] = self.img_prefix
-        results['img_info']['filename'] = results['img_info']['filename'].replace('jpg', 'jpeg')
+        # results['img_info']['filename'] = results['img_info']['filename'].replace('jpg', 'jpeg')
         results['category_attribute_pair'] = self.get_category_attribute_pair(ann_info['captions'])
         results = self.pipeline(results)
         results['category_attribute_pair'] = DataContainer(results['category_attribute_pair'], cpu_only=True)

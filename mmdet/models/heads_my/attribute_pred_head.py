@@ -59,7 +59,7 @@ class AttributePredHead(BaseModule):
         logits_per_image = logit_scale * roi_features @ att_features.t()
         logits_per_text = logit_scale * att_features @ roi_features.t()
         each_proposal_atts_list = [atts for x in proposal_att_list for atts in x]
-        gt_label = torch.zeros((len(roi_features), len(att_features)))
+        gt_label = torch.zeros((len(roi_features), len(att_features))).to(roi_features.device)
         for proposal_idx, each_proposal_atts in enumerate(each_proposal_atts_list):
             mask = unique_attribute_idxs.view(1, -1) - each_proposal_atts.view(-1, 1)
             mask = torch.sum(mask == 0, dim=0)
@@ -69,9 +69,6 @@ class AttributePredHead(BaseModule):
         # shape = [global_batch_size, global_batch_size]
         return loss, logits_per_image, logits_per_text
 
-        losses = self.loss(x, gt_labels, img_metas, gt_bboxes_ignore=gt_bboxes_ignore)
-
-        return losses
 
     def forward(self, feats):
         return feats

@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from collections import OrderedDict
-from distutils import dist
+import torch.distributed as dist
 
 from mmcv.parallel import DataContainer
 from mmcv.runner import auto_fp16
@@ -270,12 +270,14 @@ class MaskRCNNCLIP(BaseDetector):
         unique_attribute_idxs = torch.unique(attribute_idxs)
         neg_attribute_idxs = torch.randperm(self.attribute_encoder.num_attributes)[:len(unique_attribute_idxs)]
         unique_attribute_idxs = torch.unique(torch.cat((unique_attribute_idxs, neg_attribute_idxs)))
-        proposal_attribute_features = self.attribute_encoder.forward_train(unique_attribute_idxs)  # 6x1024
+        proposal_attribute_features = self.attribute_encoder.forward_train(unique_attribute_idxs, device=img.device)  # 6x1024
         proposal_flatten_features = proposal_flatten_features.squeeze(dim=-1).squeeze(dim=-1)  # 2x1024
+
         losses = {}
         loss, logits_per_image, logits_per_text = self.attribute_pred_head.forward_train(
             proposal_flatten_features, proposal_attribute_features, proposal_att_list, unique_attribute_idxs
         )
+
         losses.update(loss)
         return losses
 

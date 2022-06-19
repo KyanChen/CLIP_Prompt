@@ -102,19 +102,11 @@ class AttributeEncoder(BaseModule):
 
         per_attribute_lens = [len(self.tokenizer.encode(attribute)) for attribute in sub_attributes]
         prompts = [prompt_prefix + " " + attribute + "?" for attribute in sub_attributes]
-        tokenized_prompts = torch.cat([self.tokenize(p) for p in prompts])  # N_Attribute len_seq
+        self.tokenized_prompts = torch.cat([self.tokenize(p) for p in prompts])  # N_Attribute len_seq
 
-        self.src_key_padding_mask = tokenized_prompts == 0  # regard 0 as PAD
-        embedding = self.token_embedding(tokenized_prompts)
-
-        # These token vectors will be saved when in save_model(),
-        # but they should be ignored in load_model() as we want to use
-        # those computed using the current class names
-        self.register_buffer("token_prefix", embedding[:, :1, :])  # SOS, N_Att 1 model_dim
-        self.register_buffer("token_suffix", embedding[:, 1 + n_ctx:, :])  # ATT, EOS
+        self.src_key_padding_mask = self.tokenized_prompts == 0  # regard 0 as PAD
 
         self.n_ctx = n_ctx
-        self.tokenized_prompts = tokenized_prompts  # torch.Tensor
         self.per_attribute_lens = torch.tensor(per_attribute_lens)
 
     def tokenize(self, texts, context_length=32, truncate=False):
@@ -226,14 +218,34 @@ class AttributeEncoder(BaseModule):
     def forward(self, attribute_idxs, **kwargs):
         return self.forward_train(attribute_idxs, **kwargs)
 
-    def forward_train(self, attribute_idxs, **kwargs):
+    def get_prompts_embeddings(self, device):
+        embedding = self.token_embedding(self.tokenized_prompts.to(device))
+
+        # These token vectors will be saved when in save_model(),
+        # but they should be ignored in load_model() as we want to use
+        # those computed using the current class names
+        self.register_buffer('token_prefix', embedding[:, :1, :])  # SOS, N_Att 1 model_dim
+        self.register_buffer('token_suffix', embedding[:, 1 + self.n_ctx:, :]) # ATT, EOS
+
+    def forward_train(self, attribute_idxs, device, **kwargs):
         # attribute_idxs is attribute not sub_attribute
+
+        # if not hasattr(self, 'token_prefix'):
+        #     self.get_prompts_embeddings(device)
+
         attribute_idxs = self.attribute2subattribute_idxs(attribute_idxs)
-        # attribute_ids B
-        prefix = self.token_prefix[attribute_idxs]  # BxLxC
-        suffix = self.token_suffix[attribute_idxs]  # # BxLxC
+
+        tokenized_prompts = self.tokenized_prompts[attribute_idxs]
+        embedding = self.token_embedding(tokenized_prompts.to(device))
+        prefix = embedding[:, :1, :]  # SOS, N_Att 1 model_dim
+        suffix = embedding[:, 1 + self.n_ctx:, :]
+
+        # # attribute_ids B
+        # prefix = self.token_prefix[attribute_idxs]  # BxLxC
+        # suffix = self.token_suffix[attribute_idxs]  # # BxLxC
         attribute_lens = self.per_attribute_lens[attribute_idxs]
         ctx = self.ctx  # 8x16x512
+
         prefix = repeat(prefix, 'B L C -> B prompt_num L C', prompt_num=self.prompt_num)
         suffix = repeat(suffix, 'B L C -> B prompt_num L C', prompt_num=self.prompt_num)
         ctx = repeat(ctx, 'prompt_num L C -> B prompt_num L C', B=attribute_idxs.size(0))
@@ -268,6 +280,7 @@ class AttributeEncoder(BaseModule):
                     ],
                     dim=-2,
                 )
+
                 prompts.append(prompt)
             prompts = torch.cat(prompts, dim=0)
 
@@ -294,9 +307,11 @@ class AttributeEncoder(BaseModule):
         else:
             raise ValueError
         # prompts : B prompt_num L C
+
         x = prompts + self.positional_embedding  # broadcast, B prompt_num L C
+
         x_encoded = rearrange(x, 'B prompt_num L C -> (B prompt_num) L C')
-        src_key_padding_mask = self.src_key_padding_mask[attribute_idxs]  # BxLxC
+        src_key_padding_mask = self.src_key_padding_mask[attribute_idxs].to(x.device)  # BxLxC
         src_key_padding_mask_expand = repeat(
             src_key_padding_mask, 'B L -> (B prompt_num) L', prompt_num=self.prompt_num
         )

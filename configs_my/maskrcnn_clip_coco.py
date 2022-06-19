@@ -1,13 +1,13 @@
-checkpoint_config = dict(interval=5)
+checkpoint_config = dict(interval=20)
 # yapf:disable
 log_config = dict(
-    interval=50,
+    interval=1,
     hooks=[
         dict(type='TextLoggerHook'),
         dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable
-custom_hooks = [dict(type='NumClassCheckHook')]
+custom_hooks = None
 
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
@@ -24,7 +24,7 @@ mp_start_method = 'fork'
 #   - `base_batch_size` = (8 GPUs) x (2 samples per GPU).
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
-attribute_id_map = '/Users/kyanchen/Code/CLIP_Prompt/attributes/COCO/attribute_id_map.json'
+attribute_id_map = '../attributes/COCO/attribute_id_map.json'
 
 # model settings
 model = dict(
@@ -223,12 +223,12 @@ test_pipeline = [
 ]
 
 # Use RepeatDataset to speed up training
-caption_root = '/Users/kyanchen/Code/CLIP_Prompt/captions/COCO'
-category_id_map = '/Users/kyanchen/Code/CLIP_Prompt/objects/MSCOCO/category_id_map.json'
+caption_root = 'D:/Dataset/COCO'
+category_id_map = '../objects/MSCOCO/category_id_map.json'
 dataset_type = 'CocoCLIPDataset'
-data_root = '/Users/kyanchen/Code/CLIP_Prompt/data/COCO'
+data_root = 'D:/Dataset/COCO'
 data = dict(
-    samples_per_gpu=2,
+    samples_per_gpu=4,
     workers_per_gpu=1,
     train=dict(
         type=dataset_type,
@@ -247,10 +247,11 @@ data = dict(
         ann_file=data_root + 'annotations/instances_val2017.json',
         img_prefix=data_root + '/val2014/',
         pipeline=test_pipeline))
-evaluation = dict(interval=1, metric=['bbox'])
+evaluation = dict(interval=5, metric=['bbox'])
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+# optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='AdamW', lr=1e-4)
 optimizer_config = dict(grad_clip=None)
 
 # learning policy
@@ -260,7 +261,8 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[9, 11])
-runner = dict(type='EpochBasedRunner', max_epochs=12)
-load_from = '/Users/kyanchen/Code/CLIP_Prompt/pretrained/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
+    step=[50, 80])
+runner = dict(type='EpochBasedRunner', max_epochs=100)
+# load_from = '/Users/kyanchen/Code/CLIP_Prompt/pretrained/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
+load_from = 'D:/Dataset/COCO/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
 resume_from = None
