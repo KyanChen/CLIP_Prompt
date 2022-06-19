@@ -286,4 +286,4 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=200)
 load_from = '../pretrain/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
 # load_from = 'D:/Dataset/COCO/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
-resume_from = 'results/EXP20220619_0/latest.pth'
+resume_from = None
