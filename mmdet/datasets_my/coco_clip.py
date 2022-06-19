@@ -150,13 +150,13 @@ class CocoCLIPDataset(CustomDataset):
                 caption = rule.sub(f'a{id}a', caption)
             try:
                 for idx, char_x in enumerate(caption.split(' ')):
-                    char_x = re.search(r'\bc\d{1,}c\b', char_x)
-                    if char_x is not None:
-                        categories.append(int(char_x.group().replace('c', '')))
+                    char_x_tmp = re.search(r'\bc\d{1,}c\b', char_x)
+                    if char_x_tmp is not None:
+                        categories.append(int(char_x_tmp.group().replace('c', '')))
                         categories_index.append(idx)
-                    char_x = re.search(r'\ba\d{1,}a\b', char_x)
-                    if char_x is not None:
-                        attributes.append(int(char_x.group().replace('a', '')))
+                    char_x_tmp = re.search(r'\ba\d{1,}a\b', char_x)
+                    if char_x_tmp is not None:
+                        attributes.append(int(char_x_tmp.group().replace('a', '')))
                         attributes_index.append(idx)
             except:
                 print(caption)
