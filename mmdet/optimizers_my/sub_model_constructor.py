@@ -35,6 +35,8 @@ class SubModelConstructor(DefaultOptimizerConstructor):
 
         # if no paramwise option is specified, just use the global setting
         if not self.paramwise_cfg:
+            import pdb
+            pdb.set_trace()
             optimizer_cfg['params'] = [needed_train_sub_model.parameters() for needed_train_sub_model in needed_train_sub_models]
             return build_from_cfg(optimizer_cfg, OPTIMIZERS)
 
