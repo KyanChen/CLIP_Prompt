@@ -2,6 +2,7 @@ import torch.nn
 from mmcv.utils import _BatchNorm, _InstanceNorm, build_from_cfg, is_list_of
 from mmcv.runner.optimizer import OPTIMIZER_BUILDERS, OPTIMIZERS
 from mmcv.runner.optimizer import DefaultOptimizerConstructor
+from mmcv.runner import get_dist_info
 
 
 @OPTIMIZER_BUILDERS.register_module()
@@ -21,15 +22,17 @@ class SubModelConstructor(DefaultOptimizerConstructor):
                 needed_train_sub_models.append(sub_model)
             else:
                 raise ModuleNotFoundError(f'{optimizer_cfg["sub_model"]} not in model')
-        print('All sub models:')
-        for name, module in model.named_children():
-            print('children module:', name, end=', ')
-        print('')
-        print('Needed train models:')
 
-        for needed_train_sub_model in needed_train_sub_models:
-            print('children module:', repr(needed_train_sub_model))
-        print('')
+        _rank, _word_size = get_dist_info()
+        if _rank == 0:
+            print('All sub models:')
+            for name, module in model.named_children():
+                print(name, end=', ')
+            print('')
+            print('Needed train models:')
+            for needed_train_sub_model in needed_train_sub_models:
+                print(needed_train_sub_model)
+
         # if no paramwise option is specified, just use the global setting
         if not self.paramwise_cfg:
             optimizer_cfg['params'] = [needed_train_sub_model.parameters() for needed_train_sub_model in needed_train_sub_models]
