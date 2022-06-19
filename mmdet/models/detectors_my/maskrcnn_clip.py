@@ -67,15 +67,6 @@ class MaskRCNNCLIP(BaseDetector):
         pass
 
     def forward_test(self, imgs, img_metas, **kwargs):
-        """
-        Args:
-            imgs (List[Tensor]): the outer list indicates test-time
-                augmentations and inner Tensor should have a shape NxCxHxW,
-                which contains all images in the batch.
-            img_metas (List[List[dict]]): the outer list indicates test-time
-                augs (multiscale, flip, etc.) and the inner list indicates
-                images in a batch.
-        """
         for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:
             if not isinstance(var, list):
                 raise TypeError(f'{name} must be a list, but got {type(var)}')
@@ -308,6 +299,7 @@ class MaskRCNNCLIP(BaseDetector):
             proposal_list = self.rpn_head.simple_test_rpn(x, img_metas)
         else:
             proposal_list = proposals
+
 
         return self.roi_head.simple_test(
             x, proposal_list, img_metas, rescale=rescale)

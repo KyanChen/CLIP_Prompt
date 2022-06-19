@@ -209,17 +209,17 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations', with_bbox=True),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1333, 800),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
-            dict(type='ImageToTensor', keys=['img']),
-            dict(type='Collect', keys=['img']),
+            dict(type='ImageToTensor', keys=['img', 'attrs', 'gt_bboxes']),
+            dict(type='Collect', keys=['img', 'attrs', 'gt_bboxes']),
         ])
 ]
 
@@ -246,11 +246,12 @@ data = dict(
     ),
     val=dict(
         type=dataset_type,
-        caption_ann_file=caption_root + '/captions_val2014.json',
-        category_id_map=category_id_map,
-        attribute_id_map=attribute_id_map,
-        img_prefix=img_root + '/val2014/',
-        pipeline=train_pipeline
+        attributes_file='D:/Dataset/COCO/attributes_2014.pkl',
+        annotations_file="D:/Dataset/COCO/instances_val2014.json",
+        pipeline=train_pipeline,
+        attribute_id_map='I:/CodeRep/CLIP_Prompt/attributes/COCO/attribute_id_map.json',
+        img_prefix="D:/Dataset/COCO/val2014",
+        test_mode=True,
     ),
     test=dict(
         type=dataset_type,

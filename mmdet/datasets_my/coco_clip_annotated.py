@@ -70,8 +70,10 @@ class CocoCLIPAnnDataset(CustomDataset):
         # coco.loadImgs returns a list
         ann_info = self.coco.load_anns(ann_id)[0]
         img_info = self.coco.load_imgs(ann_info['image_id'])[0]
+        if len(ann_info['bboxes']) != 0:
+            print('ann_info bboxes is not 1')
 
-        results = dict(img_info=img_info, ann_info=ann_info)
+        results = dict(img_info=img_info, ann_info=ann_info, attrs=attrs)
         results['img_prefix'] = self.img_prefix
         results = self.pipeline(results)
 
