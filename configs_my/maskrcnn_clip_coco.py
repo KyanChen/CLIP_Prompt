@@ -17,7 +17,7 @@ workflow = [('train', 1)]
 opencv_num_threads = 0
 # set multi-process start method as `fork` to speed up the training
 mp_start_method = 'fork'
-# find_unused_parameters = True
+find_unused_parameters = True
 # Default setting for scaling LR automatically
 #   - `enable` means enable scaling LR automatically
 #       or not by default.
