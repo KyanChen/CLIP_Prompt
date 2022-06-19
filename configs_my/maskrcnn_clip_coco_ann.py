@@ -242,7 +242,7 @@ data = dict(
         pipeline=train_pipeline,
         attribute_id_map='I:/CodeRep/CLIP_Prompt/attributes/COCO/attribute_id_map.json',
         img_prefix="D:/Dataset/COCO/val2014",
-        test_mode=False,
+        test_mode=True,
     ),
     val=dict(
         type=dataset_type,

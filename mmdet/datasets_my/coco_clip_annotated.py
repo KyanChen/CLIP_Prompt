@@ -38,7 +38,7 @@ class CocoCLIPAnnDataset(CustomDataset):
                  ):
         self.file_client = mmcv.FileClient(**file_client_args)
 
-        self.attributes_dataset = pickle.load(attributes_file)
+        self.attributes_dataset = pickle.load(open(attributes_file, 'rb'))
         self.coco = COCO(annotations_file)
         self.img_prefix = img_prefix
         self.test_mode = test_mode
@@ -48,7 +48,7 @@ class CocoCLIPAnnDataset(CustomDataset):
         self.patch_ids = []
         split = 'val2014' if self.test_mode else 'train2014'
         # get all attribute vectors for this split
-        for patch_id, _ in self.attributes_dataset['ann_vecs'].items():
+        for patch_id in self.attributes_dataset['ann_vecs'].keys():
             if self.attributes_dataset['split'][patch_id] == split:
                 self.patch_ids.append(patch_id)
 
@@ -71,64 +71,17 @@ class CocoCLIPAnnDataset(CustomDataset):
         ann_info = self.coco.load_anns(ann_id)[0]
         img_info = self.coco.load_imgs(ann_info['image_id'])[0]
 
-        x, y, width, height = ann_info["bbox"]
-        results = dict(img_info=img_info)
+        results = dict(img_info=img_info, ann_info=ann_info)
         results['img_prefix'] = self.img_prefix
+        results = self.pipeline(results)
 
-        img = Image.open(osp.join(self.dataset_root, self.split,
-                                  image["file_name"])).convert('RGB')
+        return results
 
-        # Crop out the object with context padding.
-        img = get_image_crop(img, x, y, width, height, self.crop_size)
-
-
-        return img, attrs
-
-
-def get_image_crop(img, x, y, width, height, crop_size=224, padding=16):
-    """
-    Get the image crop for the object specified in the COCO annotations.
-    We crop in such a way that in the final resized image, there is `context padding` amount of image data around the object.
-    This is the same as is used in RCNN to allow for additional image context.
-    :param img: The image ndarray
-    :param x: The x coordinate for the start of the bounding box
-    :param y: The y coordinate for the start of the bounding box
-    :param width: The width of the bounding box
-    :param height: The height of the bounding box
-    :param crop_size: The final size of the cropped image. Needed to calculate the amount of context padding.
-    :param padding: The amount of context padding needed in the image.
-    :return:
-    """
-    # Scale used to compute the new bbox for the image such that there is surrounding context.
-    # The way it works is that we find what is the scaling factor between the crop and the crop without the padding
-    # (which would be the original tight bounding box).
-    # `crop_size` is the size of the crop with context padding.
-    # The denominator is the size of the crop if we applied the same transform with the original tight bounding box.
-    scale = crop_size / (crop_size - padding * 2)
-
-    # Calculate semi-width and semi-height
-    semi_width = width / 2
-    semi_height = height / 2
-
-    # Calculate the center of the crop
-    centerx = x + semi_width
-    centery = y + semi_height
-
-    img_width, img_height = img.size
-
-    # We get the crop using the semi- height and width from the center of the crop.
-    # The semi- height and width are scaled accordingly.
-    # We also ensure the numbers are valid
-    upper = max(0, centery - (semi_height * scale))
-    lower = min(img_height, centery + (semi_height * scale))
-    left = max(0, centerx - (semi_width * scale))
-    right = min(img_width, centerx + (semi_width * scale))
-
-    crop_img = img.crop((left, upper, right, lower))
-
-    if 0 in crop_img.size:
-        print(img.size)
-        print("lowx {0}\nlowy {1}\nhighx {2}\nhighy {3}".format(
-            left, upper, right, lower))
-
-    return crop_img
+    def evaluate(self,
+                 results,
+                 metric='mAP',
+                 logger=None,
+                 proposal_nums=(100, 300, 1000),
+                 iou_thr=0.5,
+                 scale_ranges=None):
+        pass

@@ -368,7 +368,7 @@ def test_dataset_init(data_config):
 
 
 def test_dataset():
-    config_path = '/Users/kyanchen/Code/CLIP_Prompt/configs_my/maskrcnn_clip_coco_ann.py'
+    config_path = r'I:\CodeRep\CLIP_Prompt\configs_my\maskrcnn_clip_coco_ann.py'
     data_config = mmcv.Config.fromfile(config_path)
     dataset = test_dataset_init(data_config)
     dataset.__getitem__(0)
