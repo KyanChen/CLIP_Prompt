@@ -232,10 +232,10 @@ data = dict(
     workers_per_gpu=4,
     train=dict(
         type=dataset_type,
-        caption_ann_file=caption_root+'/captions_val2014.json',
+        caption_ann_file=caption_root+'/captions_train2014.json',
         category_id_map=category_id_map,
         attribute_id_map=attribute_id_map,
-        img_prefix=img_root + '/val2014/',
+        img_prefix=img_root + '/train2014/',
         pipeline=train_pipeline
     ),
     val=dict(
