@@ -66,7 +66,7 @@ class MaskRCNNCLIP(BaseDetector):
     def aug_test(self, imgs, img_metas, **kwargs):
         pass
 
-    def forward_test(self, imgs, img_metas, **kwargs):
+    def forward_test(self, imgs, img_metas, gt_bboxes, **kwargs):
         for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:
             if not isinstance(var, list):
                 raise TypeError(f'{name} must be a list, but got {type(var)}')
@@ -92,7 +92,7 @@ class MaskRCNNCLIP(BaseDetector):
             # proposals.
             if 'proposals' in kwargs:
                 kwargs['proposals'] = kwargs['proposals'][0]
-            return self.simple_test(imgs[0], img_metas[0], **kwargs)
+            return self.simple_test(imgs[0], img_metas[0], gt_bboxes[0], **kwargs)
         else:
             assert imgs[0].size(0) == 1, 'aug test does not support ' \
                                          'inference with batch size ' \
@@ -290,9 +290,9 @@ class MaskRCNNCLIP(BaseDetector):
         return await self.roi_head.async_simple_test(
             x, proposal_list, img_meta, rescale=rescale)
 
-    def simple_test(self, img, img_metas, proposals=None, rescale=False):
+    def simple_test(self, img, img_metas, gt_bboxes, **kwargs):
         """Test without augmentation."""
-
+        # img: 2 3 800 1216, gt_bboxes 2*list[tensor(1,4)]
         assert self.with_bbox, 'Bbox head must be implemented.'
         x = self.extract_feat(img)
         if proposals is None:

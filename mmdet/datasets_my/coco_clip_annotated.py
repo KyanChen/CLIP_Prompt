@@ -68,15 +68,29 @@ class CocoCLIPAnnDataset(CustomDataset):
 
         ann_id = self.attributes_dataset['patch_id_to_ann_id'][patch_id]
         # coco.loadImgs returns a list
-        ann_info = self.coco.load_anns(ann_id)[0]
-        img_info = self.coco.load_imgs(ann_info['image_id'])[0]
-        if len(ann_info['bboxes']) != 0:
-            print('ann_info bboxes is not 1')
+        ann = self.coco.load_anns(ann_id)[0]
+        img_info = self.coco.load_imgs(ann['image_id'])[0]
 
-        results = dict(img_info=img_info, ann_info=ann_info, attrs=attrs)
+        x1, y1, w, h = ann['bbox']
+        inter_w = max(0, min(x1 + w, img_info['width']) - max(x1, 0))
+        inter_h = max(0, min(y1 + h, img_info['height']) - max(y1, 0))
+        if inter_w * inter_h == 0:
+            print('box is too small')
+            return None
+        if ann['area'] <= 0 or w < 1 or h < 1:
+            print('box is too small')
+            return None
+        bbox = [x1, y1, x1 + w, y1 + h]
+
+        gt_bboxes = np.array(bbox, dtype=np.float32)
+
+        results = dict(img_info=img_info, ann_info=ann, attrs=attrs)
         results['img_prefix'] = self.img_prefix
+        results['img_info']['filename'] = img_info['file_name']
+        results['ann_info']['bboxes'] = np.array(gt_bboxes).reshape(1, 4)
+        results['bbox_fields'] = []
         results = self.pipeline(results)
-
+        # results['gt_bboxes'] = results['gt_bboxes']
         return results
 
     def evaluate(self,

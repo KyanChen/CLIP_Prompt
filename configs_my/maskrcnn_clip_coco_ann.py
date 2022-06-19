@@ -25,7 +25,8 @@ find_unused_parameters = True
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 # attribute_id_map = '../attributes/COCO/attribute_id_map.json'
-attribute_id_map = '/Users/kyanchen/Code/CLIP_Prompt/attributes/COCO/attribute_id_map.json'
+# attribute_id_map = '/Users/kyanchen/Code/CLIP_Prompt/attributes/COCO/attribute_id_map.json'
+attribute_id_map = 'I:/CodeRep/CLIP_Prompt/attributes/COCO/attribute_id_map.json'
 # model settings
 model = dict(
     type='MaskRCNNCLIP',
@@ -209,7 +210,7 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='LoadAnnotations', with_bbox=True, with_label=False),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1333, 800),
@@ -218,8 +219,9 @@ test_pipeline = [
             dict(type='Resize', keep_ratio=True),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
-            dict(type='ImageToTensor', keys=['img', 'attrs', 'gt_bboxes']),
-            dict(type='Collect', keys=['img', 'attrs', 'gt_bboxes']),
+            dict(type='ImageToTensor', keys=['img']),
+            # dict(type='ToTensor', keys=['attrs']),
+            dict(type='Collect', keys=['img', 'gt_bboxes']),
         ])
 ]
 
@@ -239,7 +241,7 @@ data = dict(
         type=dataset_type,
         attributes_file='D:/Dataset/COCO/attributes_2014.pkl',
         annotations_file="D:/Dataset/COCO/instances_val2014.json",
-        pipeline=train_pipeline,
+        pipeline=test_pipeline,
         attribute_id_map='I:/CodeRep/CLIP_Prompt/attributes/COCO/attribute_id_map.json',
         img_prefix="D:/Dataset/COCO/val2014",
         test_mode=True,
@@ -248,18 +250,21 @@ data = dict(
         type=dataset_type,
         attributes_file='D:/Dataset/COCO/attributes_2014.pkl',
         annotations_file="D:/Dataset/COCO/instances_val2014.json",
-        pipeline=train_pipeline,
+        pipeline=test_pipeline,
         attribute_id_map='I:/CodeRep/CLIP_Prompt/attributes/COCO/attribute_id_map.json',
         img_prefix="D:/Dataset/COCO/val2014",
         test_mode=True,
     ),
     test=dict(
+        samples_per_gpu=2,
+        # is_replace_ImageToTensor=False,
         type=dataset_type,
-        caption_ann_file=caption_root + '/captions_val2014.json',
-        category_id_map=category_id_map,
-        attribute_id_map=attribute_id_map,
-        img_prefix=img_root + '/val2014/',
-        pipeline=train_pipeline
+        attributes_file='D:/Dataset/COCO/attributes_2014.pkl',
+        annotations_file="D:/Dataset/COCO/instances_val2014.json",
+        pipeline=test_pipeline,
+        attribute_id_map='I:/CodeRep/CLIP_Prompt/attributes/COCO/attribute_id_map.json',
+        img_prefix="D:/Dataset/COCO/val2014",
+        test_mode=True,
     )
 )
 evaluation = dict(interval=5, metric=['bbox'])

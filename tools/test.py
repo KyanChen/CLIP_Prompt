@@ -188,9 +188,10 @@ def main():
         samples_per_gpu=1, workers_per_gpu=2, dist=distributed, shuffle=False)
 
     # in case the test dataset is concatenated
+    is_replace_ImageToTensor = cfg.data.test.pop('is_replace_ImageToTensor', True)
     if isinstance(cfg.data.test, dict):
         cfg.data.test.test_mode = True
-        if cfg.data.test_dataloader.get('samples_per_gpu', 1) > 1:
+        if cfg.data.test_dataloader.get('samples_per_gpu', 1) > 1 and is_replace_ImageToTensor:
             # Replace 'ImageToTensor' to 'DefaultFormatBundle'
             cfg.data.test.pipeline = replace_ImageToTensor(
                 cfg.data.test.pipeline)
