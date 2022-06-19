@@ -35,15 +35,20 @@ class AttributePredHead(BaseModule):
              ):
         loss = self.loss_cls(cls_logits, gt_labels)
         pred_prob = cls_logits.sigmoid()
+
         pred_att = pred_prob > 0.5
-        t_p_samples = torch.sum(pred_att * gt_labels)
-        p_samples = torch.sum(gt_labels)
+        gt_labels = gt_labels == 1
+
+        t_p_samples = torch.sum(pred_att * gt_labels).float()
+        gt_p_samples = torch.sum(gt_labels).float()
+        pred_p_samples = torch.sum(pred_att).float()
+
         losses = {
             "loss": loss,
-            "recall": t_p_samples / p_samples,
-            'precision': t_p_samples / torch.sum(pred_att),
-            'tp': t_p_samples.float(),
-            'positive_sample': torch.sum(pred_att).float()
+            "recall": t_p_samples / gt_p_samples,
+            'precision': t_p_samples / pred_p_samples,
+            't_p_samples': t_p_samples,
+            'pred_positive_sample': pred_p_samples
 
         }
         return losses
