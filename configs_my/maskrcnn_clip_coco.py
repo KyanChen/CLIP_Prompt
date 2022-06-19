@@ -253,6 +253,7 @@ data = dict(
         pipeline=train_pipeline
     ),
     test=dict(
+        samples_per_gpu=16,
         type=dataset_type,
         caption_ann_file=caption_root + '/captions_val2014.json',
         category_id_map=category_id_map,

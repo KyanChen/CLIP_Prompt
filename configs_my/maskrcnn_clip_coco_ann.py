@@ -26,7 +26,8 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 # attribute_id_map = '../attributes/COCO/attribute_id_map.json'
 # attribute_id_map = '/Users/kyanchen/Code/CLIP_Prompt/attributes/COCO/attribute_id_map.json'
-attribute_id_map = 'I:/CodeRep/CLIP_Prompt/attributes/COCO/attribute_id_map.json'
+# attribute_id_map = 'I:/CodeRep/CLIP_Prompt/attributes/COCO/attribute_id_map.json'
+attribute_id_map = '/data/kyanchen/prompt/attributes/COCO/attribute_id_map.json'
 # model settings
 model = dict(
     type='MaskRCNNCLIP',
@@ -223,25 +224,27 @@ test_pipeline = [
 ]
 
 # Use RepeatDataset to speed up training
-caption_root = '../data/COCO/annotations'
-caption_root = '/Users/kyanchen/Code/CLIP_Prompt/captions/COCO'
+caption_root = '/data/kyanchen/prompt/data/COCO'
+# caption_root = '/Users/kyanchen/Code/CLIP_Prompt/captions/COCO'
 # category_id_map = '../objects/MSCOCO/category_id_map.json'
-category_id_map = '/Users/kyanchen/Code/CLIP_Prompt/objects/MSCOCO/category_id_map.json'
+# category_id_map = '/Users/kyanchen/Code/CLIP_Prompt/objects/MSCOCO/category_id_map.json'
+category_id_map = '/data/kyanchen/prompt/objects/MSCOCO/category_id_map.json'
+attributes_file = '/data/kyanchen/prompt/data/COCO/attributes_2014.pkl'
 
 dataset_type = 'CocoCLIPAnnDataset'
-img_root = '../data/COCO'
+img_root = '/data/kyanchen/prompt/data/COCO'
 data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=1,
+    samples_per_gpu=16,
+    workers_per_gpu=4,
     persistent_workers=True,
     train=dict(
         type=dataset_type,
-        attributes_file='D:/Dataset/COCO/attributes_2014.pkl',
-        annotations_file="D:/Dataset/COCO/instances_val2014.json",
+        attributes_file=attributes_file,
+        annotations_file=caption_root+'/annotations/instances_train2014.json',
         pipeline=train_pipeline,
-        attribute_id_map='I:/CodeRep/CLIP_Prompt/attributes/COCO/attribute_id_map.json',
-        img_prefix="D:/Dataset/COCO/val2014",
-        test_mode=True,
+        attribute_id_map=attribute_id_map,
+        img_prefix=caption_root+'/train2014',
+        test_mode=False,
     ),
     val=dict(
         type=dataset_type,
@@ -253,14 +256,14 @@ data = dict(
         test_mode=True,
     ),
     test=dict(
-        samples_per_gpu=2,
+        samples_per_gpu=16,
         # is_replace_ImageToTensor=False,
         type=dataset_type,
-        attributes_file='D:/Dataset/COCO/attributes_2014.pkl',
-        annotations_file="D:/Dataset/COCO/instances_val2014.json",
-        pipeline=test_pipeline,
-        attribute_id_map='I:/CodeRep/CLIP_Prompt/attributes/COCO/attribute_id_map.json',
-        img_prefix="D:/Dataset/COCO/val2014",
+        attributes_file=attributes_file,
+        annotations_file=caption_root + '/annotations/instances_val2014.json',
+        pipeline=train_pipeline,
+        attribute_id_map=attribute_id_map,
+        img_prefix=caption_root + '/val2014',
         test_mode=True,
     )
 )
@@ -284,9 +287,9 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[100, 150])
-runner = dict(type='EpochBasedRunner', max_epochs=200)
-# load_from = '../pretrain/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
+    step=[50, 80])
+runner = dict(type='EpochBasedRunner', max_epochs=100)
+load_from = '/data/kyanchen/prompt/pretrain/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
 # load_from = 'D:/Dataset/COCO/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
-load_from = None
+# load_from = None
 resume_from = None
