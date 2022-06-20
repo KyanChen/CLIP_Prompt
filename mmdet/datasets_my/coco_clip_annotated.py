@@ -124,6 +124,7 @@ class CocoCLIPAnnDataset(CustomDataset):
                  **kwargs
                  ):
         results = np.array(results)
+        print()
         print(results[:, 0])
         preds = torch.from_numpy(results)
         gts = self.get_labels()
