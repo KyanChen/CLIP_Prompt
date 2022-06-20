@@ -258,15 +258,15 @@ data = dict(
         test_mode=True,
     ),
     test=dict(
-        samples_per_gpu=10,
+        samples_per_gpu=16,
         is_replace_ImageToTensor=True,
         type=dataset_type,
         attributes_file=attributes_file,
-        annotations_file=caption_root + '/annotations/instances_train2014.json',
+        annotations_file=caption_root + '/annotations/instances_val2014.json',
         pipeline=test_pipeline,
         attribute_id_map=attribute_id_map,
-        img_prefix=caption_root + '/train2014',
-        att_split='train2014',
+        img_prefix=caption_root + '/val2014',
+        att_split='val2014',
         test_mode=True,
     )
 )
@@ -296,5 +296,5 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=500)
 # load_from = '/data/kyanchen/prompt/pretrain/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
 # load_from = 'D:/Dataset/COCO/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
-load_from = 'results/tmp/latest.pth'
+load_from = None
 resume_from = None
