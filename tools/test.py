@@ -192,7 +192,7 @@ def main():
     if isinstance(cfg.data.test, dict):
         cfg.data.test.test_mode = True
         if cfg.data.test_dataloader.get('samples_per_gpu', 1) > 1 and is_replace_ImageToTensor:
-            # Replace 'ImageToTensor' to 'DefaultFormatBundle'
+            print('Replace ImageToTensor to DefaultFormatBundle')
             cfg.data.test.pipeline = replace_ImageToTensor(
                 cfg.data.test.pipeline)
     elif isinstance(cfg.data.test, list):
