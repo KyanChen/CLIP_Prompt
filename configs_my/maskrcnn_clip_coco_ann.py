@@ -257,7 +257,7 @@ data = dict(
     ),
     test=dict(
         samples_per_gpu=16,
-        # is_replace_ImageToTensor=False,
+        is_replace_ImageToTensor=True,
         type=dataset_type,
         attributes_file=attributes_file,
         annotations_file=caption_root + '/annotations/instances_val2014.json',
