@@ -296,7 +296,7 @@ class MaskRCNNCLIP(BaseDetector):
             proposal_att_list.append([attribute_idxs[attribute_idxs[:, 0] == proposal_idx][:, 1]])
 
         unique_attribute_idxs = torch.unique(attribute_idxs[:, 1])
-        neg_attribute_idxs = torch.randperm(self.attribute_encoder.num_attributes)[:len(unique_attribute_idxs)].to(img.device)
+        neg_attribute_idxs = torch.randperm(self.attribute_encoder.num_attributes)[:len(unique_attribute_idxs)*5].to(img.device)
         unique_attribute_idxs = torch.unique(torch.cat((unique_attribute_idxs, neg_attribute_idxs)))
         proposal_attribute_features = self.attribute_encoder.forward_train(unique_attribute_idxs, device=img.device)  # 6x1024
 

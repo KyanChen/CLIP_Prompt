@@ -234,7 +234,7 @@ attributes_file = '/data/kyanchen/prompt/data/COCO/attributes_2014.pkl'
 dataset_type = 'CocoCLIPAnnDataset'
 img_root = '/data/kyanchen/prompt/data/COCO'
 data = dict(
-    samples_per_gpu=16,
+    samples_per_gpu=10,
     workers_per_gpu=4,
     persistent_workers=True,
     train=dict(
@@ -244,6 +244,7 @@ data = dict(
         pipeline=train_pipeline,
         attribute_id_map=attribute_id_map,
         img_prefix=caption_root+'/train2014',
+        att_split='train2014',
         test_mode=False,
     ),
     val=dict(
@@ -288,9 +289,11 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[50, 80])
-runner = dict(type='EpochBasedRunner', max_epochs=100)
-load_from = '/data/kyanchen/prompt/pretrain/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
+    # step=[50, 80]
+    step=[300]
+)
+runner = dict(type='EpochBasedRunner', max_epochs=500)
+# load_from = '/data/kyanchen/prompt/pretrain/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
 # load_from = 'D:/Dataset/COCO/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
-# load_from = 'results/EXP20220619_0//latest.pth'
+load_from = 'results/EXP20220619_1//latest.pth'
 resume_from = None
