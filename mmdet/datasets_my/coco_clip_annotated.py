@@ -21,7 +21,7 @@ from mmdet.utils.api_wrappers import COCO, COCOeval
 from ..datasets.builder import DATASETS
 from ..datasets.custom import CustomDataset
 from ..datasets.pipelines import Compose
-from evaluate_tools.evaluate_attributes import Evaluator
+from .evaluate_tools.evaluate_attributes import Evaluator
 import re
 from string import punctuation
 
