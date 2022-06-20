@@ -234,6 +234,7 @@ attributes_file = '/data/kyanchen/prompt/data/COCO/attributes_2014.pkl'
 dataset_type = 'CocoCLIPAnnDataset'
 img_root = '/data/kyanchen/prompt/data/COCO'
 data = dict(
+    train_dataloader=dict(shuffle=False),
     samples_per_gpu=10,
     workers_per_gpu=4,
     persistent_workers=True,
