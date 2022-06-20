@@ -212,6 +212,7 @@ class AttributeEncoder(BaseModule):
         for attribute_idx in attribute_idxs:
             attributes = self.attribute_id_map['id2attribute'][repr(attribute_idx.item())]
             attribute = attributes[torch.randint(len(attributes), []).item()]
+            attribute = attributes[0]
             selected_attribute_idxs.append(self.sub_attributes2id[attribute])
         return torch.tensor(selected_attribute_idxs)
 
