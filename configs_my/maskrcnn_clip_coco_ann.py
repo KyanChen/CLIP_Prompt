@@ -257,15 +257,15 @@ data = dict(
         test_mode=True,
     ),
     test=dict(
-        samples_per_gpu=16,
+        samples_per_gpu=10,
         is_replace_ImageToTensor=True,
         type=dataset_type,
         attributes_file=attributes_file,
-        annotations_file=caption_root + '/annotations/instances_val2014.json',
+        annotations_file=caption_root + '/annotations/instances_train2014.json',
         pipeline=test_pipeline,
         attribute_id_map=attribute_id_map,
-        img_prefix=caption_root + '/val2014',
-        att_split='val2014',
+        img_prefix=caption_root + '/train2014',
+        att_split='train2014',
         test_mode=True,
     )
 )
