@@ -73,7 +73,8 @@ class AttributePredHead(BaseModule):
             mask = unique_attribute_idxs.view(1, -1) - each_proposal_atts.view(-1, 1)
             mask = torch.sum(mask == 0, dim=0)
             gt_label[proposal_idx] = mask
-
+        import pdb
+        pdb.set_trace()
         loss = self.loss(logits_per_image, gt_label)
         # shape = [global_batch_size, global_batch_size]
         return loss, logits_per_image, logits_per_text
