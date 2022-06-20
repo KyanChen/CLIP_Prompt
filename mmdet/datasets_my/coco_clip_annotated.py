@@ -52,7 +52,8 @@ class CocoCLIPAnnDataset(CustomDataset):
         for patch_id in self.attributes_dataset['ann_vecs'].keys():
             if self.attributes_dataset['split'][patch_id] == split:
                 self.patch_ids.append(patch_id)
-        # self.patch_ids = self.patch_ids[:2]
+
+        self.patch_ids = self.patch_ids[:1000]
         # list of attribute names
         self.attributes = sorted(
             self.attributes_dataset['attributes'], key=lambda x: x['id'])
