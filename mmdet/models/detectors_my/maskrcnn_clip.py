@@ -60,8 +60,6 @@ class MaskRCNNCLIP(BaseDetector):
         self.test_cfg = test_cfg
 
     def train(self, mode=True):
-        import pdb
-        pdb.set_trace()
         if not isinstance(mode, bool):
             raise ValueError("training mode is expected to be boolean")
         self.training = mode
@@ -293,9 +291,6 @@ class MaskRCNNCLIP(BaseDetector):
         with torch.no_grad():
             x = self.extract_feat(img)  # 5x[Bx256xHxW]
 
-        import pdb
-        pdb.set_trace()
-
         proposal_flatten_features, bbox_feats = self.proposal_encoder(x, gt_bboxes)
         proposal_flatten_features = proposal_flatten_features.squeeze(dim=-1).squeeze(dim=-1)  # 2x1024
 
@@ -351,8 +346,6 @@ class MaskRCNNCLIP(BaseDetector):
         # att_proposal_list, proposal_att_list = self.select_proposal_list(
         #     det_labels, not_scaled_boxes, category_attribute_pair, img_metas
         # )  # Bx[tensor(Nx5)]
-        import pdb
-        pdb.set_trace()
 
         proposal_flatten_features, bbox_feats = self.proposal_encoder(x, gt_bboxes)
         proposal_flatten_features = proposal_flatten_features.squeeze(dim=-1).squeeze(dim=-1)  # 2x1024
