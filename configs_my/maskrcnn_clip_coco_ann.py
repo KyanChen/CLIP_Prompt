@@ -264,7 +264,8 @@ data = dict(
         pipeline=test_pipeline,
         attribute_id_map=attribute_id_map,
         img_prefix=caption_root + '/train2014',
-        test_mode=False,
+        att_split='train2014',
+        test_mode=True,
     )
 )
 evaluation = dict(interval=5, metric=['bbox'])

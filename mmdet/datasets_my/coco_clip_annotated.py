@@ -34,6 +34,7 @@ class CocoCLIPAnnDataset(CustomDataset):
                  pipeline,
                  attribute_id_map=None,
                  img_prefix='',
+                 att_split='val2014',
                  test_mode=False,
                  file_client_args=dict(backend='disk')
                  ):
@@ -47,7 +48,7 @@ class CocoCLIPAnnDataset(CustomDataset):
         self.pipeline = Compose(pipeline)
 
         self.patch_ids = []
-        split = 'val2014' if self.test_mode else 'train2014'
+        split = att_split
         # get all attribute vectors for this split
         for patch_id in self.attributes_dataset['ann_vecs'].keys():
             if self.attributes_dataset['split'][patch_id] == split:
