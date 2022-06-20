@@ -60,11 +60,17 @@ class MaskRCNNCLIP(BaseDetector):
         self.test_cfg = test_cfg
 
     def train(self, mode=True):
-        if mode:
-            self.backbone.eval()
-            self.neck.eval()
-            self.rpn_head.eval()
-            self.roi_head.eval()
+        import pdb
+        pdb.set_trace()
+        if not isinstance(mode, bool):
+            raise ValueError("training mode is expected to be boolean")
+        self.training = mode
+        for name, module in self.named_children():
+            if name in ['backbone', 'neck', 'rpn_head', 'roi_head']:
+                module.train(False)
+            else:
+                module.train(mode)
+        return self
 
     def aug_test(self, imgs, img_metas, **kwargs):
         pass
