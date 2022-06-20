@@ -87,15 +87,17 @@ class CocoCLIPAnnDataset(CustomDataset):
         ann = self.coco.load_anns(ann_id)[0]
         img_info = self.coco.load_imgs(ann['image_id'])[0]
 
+
         x1, y1, w, h = ann['bbox']
         inter_w = max(0, min(x1 + w, img_info['width']) - max(x1, 0))
         inter_h = max(0, min(y1 + h, img_info['height']) - max(y1, 0))
-        if inter_w * inter_h == 0:
-            print('box is too small')
-            return None
-        if ann['area'] <= 0 or w < 1 or h < 1:
-            print('box is too small')
-            return None
+        if not self.test_mode:
+            if inter_w * inter_h == 0:
+                print('box is too small')
+                return None
+            if ann['area'] <= 0 or w < 1 or h < 1:
+                print('box is too small')
+                return None
         bbox = [x1, y1, x1 + w, y1 + h]
 
         gt_bboxes = np.array(bbox, dtype=np.float32)
