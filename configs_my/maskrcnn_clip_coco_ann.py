@@ -290,7 +290,7 @@ lr_config = dict(
     warmup_ratio=0.001,
     step=[50, 80])
 runner = dict(type='EpochBasedRunner', max_epochs=100)
-load_from = '/data/kyanchen/prompt/pretrain/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
+# load_from = '/data/kyanchen/prompt/pretrain/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
 # load_from = 'D:/Dataset/COCO/mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth'
-# load_from = None
+load_from = 'results/EXP20220619_0//latest.pth'
 resume_from = None
