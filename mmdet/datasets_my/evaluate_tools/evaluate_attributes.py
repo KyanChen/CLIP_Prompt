@@ -50,7 +50,7 @@ class Evaluator:
         # with open(fpath_attr_headtail, 'r') as f:
         #     self.attribute_head_tail = json.load(f)
 
-        self.n_class = len(self.attr2idx)
+        self.n_class = len(self.idx2attr)
         self.exclude_atts = exclude_atts
         self.threshold = threshold
 
