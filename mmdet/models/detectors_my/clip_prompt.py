@@ -69,7 +69,7 @@ class CLIP_Prompter(BaseDetector):
     def train(self, mode=True):
         for name, module in self.named_children():
             if 'prompt_learner' in name:
-                module.train()
+                module.train(mode)
             else:
                 module.eval()
 
