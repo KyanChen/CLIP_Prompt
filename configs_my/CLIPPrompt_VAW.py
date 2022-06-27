@@ -137,7 +137,7 @@ optimizer = dict(
     constructor='SubModelConstructor',
     sub_model='prompt_learner',
     type='SGD',
-    lr=0.002,
+    lr=0.005,
     momentum=0.9,
     weight_decay=0.0005
 )
