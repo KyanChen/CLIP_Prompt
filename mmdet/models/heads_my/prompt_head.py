@@ -43,8 +43,8 @@ class PromptHead(BaseModule):
         # tmp_mask = (tmp_label >= 0)
         # loss = loss * tmp_mask
         # loss = loss.sum() / tmp_mask.sum()
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         try:
             acc = cal_metrics(f'{self.data_root}/VAW', cls_scores, gt_labels, is_logit=True)
         except Exception as e:
