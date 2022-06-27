@@ -1,6 +1,7 @@
 import warnings
 from abc import abstractmethod
 
+import torch
 from mmcv.runner import force_fp32
 
 from ..builder import HEADS, build_loss
@@ -42,9 +43,14 @@ class PromptHead(BaseModule):
         # tmp_mask = (tmp_label >= 0)
         # loss = loss * tmp_mask
         # loss = loss.sum() / tmp_mask.sum()
+        try:
+            acc = cal_metrics(f'{self.data_root}/VAW', cls_scores, gt_labels, is_logit=True)
+        except Exception as e:
+            print(e)
+            acc = torch.tensor(0.)
         losses = {
             "loss": loss,
-            "acc": cal_metrics(f'{self.data_root}/VAW', cls_scores, gt_labels)
+            "acc": acc
         }
         return losses
 
