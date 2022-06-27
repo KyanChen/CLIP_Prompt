@@ -150,7 +150,7 @@ optimizer = dict(
 #     lr=1e-4,
 #     weight_decay=1e-3
 # )
-optimizer_config = dict(grad_clip=dict(max_norm=100, norm_type=2))
+optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
 # # learning policy
 lr_config = dict(
