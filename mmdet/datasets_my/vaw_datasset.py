@@ -60,7 +60,7 @@ class VAWDataset(Dataset):
         [print(k, ': ', len(v)) for k, v in preprocessed.items()]
         print(10 * '*', 'All Dataset', 10 * '*')
 
-        if num_shots >= 1:
+        if isinstance(num_shots, int) and num_shots >= 1:
             split_path = os.path.join(self.split_fewshot_dir, f"shot_{num_shots}-seed_{seed}.pkl")
 
             if os.path.exists(split_path):
@@ -74,7 +74,6 @@ class VAWDataset(Dataset):
 
                 with open(split_path, "wb") as file:
                     pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
-
         else:
             data = preprocessed
 

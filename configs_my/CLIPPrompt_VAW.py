@@ -26,14 +26,14 @@ mp_start_method = 'fork'
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 # model settings
-data_root = 'D:/Dataset'
-# data_root = '/data/kyanchen/prompt/data'
+# data_root = 'D:/Dataset'
+data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='CLIP_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
     backbone=dict(
         type='CLIPModel',
-        backbone_name='RN50',
+        backbone_name='RN101',
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
         precision='fp16',
@@ -66,6 +66,7 @@ img_norm_cfg = dict(
     std=[0.26862954, 0.26130258, 0.27577711],
     to_rgb=False
 )
+# Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
 
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
@@ -97,7 +98,7 @@ test_pipeline = [
     )
 ]
 
-num_shots = 256
+num_shots = 'all'
 seed = 1
 data = dict(
     samples_per_gpu=256,
@@ -119,8 +120,7 @@ data = dict(
         seed=seed,
         test_mode=True,
         pipeline=test_pipeline),
-    test=
-    dict(
+    test=dict(
         samples_per_gpu=256,
         type=dataset_type,
         data_root=data_root,
@@ -131,33 +131,43 @@ data = dict(
         pipeline=test_pipeline
     )
 )
+#
+# # optimizer
+# optimizer = dict(
+#     constructor='SubModelConstructor',
+#     sub_model='prompt_learner',
+#     type='SGD',
+#     lr=0.002,
+#     momentum=0.9,
+#     weight_decay=0.0005
+# )
 
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model='prompt_learner',
-    type='SGD',
-    lr=0.002,
-    momentum=0.9,
-    weight_decay=0.0005
+    type='AdamW',
+    lr=1e-4,
+    weight_decay=1e-3
 )
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
 # # learning policy
-# lr_config = dict(
-#     policy='step',
-#     warmup='linear',
-#     warmup_iters=2000,  # same as burn-in in darknet
-#     warmup_ratio=0.1,
-#     step=[218, 246])
 lr_config = dict(
-    policy='CosineAnnealing',
-    by_epoch=False,
-    min_lr_ratio=1e-2,
+    policy='step',
     warmup='linear',
-    warmup_ratio=1e-3,
-    warmup_iters=1,
-    warmup_by_epoch=True)
+    warmup_iters=2000,  # same as burn-in in darknet
+    warmup_ratio=0.1,
+    step=[90, 120])
+
+# lr_config = dict(
+#     policy='CosineAnnealing',
+#     by_epoch=False,
+#     min_lr_ratio=1e-2,
+#     warmup='linear',
+#     warmup_ratio=1e-3,
+#     warmup_iters=1,
+#     warmup_by_epoch=True)
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=150)
