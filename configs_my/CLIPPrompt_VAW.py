@@ -133,24 +133,24 @@ data = dict(
 )
 #
 # # optimizer
-# optimizer = dict(
-#     constructor='SubModelConstructor',
-#     sub_model='prompt_learner',
-#     type='SGD',
-#     lr=0.002,
-#     momentum=0.9,
-#     weight_decay=0.0005
-# )
-
-# optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model='prompt_learner',
-    type='AdamW',
-    lr=1e-4,
-    weight_decay=1e-3
+    type='SGD',
+    lr=0.002,
+    momentum=0.9,
+    weight_decay=0.0005
 )
-optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
+
+# optimizer
+# optimizer = dict(
+#     constructor='SubModelConstructor',
+#     sub_model='prompt_learner',
+#     type='AdamW',
+#     lr=1e-4,
+#     weight_decay=1e-3
+# )
+optimizer_config = dict(grad_clip=dict(max_norm=100, norm_type=2))
 
 # # learning policy
 lr_config = dict(
