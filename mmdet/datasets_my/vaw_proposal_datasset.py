@@ -70,9 +70,9 @@ class VAWProposalDataset(Dataset):
                 iou = bbox_overlaps(box, gt_bboxes)[0]
                 box_ind = np.argmax(iou)
                 if iou[box_ind] < 0.7:
-                    import pdb
-                    pdb.set_trace()
                     continue
+                import pdb
+                pdb.set_trace()
                 instance = self.img_instances_pair[img_id][box_ind]
                 instance['instance_bbox'] = box
                 instances.append(instance)
