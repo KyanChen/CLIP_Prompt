@@ -63,7 +63,7 @@ class VAWProposalDataset(Dataset):
         for img_id in self.img_ids:
             gt_bboxes = [instance['instance_bbox'] for instance in self.img_instances_pair[img_id]]
             gt_bboxes = np.array(gt_bboxes).reshape(-1, 4)
-            gt_bboxes[2:] = gt_bboxes[:2] + gt_bboxes[2:]
+            gt_bboxes[:, 2:] = gt_bboxes[:, :2] + gt_bboxes[:, 2:]
             for proposal in img_proposal_pair[img_id]:
                 if proposal['score'] < 0.55:
                     continue
