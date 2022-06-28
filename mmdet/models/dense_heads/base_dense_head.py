@@ -100,8 +100,7 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                 score_factor_list = select_single_mlvl(score_factors, img_id)
             else:
                 score_factor_list = [None for _ in range(num_levels)]
-            import pdb
-            pdb.set_trace()
+
             results = self._get_bboxes_single(cls_score_list, bbox_pred_list,
                                               score_factor_list, mlvl_priors,
                                               img_meta, cfg, rescale, with_nms,
@@ -221,7 +220,8 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
             mlvl_labels.append(labels)
             if with_score_factors:
                 mlvl_score_factors.append(score_factor)
-
+        import pdb
+        pdb.set_trace()
         return self._bbox_post_process(mlvl_scores, mlvl_labels, mlvl_bboxes,
                                        img_meta['scale_factor'], cfg, rescale,
                                        with_nms, mlvl_score_factors, **kwargs)
@@ -276,6 +276,8 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                 - det_labels (Tensor): Predicted labels of the corresponding \
                     box with shape [num_bboxes].
         """
+        import pdb
+        pdb.set_trace()
         assert len(mlvl_scores) == len(mlvl_bboxes) == len(mlvl_labels)
 
         mlvl_bboxes = torch.cat(mlvl_bboxes)
