@@ -161,7 +161,7 @@ class FasterRCNNRPN(TwoStageDetector):
     def simple_test(self, img, img_metas, proposals=None, rescale=False):
         """Test without augmentation."""
         x = self.extract_feat(img)
-        proposal_list = self.rpn_head.simple_test_rpn(x, img_metas, rescale=rescale, class_agnostic=True)
+        proposal_list = self.rpn_head.simple_test_rpn(x, img_metas, rescale=rescale, class_agnostic=False)
         return proposal_list
 
     def aug_test(self, imgs, img_metas, rescale=False):

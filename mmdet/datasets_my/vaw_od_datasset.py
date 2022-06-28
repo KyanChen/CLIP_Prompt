@@ -96,13 +96,13 @@ class VAWODDataset(Dataset):
         for instance in instances:
             img_id = instance['image_id']
             img_instances_pair[img_id] = img_instances_pair.get(img_id, []) + [instance]
-        sub = {}
-        sub_keys = list(img_instances_pair.keys())[:10]
-        for k in sub_keys:
-            sub[k] = img_instances_pair[k]
+        # sub = {}
+        # sub_keys = list(img_instances_pair.keys())[:10]
+        # for k in sub_keys:
+        #     sub[k] = img_instances_pair[k]
 
-        # return instances, img_instances_pair
-        return instances, sub
+        return instances, img_instances_pair
+        # return instances, sub
 
     def __len__(self):
         return len(self.img_instances_pair)
@@ -232,17 +232,17 @@ class VAWODDataset(Dataset):
                 bboxes = np.zeros((0, 4))
             gt_bboxes.append(bboxes)
 
-        # for i in np.random.choice(range(len(self.img_ids)), 10):
-        for i in range(len(self.img_ids)):
+        for i in np.random.choice(range(len(self.img_ids)), 100):
+        # for i in range(len(self.img_ids)):
             img_id = self.img_ids[i]
             filename = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{img_id}.jpg'
             img = cv2.imread(filename, cv2.IMREAD_COLOR)
             for box in gt_bboxes[i]:
                 x1, y1, x2, y2 = box.astype(np.int)
-                img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=2)
+                img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
             for box in results[i]:
                 x1, y1, x2, y2, _ = box.astype(np.int)
-                img = cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), thickness=2)
+                img = cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), thickness=1)
             os.makedirs('results/tmp', exist_ok=True)
             cv2.imwrite('results/tmp' + f'/{img_id}.jpg', img)
 
