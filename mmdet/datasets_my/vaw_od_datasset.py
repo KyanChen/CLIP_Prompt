@@ -40,7 +40,7 @@ class VAWODDataset(Dataset):
             self.instances, self.img_instances_pair = self.read_data(['val.json'])
         elif pattern == 'test':
             self.instances, self.img_instances_pair = self.read_data(['test.json'])
-        print('data len: ', len(self.data))
+        print('data len: ', len(self.img_instances_pair))
         self.error_list = set()
 
     def read_data(self, json_file_list):
