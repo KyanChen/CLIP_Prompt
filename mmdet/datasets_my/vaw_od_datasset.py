@@ -499,7 +499,7 @@ class VAWODDataset(Dataset):
                  classwise=False,
                  metric_items=None,
 
-                 maxDets=(100, 200, 300),
+                 maxDets=(50, 100, 200),
                  iouThrs=None,
                  # specific param
                  areaRng=None,
@@ -517,7 +517,8 @@ class VAWODDataset(Dataset):
 
         # coco_gt = self.coco
         # self.cat_ids = coco_gt.get_cat_ids(cat_names=self.CLASSES)
-
+        jsonfile_prefix = 'results/EXP20220628_0/FasterRCNN_R50_OpenImages'
+        os.makedirs(jsonfile_prefix, exist_ok=True)
         result_files, tmp_dir = self.format_results(results, jsonfile_prefix)
         result_files_gt, tmp_dir_gt = self.format_gt()
 
