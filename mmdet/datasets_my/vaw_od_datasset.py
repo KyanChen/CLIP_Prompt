@@ -235,7 +235,7 @@ class VAWODDataset(Dataset):
     def evaluate_det_segm(self,
                           results,
                           result_files,
-                          coco_gt,
+                          result_files_gt,
                           metrics,
                           logger=None,
                           classwise=False,
@@ -502,7 +502,7 @@ class VAWODDataset(Dataset):
         result_files, tmp_dir = self.format_results(results, jsonfile_prefix)
         result_files_gt, tmp_dir_gt = self.format_gt()
 
-        eval_results = self.evaluate_det_segm(results, result_files, coco_gt,
+        eval_results = self.evaluate_det_segm(results, result_files, result_files_gt,
                                               metrics, logger, classwise, metric_items,
                                               maxDets, iouThrs, areaRng, val_or_test)
 
