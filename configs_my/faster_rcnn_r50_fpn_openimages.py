@@ -172,7 +172,7 @@ data = dict(
         data_root=data_root,
         pipeline=test_pipeline,
         pattern='test',
-        test_mode=False,
+        test_mode=True,
     ))
 
 # optimizer
