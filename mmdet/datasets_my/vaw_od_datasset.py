@@ -73,6 +73,7 @@ class VAWODDataset(Dataset):
         for idx in range(len(self)):
             img_id = self.img_ids[idx]
             bboxes = [instance['instance_bbox'] for instance in self.img_instances_pair[img_id]]
+            bboxes = np.array(bboxes).reshape(-1, 4)
             for i in range(bboxes.shape[0]):
                 data = dict()
                 data['image_id'] = img_id
