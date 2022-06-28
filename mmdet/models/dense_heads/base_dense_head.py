@@ -279,6 +279,8 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
 
         mlvl_bboxes = torch.cat(mlvl_bboxes)
         if rescale:
+            import pdb
+            pdb.set_trace()
             mlvl_bboxes /= mlvl_bboxes.new_tensor(scale_factor)
         mlvl_scores = torch.cat(mlvl_scores)
         mlvl_labels = torch.cat(mlvl_labels)
