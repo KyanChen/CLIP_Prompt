@@ -91,6 +91,7 @@ class VAWODDataset(Dataset):
         json_data = [json.load(open(self.data_root + '/VAW/' + x)) for x in json_file_list]
         instances = []
         [instances.extend(x) for x in json_data]
+        instances = instances[:10]
         img_instances_pair = {}
         for instance in instances:
             img_id = instance['image_id']
