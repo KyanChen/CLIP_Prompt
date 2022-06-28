@@ -135,7 +135,7 @@ class VAWProposalDataset(Dataset):
         return results
 
     def get_labels(self):
-        gt_labels = []
+        np_gt_labels = []
         for results in self.instances:
             positive_attributes = results['positive_attributes']
             negative_attributes = results['negative_attributes']
@@ -147,8 +147,8 @@ class VAWProposalDataset(Dataset):
 
             gt_labels = label.astype(np.int)
 
-            gt_labels.append(gt_labels.astype(np.int))
-        return np.stack(gt_labels, axis=0)
+            np_gt_labels.append(gt_labels.astype(np.int))
+        return np.stack(np_gt_labels, axis=0)
 
     def evaluate(self,
                  results,
