@@ -96,7 +96,7 @@ class VAWODDataset(Dataset):
 
     def get_labels(self):
         gt_labels = []
-        for item in self.data:
+        for item in self.img_instances_pair:
             gt_labels.append(item.label.astype(np.int))
         return np.stack(gt_labels, axis=0)
 
