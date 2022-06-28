@@ -92,12 +92,17 @@ class VAWODDataset(Dataset):
         json_data = [json.load(open(self.data_root + '/VAW/' + x)) for x in json_file_list]
         instances = []
         [instances.extend(x) for x in json_data]
-        instances = instances[:10]
         img_instances_pair = {}
         for instance in instances:
             img_id = instance['image_id']
             img_instances_pair[img_id] = img_instances_pair.get(img_id, []) + [instance]
-        return instances, img_instances_pair
+        sub = {}
+        sub_keys = list(img_instances_pair.keys())[:10]
+        for k in sub_keys:
+            sub[k] = img_instances_pair[k]
+
+        # return instances, img_instances_pair
+        return instances, sub
 
     def __len__(self):
         return len(self.img_instances_pair)
