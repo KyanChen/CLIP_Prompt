@@ -184,10 +184,11 @@ class RPNHead(AnchorHead):
 
         return self._bbox_post_process(mlvl_scores, mlvl_bbox_preds,
                                        mlvl_valid_anchors, level_ids, cfg,
-                                       img_shape)
+                                       img_shape, img_meta['scale_factor'], rescale)
 
     def _bbox_post_process(self, mlvl_scores, mlvl_bboxes, mlvl_valid_anchors,
-                           level_ids, cfg, img_shape, **kwargs):
+                           level_ids, cfg, img_shape, scale_factor,
+                           rescale=False, **kwargs):
         """bbox post-processing method.
 
         Do the nms operation for bboxes in same level.
@@ -216,6 +217,10 @@ class RPNHead(AnchorHead):
         rpn_bbox_pred = torch.cat(mlvl_bboxes)  # Nx4
         proposals = self.bbox_coder.decode(
             anchors, rpn_bbox_pred, max_shape=img_shape)  # Nx4
+
+        if rescale:
+            proposals /= proposals.new_tensor(scale_factor)
+
         ids = torch.cat(level_ids)  # N,不同尺度的标签
 
         if cfg.min_bbox_size >= 0:
