@@ -41,7 +41,7 @@ class VAWProposalDataset(Dataset):
             self.instances, self.img_instances_pair = self.read_data(['val.json'])
         elif pattern == 'test':
             self.instances, self.img_instances_pair = self.read_data(['test.json'])
-
+        print('num instances: ', len(self.instances))
         print('data len: ', len(self.img_instances_pair))
         self.error_list = set()
         self.img_ids = list(self.img_instances_pair.keys())
