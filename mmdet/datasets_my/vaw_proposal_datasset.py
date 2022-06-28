@@ -16,7 +16,7 @@ from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
 from ..datasets.pipelines import Compose
 from .evaluate_tools import cal_metrics
-from mmdet.core.evaluation import bbox_overlaps
+from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 
 
 @DATASETS.register_module()
@@ -57,13 +57,14 @@ class VAWProposalDataset(Dataset):
         for instance in proposals:
             img_id = instance['image_id']
             img_proposal_pair[img_id] = img_proposal_pair.get(img_id, []) + [instance]
-        import pdb
-        pdb.set_trace()
+
         instances = []
         for img_id in self.img_ids:
             gt_bboxes = [instance['instance_bbox'] for instance in self.img_instances_pair[img_id]]
             gt_bboxes = np.array(gt_bboxes).reshape(-1, 4)
             gt_bboxes[:, 2:] = gt_bboxes[:, :2] + gt_bboxes[:, 2:]
+            import pdb
+            pdb.set_trace()
             for proposal in img_proposal_pair[img_id]:
                 if proposal['score'] < 0.55:
                     continue
