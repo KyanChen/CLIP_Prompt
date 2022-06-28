@@ -109,7 +109,7 @@ class RPNHead(AnchorHead):
                            cfg,
                            rescale=False,
                            with_nms=True,
-                           class_agnostic=False
+                           class_agnostic=False,
                            **kwargs):
         """Transform outputs of a single image into bbox predictions.
 
