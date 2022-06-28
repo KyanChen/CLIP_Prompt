@@ -102,7 +102,7 @@ model = dict(
         rpn=dict(
             nms_pre=1000,
             max_per_img=300,
-            nms=dict(type='nms', iou_threshold=0.6),
+            nms=dict(type='nms', iou_threshold=0.5),
             min_bbox_size=16),
         rcnn=dict(
             score_thr=0.01,
