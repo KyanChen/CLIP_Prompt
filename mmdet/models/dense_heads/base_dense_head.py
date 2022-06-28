@@ -278,6 +278,8 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
         assert len(mlvl_scores) == len(mlvl_bboxes) == len(mlvl_labels)
 
         mlvl_bboxes = torch.cat(mlvl_bboxes)
+        import pdb
+        pdb.set_trace()
         if rescale:
             import pdb
             pdb.set_trace()
