@@ -485,6 +485,8 @@ class VAWODDataset(Dataset):
                  areaRng=None,
                  val_or_test='val'
                  ):
+        import pdb
+        pdb.set_trace()
         results = [x.cpu().numpy() for x in results]
 
         metrics = metric if isinstance(metric, list) else [metric]
