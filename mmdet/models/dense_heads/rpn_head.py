@@ -109,6 +109,7 @@ class RPNHead(AnchorHead):
                            cfg,
                            rescale=False,
                            with_nms=True,
+                           class_agnostic=False
                            **kwargs):
         """Transform outputs of a single image into bbox predictions.
 
@@ -184,11 +185,11 @@ class RPNHead(AnchorHead):
 
         return self._bbox_post_process(mlvl_scores, mlvl_bbox_preds,
                                        mlvl_valid_anchors, level_ids, cfg,
-                                       img_shape, img_meta['scale_factor'], rescale)
+                                       img_shape, img_meta['scale_factor'], rescale, class_agnostic)
 
     def _bbox_post_process(self, mlvl_scores, mlvl_bboxes, mlvl_valid_anchors,
                            level_ids, cfg, img_shape, scale_factor,
-                           rescale=False, **kwargs):
+                           rescale=False, class_agnostic=False, **kwargs):
         """bbox post-processing method.
 
         Do the nms operation for bboxes in same level.
@@ -233,7 +234,7 @@ class RPNHead(AnchorHead):
                 ids = ids[valid_mask]
 
         if proposals.numel() > 0:
-            dets, _ = batched_nms(proposals, scores, ids, cfg.nms)
+            dets, _ = batched_nms(proposals, scores, ids, cfg.nms, class_agnostic=class_agnostic)
         else:
             return proposals.new_zeros(0, 5)
 
