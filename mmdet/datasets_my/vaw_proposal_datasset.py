@@ -63,8 +63,6 @@ class VAWProposalDataset(Dataset):
             gt_bboxes = [instance['instance_bbox'] for instance in self.img_instances_pair[img_id]]
             gt_bboxes = np.array(gt_bboxes).reshape(-1, 4)
             gt_bboxes[:, 2:] = gt_bboxes[:, :2] + gt_bboxes[:, 2:]
-            import pdb
-            pdb.set_trace()
             for proposal in img_proposal_pair[img_id]:
                 if proposal['score'] < 0.55:
                     continue
@@ -72,6 +70,8 @@ class VAWProposalDataset(Dataset):
                 iou = bbox_overlaps(box, gt_bboxes)[0]
                 box_ind = np.argmax(iou)
                 if iou[box_ind] < 0.7:
+                    import pdb
+                    pdb.set_trace()
                     continue
                 instance = self.img_instances_pair[img_id][box_ind]
                 instance['instance_bbox'] = box
