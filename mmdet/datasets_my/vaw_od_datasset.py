@@ -227,7 +227,8 @@ class VAWODDataset(Dataset):
                 bboxes = np.zeros((0, 4))
             gt_bboxes.append(bboxes)
 
-        for i in np.random.choice(range(len(self.img_ids)), 10):
+        # for i in np.random.choice(range(len(self.img_ids)), 10):
+        for i in range(len(self.img_ids)):
             img_id = self.img_ids[i]
             filename = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{img_id}.jpg'
             img = cv2.imread(filename, cv2.IMREAD_COLOR)
