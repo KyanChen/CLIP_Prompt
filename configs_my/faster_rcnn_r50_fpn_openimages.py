@@ -170,7 +170,7 @@ data = dict(
         samples_per_gpu=2,
         type=dataset_type,
         data_root=data_root,
-        pipeline=train_pipeline,
+        pipeline=test_pipeline,
         pattern='test',
         test_mode=False,
     ))
