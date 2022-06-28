@@ -101,8 +101,8 @@ model = dict(
     test_cfg=dict(
         rpn=dict(
             nms_pre=1000,
-            max_per_img=100,
-            nms=dict(type='nms', iou_threshold=0.45),
+            max_per_img=50,
+            nms=dict(type='nms', iou_threshold=0.4),
             min_bbox_size=16),
         rcnn=dict(
             score_thr=0.01,
