@@ -187,7 +187,7 @@ lr_config = dict(
     step=[8, 11])
 runner = dict(type='EpochBasedRunner', max_epochs=12)
 
-evaluation = dict(interval=1, metric='mAP')
+evaluation = dict(interval=1, metric='proposal_fast')
 
 # https://download.openmmlab.com/mmdetection/v2.0/openimages/faster_rcnn_r50_fpn_32x2_cas_1x_openimages_challenge/faster_rcnn_r50_fpn_32x2_cas_1x_openimages_challenge_20220221_192021-34c402d9.pth
 load_from = None

@@ -57,7 +57,7 @@ def parse_args():
         'submit it to the test server')
     parser.add_argument(
         '--eval',
-        default="bbox",
+        default="proposal_fast",
         # default="mAP",
         type=str,
         nargs='+',
