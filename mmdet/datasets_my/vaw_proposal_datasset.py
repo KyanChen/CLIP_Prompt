@@ -69,7 +69,7 @@ class VAWProposalDataset(Dataset):
                 box = np.array(proposal['bbox']).reshape(-1, 4)
                 iou = bbox_overlaps(box, gt_bboxes)[0]
                 box_ind = np.argmax(iou)
-                if iou[box_ind] < 0.5:
+                if iou[box_ind] < 0.6:
                     continue
                 # import pdb
                 # pdb.set_trace()
