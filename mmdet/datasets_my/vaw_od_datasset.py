@@ -234,7 +234,7 @@ class VAWODDataset(Dataset):
             img = cv2.imread(filename, cv2.IMREAD_COLOR)
             for box in gt_bboxes[i]:
                 x1, y1, x2, y2 = box.astype(np.int)
-                img = cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), thickness=2)
+                img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=2)
             for box in results[i]:
                 x1, y1, x2, y2, _ = box.astype(np.int)
                 img = cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), thickness=2)
