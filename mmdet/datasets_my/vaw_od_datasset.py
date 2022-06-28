@@ -485,6 +485,7 @@ class VAWODDataset(Dataset):
                  areaRng=None,
                  val_or_test='val'
                  ):
+        results = [x.cpu().numpy() for x in results]
 
         metrics = metric if isinstance(metric, list) else [metric]
         allowed_metrics = ['bbox', 'segm', 'proposal', 'proposal_fast']
