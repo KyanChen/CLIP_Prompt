@@ -33,7 +33,7 @@ model = dict(
     classname_path=data_root+'/VAW/attribute_index.json',
     backbone=dict(
         type='CLIPModel',
-        backbone_name='RN101',
+        backbone_name='RN50',
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
         precision='fp16',
@@ -132,7 +132,7 @@ data = dict(
     )
 )
 #
-# # optimizer
+# optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model='prompt_learner',
@@ -152,22 +152,22 @@ optimizer = dict(
 # )
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
-# # learning policy
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=2000,  # same as burn-in in darknet
-    warmup_ratio=0.1,
-    step=[90, 120])
-
+# # # learning policy
 # lr_config = dict(
-#     policy='CosineAnnealing',
-#     by_epoch=False,
-#     min_lr_ratio=1e-2,
+#     policy='step',
 #     warmup='linear',
-#     warmup_ratio=1e-3,
-#     warmup_iters=1,
-#     warmup_by_epoch=True)
+#     warmup_iters=2000,  # same as burn-in in darknet
+#     warmup_ratio=0.1,
+#     step=[90, 120])
+
+lr_config = dict(
+    policy='CosineAnnealing',
+    by_epoch=False,
+    min_lr_ratio=1e-2,
+    warmup='linear',
+    warmup_ratio=1e-3,
+    warmup_iters=1,
+    warmup_by_epoch=True)
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=150)
