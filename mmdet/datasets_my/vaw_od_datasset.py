@@ -485,12 +485,6 @@ class VAWODDataset(Dataset):
                  areaRng=None,
                  val_or_test='val'
                  ):
-        import pdb
-        pdb.set_trace()
-        results = np.array(results)
-        preds = torch.from_numpy(results)
-        gts = self.get_labels()
-        gts = torch.from_numpy(gts)
 
         metrics = metric if isinstance(metric, list) else [metric]
         allowed_metrics = ['bbox', 'segm', 'proposal', 'proposal_fast']
