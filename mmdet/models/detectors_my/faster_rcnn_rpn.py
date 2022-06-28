@@ -160,8 +160,6 @@ class FasterRCNNRPN(TwoStageDetector):
 
     def simple_test(self, img, img_metas, proposals=None, rescale=False):
         """Test without augmentation."""
-
-        assert self.with_bbox, 'Bbox head must be implemented.'
         x = self.extract_feat(img)
         proposal_list = self.rpn_head.simple_test_rpn(x, img_metas, rescale=rescale)
         import pdb
