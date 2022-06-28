@@ -25,7 +25,8 @@ from mmdet.utils import (build_ddp, build_dp, compat_cfg, get_device,
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
-    parser.add_argument('--config', default='../configs_my/CLIPPrompt_VAW.py', help='test config file path')
+    parser.add_argument('--config', default='../configs_my/faster_rcnn_r50_fpn_openimages.py', help='test config file path')
+    # parser.add_argument('--checkpoint', default='results/EXP20220627_0/latest.pth', help='checkpoint file')
     parser.add_argument('--checkpoint', default='results/EXP20220627_0/latest.pth', help='checkpoint file')
     parser.add_argument(
         '--work-dir',

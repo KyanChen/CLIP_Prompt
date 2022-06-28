@@ -145,6 +145,8 @@ test_pipeline = [
 dataset_type = 'VAWODDataset'
 data_root = '/data/kyanchen/prompt/data'
 data = dict(
+    samples_per_gpu=2,
+    workers_per_gpu=0,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -165,6 +167,7 @@ data = dict(
         'challenge2019/challenge-2019-validation-detection-'
         'human-imagelabels.csv'),
     test=dict(
+        samples_per_gpu=2,
         type=dataset_type,
         data_root=data_root,
         pipeline=train_pipeline,
