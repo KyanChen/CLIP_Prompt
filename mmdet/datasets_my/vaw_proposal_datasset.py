@@ -51,14 +51,14 @@ class VAWProposalDataset(Dataset):
         self.classname_maps = json.load(open(text_file))
 
     def get_instances(self):
-        import pdb
-        pdb.set_trace()
+
         proposals = json.load(open('/data/kyanchen/prompt1/tools/results/EXP20220628_0/FasterRCNN_R50_OpenImages.proposal.json', 'r'))
         img_proposal_pair = {}
         for instance in proposals:
             img_id = instance['image_id']
             img_proposal_pair[img_id] = img_proposal_pair.get(img_id, []) + [instance]
-
+        import pdb
+        pdb.set_trace()
         instances = []
         for img_id in self.img_ids:
             gt_bboxes = [instance['instance_bbox'] for instance in self.img_instances_pair[img_id]]
