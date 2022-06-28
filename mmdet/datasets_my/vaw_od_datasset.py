@@ -15,6 +15,7 @@ import tempfile
 import warnings
 from collections import OrderedDict
 
+import cv2
 from terminaltables import AsciiTable
 
 import mmcv
@@ -225,6 +226,19 @@ class VAWODDataset(Dataset):
             if bboxes.shape[0] == 0:
                 bboxes = np.zeros((0, 4))
             gt_bboxes.append(bboxes)
+
+        for i in np.random.choice(range(len(self.img_ids)), 10):
+            img_id = self.img_ids[i]
+            filename = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{img_id}.jpg'
+            img = cv2.imread(filename, cv2.IMREAD_COLOR)
+            for box in gt_bboxes[i]:
+                x1, y1, x2, y2 = box.astype(np.int)
+                img = cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), thickness=2)
+            for box in results[i]:
+                x1, y1, x2, y2, _ = box.astype(np.int)
+                img = cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), thickness=2)
+            os.makedirs('results/tmp', exist_ok=True)
+            cv2.imwrite('results/tmp' + f'/{img_id}.jpg', img)
 
         recalls = eval_recalls(
             gt_bboxes, results, proposal_nums, iou_thrs, logger=logger)
@@ -507,4 +521,6 @@ class VAWODDataset(Dataset):
 
         if tmp_dir is not None:
             tmp_dir.cleanup()
+        if tmp_dir_gt is not None:
+            tmp_dir_gt.cleanup()
         return eval_results
