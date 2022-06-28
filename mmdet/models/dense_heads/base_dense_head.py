@@ -100,7 +100,8 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                 score_factor_list = select_single_mlvl(score_factors, img_id)
             else:
                 score_factor_list = [None for _ in range(num_levels)]
-
+            import pdb
+            pdb.set_trace()
             results = self._get_bboxes_single(cls_score_list, bbox_pred_list,
                                               score_factor_list, mlvl_priors,
                                               img_meta, cfg, rescale, with_nms,
@@ -278,11 +279,9 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
         assert len(mlvl_scores) == len(mlvl_bboxes) == len(mlvl_labels)
 
         mlvl_bboxes = torch.cat(mlvl_bboxes)
-        import pdb
-        pdb.set_trace()
+
         if rescale:
-            import pdb
-            pdb.set_trace()
+
             mlvl_bboxes /= mlvl_bboxes.new_tensor(scale_factor)
         mlvl_scores = torch.cat(mlvl_scores)
         mlvl_labels = torch.cat(mlvl_labels)
