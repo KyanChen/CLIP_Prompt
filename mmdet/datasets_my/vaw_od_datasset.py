@@ -99,9 +99,7 @@ class VAWODDataset(Dataset):
         return instances, img_instances_pair
 
     def __len__(self):
-        # return len(self.img_instances_pair)
-
-        return 10
+        return len(self.img_instances_pair)
 
     def get_test_data(self, idx):
         img_instances_pair = list(self.img_instances_pair.values())[idx]
