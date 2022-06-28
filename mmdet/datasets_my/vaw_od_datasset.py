@@ -479,7 +479,7 @@ class VAWODDataset(Dataset):
                  classwise=False,
                  metric_items=None,
 
-                 maxDets=(100, 300, 1000),
+                 maxDets=(100, 200, 300),
                  iouThrs=None,
                  # specific param
                  areaRng=None,
