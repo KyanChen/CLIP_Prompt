@@ -16,19 +16,18 @@ from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
 from ..datasets.pipelines import Compose
 from .evaluate_tools import cal_metrics
+from mmdet.core.evaluation import bbox_overlaps
 
 
 @DATASETS.register_module()
-class VAWDataset(Dataset):
+class VAWProposalDataset(Dataset):
 
     CLASSES = None
 
     def __init__(self,
                  data_root,
                  pipeline,
-                 num_shots,
                  pattern,
-                 seed=1,
                  test_mode=False,
                  file_client_args=dict(backend='disk')
                  ):
@@ -36,153 +35,77 @@ class VAWDataset(Dataset):
         self.test_mode = test_mode
         self.pipeline = Compose(pipeline)
         self.data_root = data_root
-        self.image_dir = os.path.join(self.data_root, "VG/images")
-        self.preprocessed = os.path.join(self.data_root, "VAW/preprocessed.pkl")
-        self.split_fewshot_dir = os.path.join(self.data_root, "VAW/split_fewshot")
-        mmcv.mkdir_or_exist(self.split_fewshot_dir)
+        if pattern == 'train':
+            self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
+        elif pattern == 'val':
+            self.instances, self.img_instances_pair = self.read_data(['val.json'])
+        elif pattern == 'test':
+            self.instances, self.img_instances_pair = self.read_data(['test.json'])
 
-        text_file = os.path.join(self.data_root, "VAW/attribute_index.json")
-        classname_maps = json.load(open(text_file))
-
-        if os.path.exists(self.preprocessed):
-            with open(self.preprocessed, "rb") as f:
-                preprocessed = pickle.load(f)
-        else:
-            train = self.read_data(classname_maps, ["train_part1.json", "train_part2.json"])
-            val = self.read_data(classname_maps, ['val.json'])
-            test = self.read_data(classname_maps, ['test.json'])
-
-            preprocessed = {"train": train, "val": val, "test": test}
-            with open(self.preprocessed, "wb") as f:
-                pickle.dump(preprocessed, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-        print(10 * '*', 'All Dataset', 10 * '*')
-        [print(k, ': ', len(v)) for k, v in preprocessed.items()]
-        print(10 * '*', 'All Dataset', 10 * '*')
-
-        if isinstance(num_shots, int) and num_shots >= 1:
-            split_path = os.path.join(self.split_fewshot_dir, f"shot_{num_shots}-seed_{seed}.pkl")
-
-            if os.path.exists(split_path):
-                print(f"Loading preprocessed few-shot data from {split_path}")
-                with open(split_path, "rb") as file:
-                    data = pickle.load(file)
-            else:
-                train = self.generate_fewshot_dataset(preprocessed['train'], num_shots=num_shots)
-                data = {"train": train}
-                print(f"Saving preprocessed few-shot data to {split_path}")
-
-                with open(split_path, "wb") as file:
-                    pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        else:
-            data = preprocessed
-
-        print(10 * '*', 'Split Dataset', 10 * '*')
-        [print(k, ': ', len(v)) for k, v in data.items()]
-        print(10 * '*', 'Split Dataset', 10 * '*')
-        if self.test_mode:
-            self.data = preprocessed[pattern]
-        else:
-            self.data = data['train']
-        # self.data = self.data[:3]
-        print('data len: ', len(self.data))
-        self.num_classes = max(classname_maps.values()) + 1
-        self.lab2cname = {v: k for k, v in classname_maps.items()}
-        self.classnames = list(self.lab2cname.values())
-        self.CLASSES = self.classnames
+        print('data len: ', len(self.img_instances_pair))
         self.error_list = set()
+        self.img_ids = list(self.img_instances_pair.keys())
 
-    def split_dataset_by_label(self, data_source):
-        """Split a dataset, i.e. a list of Datum objects,
-        into class-specific groups stored in a dictionary.
+        self.instances = self.get_instances()
+        text_file = os.path.join(self.data_root, "VAW/attribute_index.json")
+        self.classname_maps = json.load(open(text_file))
 
-        Args:
-            data_source (list): a list of Datum objects.
-        """
-        output = defaultdict(list)
+    def get_instances(self):
+        import pdb
+        pdb.set_trace()
+        proposals = json.load(open('/data/kyanchen/prompt1/tools/results/EXP20220628_0/FasterRCNN_R50_OpenImages.proposal.json', 'r'))
+        img_proposal_pair = {}
+        for instance in proposals:
+            img_id = instance['image_id']
+            img_proposal_pair[img_id] = img_proposal_pair.get(img_id, []) + [instance]
 
-        for item in data_source:
-            idxes = np.nonzero(item.label + 1)
-            for idx in idxes[0]:
-                output[idx].append(item)
+        instances = []
+        for img_id in self.img_ids:
+            gt_bboxes = [instance['instance_bbox'] for instance in self.img_instances_pair[img_id]]
+            gt_bboxes = np.array(gt_bboxes).reshape(-1, 4)
+            for proposal in img_proposal_pair[img_id]:
+                if proposal['score'] < 0.55:
+                    continue
+                box = np.array(proposal['bbox']).reshape(-1, 4)
+                iou = bbox_overlaps(box, gt_bboxes)[0]
+                box_ind = np.argmax(iou)
+                instance = self.img_instances_pair[img_id][box_ind]
+                instance['instance_bbox'] = box
+                instances.append(instance)
 
-        return output
+        return instances
 
-    def generate_fewshot_dataset(self, *data_sources, num_shots=-1, repeat=False):
-        """Generate a few-shot dataset (typically for the training set).
 
-        This function is useful when one wants to evaluate a model
-        in a few-shot learning setting where each class only contains
-        a few number of images.
-
-        Args:
-            data_sources: each individual is a list containing Datum objects.
-            num_shots (int): number of instances per class to sample.
-            repeat (bool): repeat images if needed (default: False).
-        """
-        if num_shots < 1:
-            if len(data_sources) == 1:
-                return data_sources[0]
-            return data_sources
-
-        print(f"Creating a {num_shots}-shot dataset")
-
-        output = []
-
-        for data_source in data_sources:
-            tracker = self.split_dataset_by_label(data_source)
-            dataset = []
-
-            for label, items in tracker.items():
-                if len(items) >= num_shots:
-                    sampled_items = random.sample(items, num_shots)
-                else:
-                    if repeat:
-                        sampled_items = random.choices(items, k=num_shots)
-                    else:
-                        sampled_items = items
-                dataset.extend(sampled_items)
-
-            output.append(dataset)
-
-        if len(output) == 1:
-            return output[0]
-
-        return output
-
-    def read_data(self, classname_maps, json_file_list):
+    def read_data(self, json_file_list):
         json_data = [json.load(open(self.data_root + '/VAW/' + x)) for x in json_file_list]
-        datas = []
-        [datas.extend(x) for x in json_data]
-        items = []
-        for data in datas:
-            # for x in data['positive_attributes']:
-            instance_bbox = data['instance_bbox']
-            if instance_bbox[2] * instance_bbox[3] < 16:
-                print(f'{data["image_id"]}: {instance_bbox}')
-                continue
-            item = DataItem(
-                image_id=data['image_id'],
-                instance_id=data['instance_id'],
-                instance_bbox=data['instance_bbox'],
-                object_name=data['object_name'],
-                positive_attributes=data['positive_attributes'],
-                negative_attributes=data['negative_attributes'],
-                label=None)
-            item.set_label(classname_maps=classname_maps)
+        instances = []
+        [instances.extend(x) for x in json_data]
+        img_instances_pair = {}
+        for instance in instances:
+            img_id = instance['image_id']
+            img_instances_pair[img_id] = img_instances_pair.get(img_id, []) + [instance]
+        # sub = {}
+        # sub_keys = list(img_instances_pair.keys())[:10]
+        # for k in sub_keys:
+        #     sub[k] = img_instances_pair[k]
 
-            items.append(item)
-        # print(json_file_list[0], ' instances: ', len(items))
-        return items
+        return instances, img_instances_pair
 
     def __len__(self):
-        return len(self.data)
+        return len(self.instances)
 
     def test_proposal_atts(self, idx):
-        pass
-
+        results = self.instances[idx]
+        results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
+        results['img_info'] = {}
+        results['img_info']['filename'] = f'{results["image_id"]}.jpg'
+        results['instance_bbox'] = results["instance_bbox"]
+        results = self.pipeline(results)
+        return results
 
     def __getitem__(self, idx):
+        if self.test_mode:
+            return self.test_proposal_atts(idx)
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
         item = self.data[idx]
@@ -209,8 +132,18 @@ class VAWDataset(Dataset):
 
     def get_labels(self):
         gt_labels = []
-        for item in self.data:
-            gt_labels.append(item.label.astype(np.int))
+        for results in self.instances:
+            positive_attributes = results['positive_attributes']
+            negative_attributes = results['negative_attributes']
+            label = np.ones(len(self.classname_maps.keys())) * 2
+            for att in positive_attributes:
+                label[self.classname_maps[att]] = 1
+            for att in negative_attributes:
+                label[self.classname_maps[att]] = 0
+
+            gt_labels = label.astype(np.int)
+
+            gt_labels.append(gt_labels.astype(np.int))
         return np.stack(gt_labels, axis=0)
 
     def evaluate(self,
