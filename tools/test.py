@@ -25,8 +25,8 @@ from mmdet.utils import (build_ddp, build_dp, compat_cfg, get_device,
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
-    parser.add_argument('--config', default='../configs_my/maskrcnn_clip_coco_ann.py', help='test config file path')
-    parser.add_argument('--checkpoint', default='results/EXP20220619_1/latest.pth', help='checkpoint file')
+    parser.add_argument('--config', default='../configs_my/CLIPPrompt_VAW.py', help='test config file path')
+    parser.add_argument('--checkpoint', default='results/EXP20220627_0/latest.pth', help='checkpoint file')
     parser.add_argument(
         '--work-dir',
         help='the directory to save the file containing evaluation metrics')
