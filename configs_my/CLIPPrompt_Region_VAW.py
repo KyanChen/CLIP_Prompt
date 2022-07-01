@@ -40,7 +40,7 @@ model = dict(
     ),
     neck=dict(
         type='FPN',
-        in_channels=[64, 128, 256, 512, 1024],
+        in_channels=[64, 256, 512, 1024, 2048],
         out_channels=256,
         num_outs=5),
     roi_head=dict(
