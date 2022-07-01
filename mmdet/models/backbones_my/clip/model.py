@@ -141,7 +141,7 @@ class ModifiedResNet(nn.Module):
         # stem
         for conv, bn in [(self.conv1, self.bn1), (self.conv2, self.bn2), (self.conv3, self.bn3)]:
             x = self.relu(bn(conv(x)))
-            outs.append(x)
+        outs.append(x)
         x = self.avgpool(x)
 
         # res layers
