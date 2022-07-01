@@ -89,7 +89,7 @@ train_pipeline = [
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=(224, 224), keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
-    dict(type='Pad', size=(224, 224)),
+    dict(type='Pad', size=(224, 224), center_pad=True),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['proposals', 'gt_labels']),
     dict(type='Collect', keys=['img', 'proposals', 'gt_labels'])
