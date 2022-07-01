@@ -74,8 +74,8 @@ class CLIP_Prompter_Region(BaseDetector):
 
     def train(self, mode=True):
         for name, module in self.named_children():
-            import pdb
-            pdb.set_trace()
+            # import pdb
+            # pdb.set_trace()
             if 'prompt_learner' in name or 'neck' in name or 'roi_head' in name:
                 module.train(mode)
             else:
