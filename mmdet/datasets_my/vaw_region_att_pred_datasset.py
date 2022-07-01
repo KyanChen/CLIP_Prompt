@@ -135,7 +135,7 @@ class VAWRegionDataset(Dataset):
         img = cv2.imread(filename, cv2.IMREAD_COLOR)
         # import pdb
         # pdb.set_trace()
-        x1, y1, x2, y2 = int(x), int(y), int(x+w), int(y+h)
+        x1, y1, x2, y2 = int(x-w/2.), int(y-h/2), int(x+w/2), int(y+h/2)
         img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
         os.makedirs('results/tmp', exist_ok=True)
         cv2.imwrite('results/tmp' + f'/{idx}.jpg', img)
