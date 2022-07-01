@@ -161,6 +161,8 @@ class VAWRegionDataset(Dataset):
             self.error_list.add(idx)
             self.error_list.add(results['img_info']['filename'])
             print(self.error_list)
+            if len(self.error_list) > 20:
+                return
             if not self.test_mode:
                 results = self.__getitem__(np.random.randint(0, len(self)))
 

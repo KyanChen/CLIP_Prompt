@@ -180,18 +180,28 @@ class CLIP_Prompter_Region(BaseDetector):
             assert 'proposals' not in kwargs
             return self.aug_test(imgs, img_metas, **kwargs)
 
-    def simple_test(self, img, img_metas, rescale=False):
-        image_features = self.image_encoder(img.type(self.dtype))  # 2x1024
+    def simple_test(self,
+                    img, img_metas, proposals,
+                    rescale=False, **kwargs):
+
+        image_features, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
+        img_f_maps = tuple([x.float() for x in img_f_maps])
+        img_f_maps = self.neck(img_f_maps)
+        proposal_features, bbox_feats = self.roi_head(img_f_maps,
+                                                      proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
+        proposal_features = rearrange(proposal_features, 'B C H W -> B (C H W)')
 
         prompts = self.prompt_learner()  # 620x77x512
         tokenized_prompts = self.tokenized_prompts
-        text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
 
-        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+        text_features = self.text_encoder(prompts, tokenized_prompts)  # torch.Size([620, 1024])
+
+        proposal_features = proposal_features / proposal_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        text_features = text_features.float()
 
-        logit_scale = self.logit_scale.exp()
-        logits = logit_scale * image_features @ text_features.t()  # 2x620
+        logit_scale = self.logit_scale.exp().float()
+        logits = logit_scale * proposal_features @ text_features.t()  # 2x620
 
         pred = list(logits.detach().cpu().numpy())
         return pred
