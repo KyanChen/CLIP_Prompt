@@ -125,6 +125,7 @@ class VAWRegionDataset(Dataset):
         "negative_attributes": ["multicolored", "maroon", "weathered", "speckled", "carpeted"]
         '''
         results = item
+        print(results)
         results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
         results['img_info'] = {}
         results['img_info']['filename'] = f'{results["image_id"]}.jpg'
