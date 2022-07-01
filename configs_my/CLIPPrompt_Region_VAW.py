@@ -105,7 +105,7 @@ test_pipeline = [
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size=(224, 224)),
             dict(type='ImageToTensor', keys=['img']),
-            dict(type='Collect', keys=['img'])
+            dict(type='Collect', keys=['img', 'proposals'])
         ]
     )
 ]
@@ -174,7 +174,7 @@ lr_config = dict(
     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=150)
+runner = dict(type='EpochBasedRunner', max_epochs=200)
 evaluation = dict(interval=1000, metric='mAP')
 
 load_from = None
