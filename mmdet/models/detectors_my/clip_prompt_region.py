@@ -116,6 +116,8 @@ class CLIP_Prompter_Region(BaseDetector):
             image_features, img_f_maps = self.image_encoder(img.type(self.dtype), out_all_features=True)  # 2x1024
 
         proposal_features, bbox_feats = self.roi_head(img_f_maps, proposals)
+        import pdb
+        pdb.set_trace()
 
         prompts = self.prompt_learner()  # 620x77x512
         tokenized_prompts = self.tokenized_prompts
