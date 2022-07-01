@@ -114,7 +114,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=2,
+    samples_per_gpu=10,
     workers_per_gpu=0,
     # persistent_workers=True,
     train=dict(

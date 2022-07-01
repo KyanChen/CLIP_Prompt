@@ -144,6 +144,8 @@ class VAWRegionDataset(Dataset):
 
         try:
             # print(results)
+            import pdb
+            pdb.set_trace()
             results = self.pipeline(results)
         except Exception as e:
             print(e)
