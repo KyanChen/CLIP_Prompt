@@ -53,7 +53,7 @@ class PromptHead(BaseModule):
             acc = cal_metrics(f'{self.data_root}/VAW', cls_scores, gt_labels, is_logit=True)
         except Exception as e:
             print(e)
-            acc = torch.tensor(0, dtype=torch.float32)
+            acc = torch.tensor(0., dtype=torch.float32)
         acc = acc.to(loss.device)
         losses = {
             "loss": loss,
