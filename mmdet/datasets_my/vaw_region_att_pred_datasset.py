@@ -142,6 +142,7 @@ class VAWRegionDataset(Dataset):
             labels[self.classname_maps[att]] = 0
 
         results['gt_labels'] = labels.astype(np.int)
+        results = self.pipeline(results)
         try:
             # print(results)
             results = self.pipeline(results)
