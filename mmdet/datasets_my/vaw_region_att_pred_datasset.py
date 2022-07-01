@@ -142,16 +142,16 @@ class VAWRegionDataset(Dataset):
 
         results['gt_labels'] = labels.astype(np.int)
         results = self.pipeline(results)
-        try:
-            # print(results)
-            results = self.pipeline(results)
-        except Exception as e:
-            print(e)
-            self.error_list.add(idx)
-            self.error_list.add(results['img_info']['filename'])
-            print(self.error_list)
-            if not self.test_mode:
-                results = self.__getitem__(np.random.randint(0, len(self)))
+        # try:
+        #     # print(results)
+        #     results = self.pipeline(results)
+        # except Exception as e:
+        #     print(e)
+        #     self.error_list.add(idx)
+        #     self.error_list.add(results['img_info']['filename'])
+        #     print(self.error_list)
+        #     if not self.test_mode:
+        #         results = self.__getitem__(np.random.randint(0, len(self)))
         import pdb
         pdb.set_trace()
         img = results['img']
