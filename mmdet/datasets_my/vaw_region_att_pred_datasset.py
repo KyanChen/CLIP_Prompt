@@ -101,7 +101,7 @@ class VAWRegionDataset(Dataset):
         return len(self.instances)
 
     def get_test_data(self, idx):
-        results = self.instances[idx]
+        results = self.instances[idx].copy()
         results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
         results['img_info'] = {}
         results['img_info']['filename'] = f'{results["image_id"]}.jpg'
