@@ -1,6 +1,7 @@
 import json
 
 import torch
+from einops import rearrange
 
 from ..builder import DETECTORS, build_backbone, build_head, build_neck
 from ..detectors.base import BaseDetector
@@ -123,15 +124,13 @@ class CLIP_Prompter_Region(BaseDetector):
         # torch.Size([256, 2048, 7, 7])
         img_f_maps = tuple([x.float() for x in img_f_maps])
         img_f_maps = self.neck(img_f_maps)
-        import pdb
-        pdb.set_trace()
-        proposal_features, bbox_feats = self.roi_head(img_f_maps, proposals)
-
+        proposal_features, bbox_feats = self.roi_head(img_f_maps, proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
+        proposal_features = rearrange(proposal_features, 'B C H W -> B (C H W)')
 
         prompts = self.prompt_learner()  # 620x77x512
         tokenized_prompts = self.tokenized_prompts
 
-        text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
+        text_features = self.text_encoder(prompts, tokenized_prompts)  # torch.Size([620, 1024])
 
         proposal_features = proposal_features / proposal_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)

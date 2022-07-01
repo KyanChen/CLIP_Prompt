@@ -59,8 +59,6 @@ class ProposalEncoder(BaseModule):
         return bbox_head
 
     def forward(self, x, proposal_list, **kwargs):
-        import pdb
-        pdb.set_trace()
         rois = bbox2roi(proposal_list)
         bbox_feats = self.bbox_roi_extractor(x[:self.bbox_roi_extractor.num_inputs], rois)  # N 256 7 7
         bbox_feats = self.shared_head(bbox_feats)
