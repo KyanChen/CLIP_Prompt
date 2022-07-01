@@ -134,8 +134,9 @@ class CLIP_Prompter_Region(BaseDetector):
 
         proposal_features = proposal_features / proposal_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        text_features = text_features.float()
 
-        logit_scale = self.logit_scale.exp()
+        logit_scale = self.logit_scale.exp().float()
         logits = logit_scale * proposal_features @ text_features.t()  # 2x620
 
         losses = self.bbox_head.forward_train(logits, img_metas, gt_labels)
