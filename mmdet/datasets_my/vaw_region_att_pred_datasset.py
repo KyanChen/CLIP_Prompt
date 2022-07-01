@@ -49,7 +49,7 @@ class VAWRegionDataset(Dataset):
         self.img_ids = list(self.img_instances_pair.keys())
 
         # self.instances = self.get_instances()
-        self.instances = self.instances[:10]
+        self.instances = self.instances[20:80]
         attribute_index_file = os.path.join(self.data_root, "VAW/attribute_index.json")
         self.classname_maps = json.load(open(attribute_index_file))
 
@@ -135,7 +135,8 @@ class VAWRegionDataset(Dataset):
         img = cv2.imread(filename, cv2.IMREAD_COLOR)
         # import pdb
         # pdb.set_trace()
-        x1, y1, x2, y2 = int(x-w/2.), int(y-h/2), int(x+w/2), int(y+h/2)
+        # x1, y1, x2, y2 = int(x-w/2.), int(y-h/2), int(x+w/2), int(y+h/2)
+        x1, y1, x2, y2 = int(x), int(y), int(x + w), int(y + h)
         img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
         os.makedirs('results/tmp', exist_ok=True)
         cv2.imwrite('results/tmp' + f'/{idx}.jpg', img)
