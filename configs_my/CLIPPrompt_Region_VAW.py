@@ -97,8 +97,6 @@ train_pipeline = [
 
 test_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
-    dict(type='ScaleCrop', scale_range=[0.2, 0.4]),
-    dict(type='RandomCrop', crop_size=[0.7, 0.7], crop_type='relative_range'),
     dict(type='MultiScaleFlipAug',
          img_scale=(224, 224),
          flip=False,
