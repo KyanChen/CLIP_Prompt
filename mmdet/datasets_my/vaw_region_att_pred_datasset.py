@@ -130,6 +130,17 @@ class VAWRegionDataset(Dataset):
         results['img_info']['filename'] = f'{results["image_id"]}.jpg'
         x, y, w, h = results["instance_bbox"]
 
+
+        filename = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{results["image_id"]}.jpg'
+        img = cv2.imread(filename, cv2.IMREAD_COLOR)
+        # import pdb
+        # pdb.set_trace()
+        box = results['proposals'].numpy()[0]
+        x1, y1, x2, y2 = x, y, x+w, y+h
+        img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
+        os.makedirs('results/tmp', exist_ok=True)
+        cv2.imwrite('results/tmp' + f'/{idx}.jpg', img)
+
         results['proposals'] = np.array([x, y, x+w, x+h]).reshape(1, 4)
         results['bbox_fields'] = ['proposals']
         positive_attributes = results["positive_attributes"]
@@ -155,19 +166,19 @@ class VAWRegionDataset(Dataset):
             if not self.test_mode:
                 results = self.__getitem__(np.random.randint(0, len(self)))
 
-        img = results['img']
-        img_metas = results['img_metas'].data
-
-        img = img.cpu().numpy().transpose(1, 2, 0)
-        mean, std = img_metas['img_norm_cfg']['mean'], img_metas['img_norm_cfg']['std']
-        img = (255*mmcv.imdenormalize(img, mean, std, to_bgr=True)).astype(np.uint8)
-        # import pdb
-        # pdb.set_trace()
-        box = results['proposals'].numpy()[0]
-        x1, y1, x2, y2 = box.astype(np.int)
-        img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
-        os.makedirs('results/tmp', exist_ok=True)
-        cv2.imwrite('results/tmp' + f'/{idx}.jpg', img)
+        # img = results['img']
+        # img_metas = results['img_metas'].data
+        #
+        # img = img.cpu().numpy().transpose(1, 2, 0)
+        # mean, std = img_metas['img_norm_cfg']['mean'], img_metas['img_norm_cfg']['std']
+        # img = (255*mmcv.imdenormalize(img, mean, std, to_bgr=True)).astype(np.uint8)
+        # # import pdb
+        # # pdb.set_trace()
+        # box = results['proposals'].numpy()[0]
+        # x1, y1, x2, y2 = box.astype(np.int)
+        # img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
+        # os.makedirs('results/tmp', exist_ok=True)
+        # cv2.imwrite('results/tmp' + f'/{idx}.jpg', img)
         return results
 
     def get_labels(self):
