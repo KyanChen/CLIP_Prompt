@@ -122,6 +122,8 @@ class ModifiedResNet(nn.Module):
 
         embed_dim = width * 32  # the ResNet feature dimension
         self.attnpool = AttentionPool2d(input_resolution // 32, embed_dim, heads, output_dim)
+        import pdb
+        pdb.set_trace()
 
 
     def _make_layer(self, planes, blocks, stride=1):
