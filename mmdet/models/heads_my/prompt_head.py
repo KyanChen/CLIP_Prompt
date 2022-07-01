@@ -29,7 +29,7 @@ class PromptHead(BaseModule):
         cls_scores_flatten = rearrange(cls_scores, 'B N -> (B N)')
         gt_labels_flatten = rearrange(gt_labels, 'B N -> (B N)')
         pos_neg_mask = gt_labels_flatten < 2
-        bce_loss = F.binary_cross_entropy_with_logits(cls_scores_flatten[pos_neg_mask], gt_labels_flatten[pos_neg_mask], reduction='mean')
+        bce_loss = F.binary_cross_entropy_with_logits(cls_scores_flatten[pos_neg_mask], gt_labels_flatten[pos_neg_mask].float(), reduction='mean')
         return bce_loss
 
     def loss(self,
