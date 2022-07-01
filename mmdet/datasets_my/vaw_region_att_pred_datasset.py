@@ -155,7 +155,7 @@ class VAWRegionDataset(Dataset):
         import pdb
         pdb.set_trace()
         img = results['img']
-        img_metas = results['img_metas']
+        img_metas = results['img_metas'].data
         img = tensor2imgs(img, **img_metas['img_norm_cfg'])
         box = results['gt_bboxes'].numpy()
         x1, y1, x2, y2 = box.astype(np.int)
