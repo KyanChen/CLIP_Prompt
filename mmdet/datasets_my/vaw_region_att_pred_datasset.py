@@ -141,7 +141,7 @@ class VAWRegionDataset(Dataset):
         os.makedirs('results/tmp', exist_ok=True)
         cv2.imwrite('results/tmp' + f'/{idx}.jpg', img)
 
-        results['proposals'] = np.array([x, y, x+w, x+h]).reshape(1, 4)
+        results['proposals'] = np.array([x, y, x+w, y+h]).reshape(1, 4)
         results['bbox_fields'] = ['proposals']
         positive_attributes = results["positive_attributes"]
         negative_attributes = results["negative_attributes"]
