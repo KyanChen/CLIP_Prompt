@@ -50,7 +50,7 @@ class PromptHead(BaseModule):
         # import pdb
         # pdb.set_trace()
         try:
-            acc = cal_metrics(f'{self.data_root}/VAW', cls_scores, gt_labels, is_logit=True)
+            acc = cal_metrics(f'{self.data_root}/VAW', cls_scores, gt_labels, is_logit=True).float()
         except Exception as e:
             print(e)
             acc = torch.tensor(0., dtype=torch.float32)
