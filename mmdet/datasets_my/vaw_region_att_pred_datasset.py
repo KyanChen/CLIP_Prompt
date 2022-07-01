@@ -49,6 +49,7 @@ class VAWRegionDataset(Dataset):
         self.img_ids = list(self.img_instances_pair.keys())
 
         # self.instances = self.get_instances()
+        self.instances = self.instances[:2]
         attribute_index_file = os.path.join(self.data_root, "VAW/attribute_index.json")
         self.classname_maps = json.load(open(attribute_index_file))
 
