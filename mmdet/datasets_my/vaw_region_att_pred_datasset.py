@@ -106,38 +106,8 @@ class VAWRegionDataset(Dataset):
         results['img_info'] = {}
         results['img_info']['filename'] = f'{results["image_id"]}.jpg'
         x, y, w, h = results["instance_bbox"]
-
-        # filename = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{results["image_id"]}.jpg'
-        # img = cv2.imread(filename, cv2.IMREAD_COLOR)
-        # # import pdb
-        # # pdb.set_trace()
-        # # x1, y1, x2, y2 = int(x-w/2.), int(y-h/2), int(x+w/2), int(y+h/2)
-        # x1, y1, x2, y2 = int(x), int(y), int(x + w), int(y + h)
-        # img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
-        # os.makedirs('results/tmp', exist_ok=True)
-        # cv2.imwrite('results/tmp' + f'/{idx}.jpg', img)
-
         results['proposals'] = np.array([x, y, x + w, y + h], dtype=np.float32).reshape(1, 4)
         results['bbox_fields'] = ['proposals']
-        positive_attributes = results["positive_attributes"]
-        negative_attributes = results["negative_attributes"]
-        labels = np.ones(len(self.classname_maps.keys())) * 2
-        for att in positive_attributes:
-            labels[self.classname_maps[att]] = 1
-        for att in negative_attributes:
-            labels[self.classname_maps[att]] = 0
-
-        results['gt_labels'] = labels.astype(np.int)
-
-        try:
-            results = self.pipeline(results)
-        except Exception as e:
-            print(e)
-            self.error_list.add(idx)
-            self.error_list.add(results['img_info']['filename'])
-            print(self.error_list)
-            if not self.test_mode:
-                results = self.__getitem__(np.random.randint(0, len(self)))
         results = self.pipeline(results)
         return results
 
