@@ -100,7 +100,7 @@ class VAWRegionDataset(Dataset):
     def __len__(self):
         return len(self.instances)
 
-    def test_proposal_atts(self, idx):
+    def get_test_data(self, idx):
         results = self.instances[idx]
         results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
         results['img_info'] = {}
@@ -111,7 +111,7 @@ class VAWRegionDataset(Dataset):
 
     def __getitem__(self, idx):
         if self.test_mode:
-            return self.test_proposal_atts(idx)
+            return self.get_test_data(idx)
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
         item = self.instances[idx]
