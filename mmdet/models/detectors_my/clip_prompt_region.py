@@ -66,8 +66,6 @@ class CLIP_Prompter_Region(BaseDetector):
         for name, param in self.named_parameters():
             if 'prompt_learner' in name or 'neck' in name or 'roi_head' in name:
                 param.requires_grad_(True)
-                import pdb
-                pdb.set_trace()
             else:
                 param.requires_grad_(False)
 
