@@ -2,44 +2,48 @@ import warnings
 from abc import abstractmethod
 
 import torch
+from einops import rearrange
 from mmcv.runner import force_fp32
 
 from ..builder import HEADS, build_loss
 from mmcv.runner import BaseModule
 from mmdet.datasets_my.evaluate_tools import cal_metrics
-
+import torch.nn.functional as F
 
 @HEADS.register_module()
 class PromptHead(BaseModule):
     def __init__(self,
                  data_root='',
-                 loss_cls=dict(
-                     type='FocalLoss',
-                     use_sigmoid=True,
-                     gamma=2.0,
-                     alpha=0.25,
-                     loss_weight=1.0),
                  train_cfg=None,
                  test_cfg=None,
                  init_cfg=None
                  ):
         super(PromptHead, self).__init__(init_cfg)
         self.data_root = data_root
-        self.loss_cls = build_loss(loss_cls)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
+
+    def get_classify_loss(self, cls_scores, gt_labels):
+        # cls_scores: BxN
+        # gt_labels: BxN
+        cls_scores_flatten = rearrange(cls_scores, 'B N -> (B, N)')
+        gt_labels_flatten = rearrange(gt_labels, 'B N -> (B, N)')
+        pos_neg_mask = gt_labels_flatten < 2
+        bce_loss = F.binary_cross_entropy_with_logits(cls_scores_flatten[pos_neg_mask], gt_labels_flatten[pos_neg_mask], reduction='mean')
+        return bce_loss
 
     def loss(self,
              cls_scores,
              gt_labels,
              img_metas,
-             gt_bboxes_ignore=None):
+             **kwargs
+             ):
 
         # tmp_output = cls_scores.view(-1)
         # tmp_label = gt_labels.view(-1)
         # import pdb
         # pdb.set_trace()
-        loss = self.loss_cls(cls_scores, gt_labels)
+        loss = self.get_classify_loss(cls_scores, gt_labels)
         # tmp_mask = (tmp_label >= 0)
         # loss = loss * tmp_mask
         # loss = loss.sum() / tmp_mask.sum()
@@ -60,10 +64,9 @@ class PromptHead(BaseModule):
     def forward_train(self,
                       x,
                       img_metas,
-                      gt_labels=None,
-                      gt_bboxes_ignore=None,
+                      gt_labels,
                       **kwargs):
-        losses = self.loss(x, gt_labels, img_metas, gt_bboxes_ignore=gt_bboxes_ignore)
+        losses = self.loss(x, gt_labels, img_metas)
 
         return losses
 

@@ -52,6 +52,8 @@ class ProposalEncoder(BaseModule):
                 act_cfg=dict(type='ReLU')
             ),
             nn.Conv2d(in_channels * 2, in_channels * 4, kernel_size=2),
+            nn.BatchNorm2d(in_channels * 4),
+            nn.ReLU(),
             nn.Conv2d(in_channels * 4, out_channels, kernel_size=1),
         )
         return bbox_head

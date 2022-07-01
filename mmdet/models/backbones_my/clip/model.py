@@ -104,24 +104,25 @@ class ModifiedResNet(nn.Module):
         self.input_resolution = input_resolution
 
         # the 3-layer stem
-        self.conv1 = nn.Conv2d(3, width // 2, kernel_size=3, stride=2, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(3, width // 2, kernel_size=3, stride=2, padding=1, bias=False)  # Bx3x224x224 -> Bx3x112x112
         self.bn1 = nn.BatchNorm2d(width // 2)
-        self.conv2 = nn.Conv2d(width // 2, width // 2, kernel_size=3, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(width // 2, width // 2, kernel_size=3, padding=1, bias=False)  # Bx3x112x112 -> Bx3x112x112
         self.bn2 = nn.BatchNorm2d(width // 2)
-        self.conv3 = nn.Conv2d(width // 2, width, kernel_size=3, padding=1, bias=False)
+        self.conv3 = nn.Conv2d(width // 2, width, kernel_size=3, padding=1, bias=False)  # Bx3x112x112
         self.bn3 = nn.BatchNorm2d(width)
-        self.avgpool = nn.AvgPool2d(2)
+        self.avgpool = nn.AvgPool2d(2)  # Bx3x112x112 -> Bx3x64x64
         self.relu = nn.ReLU(inplace=True)
 
         # residual layers
         self._inplanes = width  # this is a *mutable* variable used during construction
-        self.layer1 = self._make_layer(width, layers[0])
-        self.layer2 = self._make_layer(width * 2, layers[1], stride=2)
-        self.layer3 = self._make_layer(width * 4, layers[2], stride=2)
-        self.layer4 = self._make_layer(width * 8, layers[3], stride=2)
+        self.layer1 = self._make_layer(width, layers[0])  # Bx3x64x64 -> Bx3x64x64
+        self.layer2 = self._make_layer(width * 2, layers[1], stride=2)  # Bx3x64x64 -> Bx3x32x32
+        self.layer3 = self._make_layer(width * 4, layers[2], stride=2)  # Bx3x32x32 -> Bx3x16x16
+        self.layer4 = self._make_layer(width * 8, layers[3], stride=2)  # Bx3x16x16 -> Bx3x8x8
 
         embed_dim = width * 32  # the ResNet feature dimension
         self.attnpool = AttentionPool2d(input_resolution // 32, embed_dim, heads, output_dim)
+
 
     def _make_layer(self, planes, blocks, stride=1):
         layers = [Bottleneck(self._inplanes, planes, stride)]
@@ -132,22 +133,38 @@ class ModifiedResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x):
-        def stem(x):
-            for conv, bn in [(self.conv1, self.bn1), (self.conv2, self.bn2), (self.conv3, self.bn3)]:
-                x = self.relu(bn(conv(x)))
-            x = self.avgpool(x)
-            return x
-
+    def forward(self, x, out_all_features=False):
+        import pdb
+        pdb.set_trace()
+        outs = []
         x = x.type(self.conv1.weight.dtype)
-        x = stem(x)
+        # stem
+        for conv, bn in [(self.conv1, self.bn1), (self.conv2, self.bn2), (self.conv3, self.bn3)]:
+            x = self.relu(bn(conv(x)))
+        if out_all_features:
+            outs.append(x)
+        x = self.avgpool(x)
+
+        # res layers
         x = self.layer1(x)
+        if out_all_features:
+            outs.append(x)
+
         x = self.layer2(x)
+        if out_all_features:
+            outs.append(x)
+
         x = self.layer3(x)
+        if out_all_features:
+            outs.append(x)
+
         x = self.layer4(x)
+        if out_all_features:
+            outs.append(x)
+
         x = self.attnpool(x)
 
-        return x
+        return x, tuple(outs)
 
 
 class LayerNorm(nn.LayerNorm):
