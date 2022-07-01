@@ -135,7 +135,6 @@ class VAWRegionDataset(Dataset):
         img = cv2.imread(filename, cv2.IMREAD_COLOR)
         # import pdb
         # pdb.set_trace()
-        box = results['proposals'].numpy()[0]
         x1, y1, x2, y2 = x, y, x+w, y+h
         img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
         os.makedirs('results/tmp', exist_ok=True)
