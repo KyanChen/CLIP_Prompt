@@ -90,10 +90,10 @@ class CLIP_Prompter_Region(BaseDetector):
 
     def train_step(self, data, optimizer):
         losses = self(**data)
-        for loss_name, loss_value in losses.items():
-            if isinstance(loss_value, torch.LongTensor):
-                import pdb
-                pdb.set_trace()
+        # for loss_name, loss_value in losses.items():
+        #     if isinstance(loss_value, torch.LongTensor):
+        #         import pdb
+        #         pdb.set_trace()
         loss, log_vars = self._parse_losses(losses)
 
         outputs = dict(
