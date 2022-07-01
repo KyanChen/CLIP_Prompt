@@ -90,6 +90,8 @@ class CLIP_Prompter_Region(BaseDetector):
 
     def train_step(self, data, optimizer):
         losses = self(**data)
+        import pdb
+        pdb.set_trace()
         loss, log_vars = self._parse_losses(losses)
 
         outputs = dict(
