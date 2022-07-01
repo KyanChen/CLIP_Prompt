@@ -91,8 +91,8 @@ train_pipeline = [
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size=(224, 224), center_pad=True),
     dict(type='ImageToTensor', keys=['img']),
-    dict(type='ToTensor', keys=['gt_bboxes', 'gt_labels']),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+    dict(type='ToTensor', keys=['proposals', 'gt_labels']),
+    dict(type='Collect', keys=['img', 'proposals', 'gt_labels'])
 ]
 
 test_pipeline = [

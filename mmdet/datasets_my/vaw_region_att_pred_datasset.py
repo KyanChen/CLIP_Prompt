@@ -130,8 +130,8 @@ class VAWRegionDataset(Dataset):
         results['img_info']['filename'] = f'{results["image_id"]}.jpg'
         x, y, w, h = results["instance_bbox"]
 
-        results['gt_bboxes'] = np.array([x, y, x+w, x+h]).reshape(1, 4)
-        results['bbox_fields'] = ['gt_bboxes']
+        results['proposals'] = np.array([x, y, x+w, x+h]).reshape(1, 4)
+        results['bbox_fields'] = ['proposals']
         positive_attributes = results["positive_attributes"]
         negative_attributes = results["negative_attributes"]
         labels = np.ones(len(self.classname_maps.keys())) * 2
@@ -153,12 +153,15 @@ class VAWRegionDataset(Dataset):
             if not self.test_mode:
                 results = self.__getitem__(np.random.randint(0, len(self)))
 
-        img = results['img'].unsqueeze(0)
+        img = results['img']
         img_metas = results['img_metas'].data
-        img = tensor2imgs(img, **img_metas['img_norm_cfg'])[0]
+
+        img = img.cpu().numpy().transpose(1, 2, 0)
+        mean, std = img_metas['img_norm_cfg']['mean'], img_metas['img_norm_cfg']['std']
+        img = (255*mmcv.imdenormalize(img, mean, std, to_bgr=True)).astype(np.uint8)
         # import pdb
         # pdb.set_trace()
-        box = results['gt_bboxes'].numpy()[0]
+        box = results['proposals'].numpy()[0]
         x1, y1, x2, y2 = box.astype(np.int)
         img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
         os.makedirs('results/tmp', exist_ok=True)
