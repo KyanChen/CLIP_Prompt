@@ -121,11 +121,10 @@ class CLIP_Prompter_Region(BaseDetector):
         # torch.Size([256, 512, 28, 28])
         # torch.Size([256, 1024, 14, 14])
         # torch.Size([256, 2048, 7, 7])
+        img_f_maps = tuple([x.float() for x in img_f_maps])
+        img_f_maps = self.neck(img_f_maps)
         import pdb
         pdb.set_trace()
-        img_f_maps = self.neck(img_f_maps)
-
-
         proposal_features, bbox_feats = self.roi_head(img_f_maps, proposals)
 
 
