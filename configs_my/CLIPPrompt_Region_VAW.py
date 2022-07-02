@@ -93,7 +93,7 @@ img_norm_cfg = dict(
     to_rgb=False
 )
 # Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
-img_size = (224*3, 224*3)
+img_size = (512, 512)
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
     dict(type='RandomFlip', flip_ratio=0.5),
@@ -122,7 +122,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=100,
+    samples_per_gpu=128,
     workers_per_gpu=8,
     persistent_workers=True,
     train=dict(
