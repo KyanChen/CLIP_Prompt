@@ -41,9 +41,9 @@ model = dict(
     neck=dict(
         type='FPN',
         # type='RefineChannel',
-        in_channels=[64, 256, 512, 1024],
+        in_channels=[64, 256, 512, 1024, 2048],
         out_channels=256,
-        num_outs=4),
+        num_outs=5),
     # neck=dict(
     #     # type='FPN',
     #     type='RefineChannel',
@@ -56,7 +56,7 @@ model = dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
-            featmap_strides=[2, 4, 8, 16]
+            featmap_strides=[2, 4, 8, 16, 32]
             # out_channels=1024,
             # featmap_strides=[32]
         ),
@@ -93,13 +93,13 @@ img_norm_cfg = dict(
     to_rgb=False
 )
 # Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
-
+img_size = (512, 512)
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
     dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='Resize', img_scale=(224, 224), keep_ratio=True),
+    dict(type='Resize', img_scale=img_size, keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
-    dict(type='Pad', size=(224, 224), center_pad=True),
+    dict(type='Pad', size=img_size, center_pad=True),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['proposals', 'gt_labels']),
     dict(type='Collect', keys=['img', 'proposals', 'gt_labels'])
@@ -108,12 +108,12 @@ train_pipeline = [
 test_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
     dict(type='MultiScaleFlipAug',
-         img_scale=(224, 224),
+         img_scale=img_size,
          flip=False,
          transforms=[
-            dict(type='Resize', img_scale=(224, 224), keep_ratio=True),
+            dict(type='Resize', img_scale=img_size, keep_ratio=True),
             dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size=(224, 224),  center_pad=True),
+            dict(type='Pad', size=img_size,  center_pad=True),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img', 'proposals'])
         ]
