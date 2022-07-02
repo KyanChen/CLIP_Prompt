@@ -38,19 +38,27 @@ model = dict(
         load_ckpt_from=None,
         precision='fp16',
     ),
+    # neck=dict(
+    #     # type='FPN',
+    #     type='RefineChannel',
+    #     in_channels=[64, 256, 512, 1024, 2048],
+    #     out_channels=256,
+    #     num_outs=5),
     neck=dict(
-        type='FPN',
-        # type='RefineChannel',
-        in_channels=[64, 256, 512, 1024, 2048],
-        out_channels=256,
-        num_outs=5),
+        # type='FPN',
+        type='RefineChannel',
+        in_channels=[1024],
+        out_channels=1024,
+        num_outs=1),
     roi_head=dict(
         type='ProposalEncoder',
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
-            out_channels=256,
-            featmap_strides=[2, 4, 8, 16, 32]
+            # out_channels=256,
+            # featmap_strides=[2, 4, 8, 16, 32]
+            out_channels=1024,
+            featmap_strides=[32]
         ),
         shared_head=dict(
             type='ResLayer',
@@ -58,10 +66,10 @@ model = dict(
             stage=3,
             stride=1,
             norm_eval=False,
-            inplanes=256,
+            inplanes=1024,
             planes=128,
         ),
-        in_channels=512,
+        in_channels=2048,
         # in_channels=256,
         out_channels=1024,
     ),

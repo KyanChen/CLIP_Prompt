@@ -4,6 +4,7 @@ from typing import Tuple, Union
 import numpy as np
 import torch
 import torch.nn.functional as F
+from einops import rearrange
 from torch import nn
 
 
@@ -64,6 +65,7 @@ class AttentionPool2d(nn.Module):
         self.num_heads = num_heads
 
     def forward(self, x):
+        H = x.size(2)
         x = x.reshape(x.shape[0], x.shape[1], x.shape[2] * x.shape[3]).permute(2, 0, 1)  # NCHW -> (HW)NC
         x = torch.cat([x.mean(dim=0, keepdim=True), x], dim=0)  # (HW+1)NC
         x = x + self.positional_embedding[:, None, :].to(x.dtype)  # (HW+1)NC
@@ -87,7 +89,10 @@ class AttentionPool2d(nn.Module):
             need_weights=False
         )
 
-        return x[0]
+        x_map = x[1:]
+        x_map = rearrange(x_map, '(HW) N C -> N C H W', H=H)
+
+        return x[0], x_map
 
 
 class ModifiedResNet(nn.Module):
@@ -157,9 +162,9 @@ class ModifiedResNet(nn.Module):
         x = self.layer4(x)
         outs.append(x)
 
-        x = self.attnpool(x)
+        x, x_map = self.attnpool(x)
 
-        return x, tuple(outs)
+        return x, x_map, tuple(outs)
 
 
 class LayerNorm(nn.LayerNorm):
