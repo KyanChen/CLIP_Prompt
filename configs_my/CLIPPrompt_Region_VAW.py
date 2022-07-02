@@ -180,7 +180,7 @@ lr_config = dict(
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=100)
-evaluation = dict(interval=1, metric='mAP')
+evaluation = dict(interval=15, metric='mAP')
 
 load_from = None
 resume_from = None
