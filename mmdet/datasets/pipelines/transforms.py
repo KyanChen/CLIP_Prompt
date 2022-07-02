@@ -640,8 +640,6 @@ class Pad:
                     padded_img = mmcv.impad(
                         results[key], padding=(left, top, right, bottom), pad_val=pad_val)
                     for key in results.get('bbox_fields', []):
-                        import pdb
-                        pdb.set_trace()
                         bboxes = results[key].copy()
                         bboxes[..., 0::2] += left
                         bboxes[..., 1::2] += top
