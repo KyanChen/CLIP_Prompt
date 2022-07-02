@@ -69,7 +69,7 @@ model = dict(
             inplanes=1024,
             planes=128,
         ),
-        in_channels=2048,
+        in_channels=512,
         # in_channels=256,
         out_channels=1024,
     ),
