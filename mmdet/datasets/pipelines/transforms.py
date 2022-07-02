@@ -644,7 +644,7 @@ class Pad:
                         pdb.set_trace()
                         bboxes = results[key].copy()
                         bboxes[..., 0::2] += left
-                        bboxes[..., 1::2] += right
+                        bboxes[..., 1::2] += top
                         results[key] = bboxes
                 else:
                     padded_img = mmcv.impad(
