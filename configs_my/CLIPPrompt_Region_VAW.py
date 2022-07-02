@@ -130,6 +130,7 @@ data = dict(
     test=dict(
         samples_per_gpu=256,
         type=dataset_type,
+        data_root=data_root,
         pattern='test',
         test_mode=True,
         pipeline=test_pipeline
