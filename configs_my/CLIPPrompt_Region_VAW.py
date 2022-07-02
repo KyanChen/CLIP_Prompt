@@ -122,7 +122,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=300,
+    samples_per_gpu=200,
     workers_per_gpu=8,
     persistent_workers=True,
     train=dict(
@@ -188,7 +188,7 @@ lr_config = dict(
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=100)
-evaluation = dict(interval=15, metric='mAP')
+evaluation = dict(interval=20, metric='mAP')
 
 load_from = None
 resume_from = None
