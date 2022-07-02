@@ -38,11 +38,12 @@ model = dict(
         load_ckpt_from=None,
         precision='fp16',
     ),
-    # neck=dict(
-    #     type='FPN',
-    #     in_channels=[64, 256, 512, 1024, 2048],
-    #     out_channels=256,
-    #     num_outs=5),
+    neck=dict(
+        # type='FPN',
+        type='RefineChannel',
+        in_channels=[64, 256, 512, 1024, 2048],
+        out_channels=256,
+        num_outs=5),
     roi_head=dict(
         type='ProposalEncoder',
         bbox_roi_extractor=dict(
@@ -152,7 +153,7 @@ data = dict(
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
-    sub_model=['prompt_learner', 'roi_head'],
+    sub_model=['prompt_learner', 'neck', 'roi_head'],
     type='AdamW',
     lr=1e-4,
     weight_decay=1e-3
