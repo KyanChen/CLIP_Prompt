@@ -162,7 +162,8 @@ class ModifiedResNet(nn.Module):
         x = self.layer4(x)
         outs.append(x)
 
-        x, x_map = self.attnpool(x)
+        x_map = None
+        # x, x_map = self.attnpool(x)
 
         return x, x_map, tuple(outs)
 
@@ -419,12 +420,10 @@ def build_model(state_dict: dict):
         grid_size = round((state_dict["visual.positional_embedding"].shape[0] - 1) ** 0.5)
         image_resolution = vision_patch_size * grid_size
     else:
-        import pdb
-        pdb.set_trace()
         counts: list = [len(set(k.split(".")[2] for k in state_dict if k.startswith(f"visual.layer{b}"))) for b in [1, 2, 3, 4]]
         vision_layers = tuple(counts)
-        vision_width = state_dict["visual.layer1.0.conv1.weight"].shape[0]
-        output_width = round((state_dict["visual.attnpool.positional_embedding"].shape[0] - 1) ** 0.5)
+        vision_width = state_dict["visual.layer1.0.conv1.weight"].shape[0]  # 64
+        output_width = round((state_dict["visual.attnpool.positional_embedding"].shape[0] - 1) ** 0.5)  # 7
         vision_patch_size = None
         assert output_width ** 2 + 1 == state_dict["visual.attnpool.positional_embedding"].shape[0]
         image_resolution = output_width * 32
