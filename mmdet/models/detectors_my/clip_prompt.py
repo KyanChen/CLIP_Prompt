@@ -118,7 +118,7 @@ class CLIP_Prompter(BaseDetector):
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()  # 2x620
 
-        losses = self.bbox_head.forward_train(logits, img_metas, gt_labels, gt_bboxes_ignore)
+        losses = self.bbox_head.forward_train(logits, img_metas, gt_labels)
 
         return losses
 
