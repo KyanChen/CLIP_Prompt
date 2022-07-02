@@ -38,11 +38,11 @@ model = dict(
         load_ckpt_from=None,
         precision='fp16',
     ),
-    neck=dict(
-        type='FPN',
-        in_channels=[64, 256, 512, 1024, 2048],
-        out_channels=256,
-        num_outs=5),
+    # neck=dict(
+    #     type='FPN',
+    #     in_channels=[64, 256, 512, 1024, 2048],
+    #     out_channels=256,
+    #     num_outs=5),
     roi_head=dict(
         type='ProposalEncoder',
         bbox_roi_extractor=dict(
@@ -51,15 +51,15 @@ model = dict(
             out_channels=256,
             featmap_strides=[2, 4, 8, 16, 32]
         ),
-        shared_head=dict(
-            type='ResLayer',
-            depth=50,
-            stage=3,
-            stride=1,
-            norm_eval=False,
-            inplanes=256,
-            planes=128,
-        ),
+        # shared_head=dict(
+        #     type='ResLayer',
+        #     depth=50,
+        #     stage=3,
+        #     stride=1,
+        #     norm_eval=False,
+        #     inplanes=256,
+        #     planes=128,
+        # ),
         in_channels=512,
         out_channels=1024,
     ),
@@ -122,6 +122,7 @@ data = dict(
         test_mode=False,
         pipeline=train_pipeline),
     val=dict(
+        samples_per_gpu=256,
         type=dataset_type,
         data_root=data_root,
         pattern='val',
@@ -136,25 +137,26 @@ data = dict(
         pipeline=test_pipeline
     )
 )
-#
+# #
+# # optimizer
+# optimizer = dict(
+#     constructor='SubModelConstructor',
+#     # sub_model=['prompt_learner', 'neck', 'roi_head'],
+#     sub_model=['prompt_learner', 'roi_head'],
+#     type='SGD',
+#     lr=0.005,
+#     momentum=0.9,
+#     weight_decay=0.0005
+# )
+
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
-    sub_model=['prompt_learner', 'neck', 'roi_head'],
-    type='SGD',
-    lr=0.005,
-    momentum=0.9,
-    weight_decay=0.0005
+    sub_model=['prompt_learner', 'roi_head'],
+    type='AdamW',
+    lr=1e-4,
+    weight_decay=1e-3
 )
-
-# optimizer
-# optimizer = dict(
-#     constructor='SubModelConstructor',
-#     sub_model='prompt_learner',
-#     type='AdamW',
-#     lr=1e-4,
-#     weight_decay=1e-3
-# )
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
 # # # learning policy
@@ -175,8 +177,8 @@ lr_config = dict(
     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=200)
-evaluation = dict(interval=1000, metric='mAP')
+runner = dict(type='EpochBasedRunner', max_epochs=100)
+evaluation = dict(interval=1, metric='mAP')
 
 load_from = None
 resume_from = None

@@ -119,8 +119,9 @@ class CLIP_Prompter_Region(BaseDetector):
                       ):
         with torch.no_grad():
             image_features, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
+
         # img_f_maps
         # torch.Size([256, 64, 112, 112])
         # torch.Size([256, 256, 56, 56])
@@ -129,7 +130,7 @@ class CLIP_Prompter_Region(BaseDetector):
         # torch.Size([256, 2048, 7, 7])
 
         img_f_maps = tuple([x.float() for x in img_f_maps])
-        img_f_maps = self.neck(img_f_maps)
+        # img_f_maps = self.neck(img_f_maps)
         proposal_features, bbox_feats = self.roi_head(img_f_maps, proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
         proposal_features = rearrange(proposal_features, 'B C H W -> B (C H W)')
 
@@ -184,11 +185,11 @@ class CLIP_Prompter_Region(BaseDetector):
     def simple_test(self,
                     img, img_metas, proposals,
                     rescale=False, **kwargs):
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         image_features, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
         img_f_maps = tuple([x.float() for x in img_f_maps])
-        img_f_maps = self.neck(img_f_maps)
+        # img_f_maps = self.neck(img_f_maps)
         proposal_features, bbox_feats = self.roi_head(img_f_maps,
                                                       proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
         proposal_features = rearrange(proposal_features, 'B C H W -> B (C H W)')
