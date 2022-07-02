@@ -61,7 +61,8 @@ class ProposalEncoder(BaseModule):
     def forward(self, x, proposal_list, **kwargs):
         rois = bbox2roi(proposal_list)
         bbox_feats = self.bbox_roi_extractor(x[:self.bbox_roi_extractor.num_inputs], rois)  # N 256 7 7
-        bbox_feats = self.shared_head(bbox_feats)
+        if hasattr(self, 'shared_head'):
+            bbox_feats = self.shared_head(bbox_feats)
         proposal_features = self.bbox_head(bbox_feats)
         return proposal_features, bbox_feats
 
