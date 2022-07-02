@@ -131,7 +131,7 @@ data = dict(
         samples_per_gpu=256,
         type=dataset_type,
         data_root=data_root,
-        pattern='train',
+        pattern='val',
         test_mode=True,
         pipeline=test_pipeline
     )
