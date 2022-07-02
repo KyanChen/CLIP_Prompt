@@ -175,6 +175,7 @@ class VAWRegionDataset(Dataset):
         # import pdb
         # pdb.set_trace()
         box = results['proposals'].numpy()[0]
+        print(box)
         x1, y1, x2, y2 = box.astype(np.int)
         img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
         os.makedirs('results/tmp', exist_ok=True)
