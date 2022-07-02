@@ -162,8 +162,8 @@ class ModifiedResNet(nn.Module):
         x = self.layer4(x)
         outs.append(x)
 
-        x_map = None
-        # x, x_map = self.attnpool(x)
+        # x_map = None
+        x, x_map = self.attnpool(x)
 
         return x, x_map, tuple(outs)
 

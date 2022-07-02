@@ -1,7 +1,7 @@
-checkpoint_config = dict(interval=15)
+checkpoint_config = dict(interval=20)
 # yapf:disable
 log_config = dict(
-    interval=50,
+    interval=30,
     hooks=[
         dict(type='TextLoggerHook'),
         dict(type='TensorboardLoggerHook')
@@ -36,7 +36,7 @@ model = dict(
         backbone_name='RN50',
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
-        precision='fp16',
+        precision='fp32',
     ),
     prompt_learner=dict(
         type='PromptLearner',
@@ -49,18 +49,10 @@ model = dict(
     bbox_head=dict(
         type='PromptHead',
         data_root=data_root,
-        loss_cls=dict(
-            type='CrossEntropyLoss',
-            use_sigmoid=True,
-            ignore_index=2,
-            avg_non_ignore=True,
-            loss_weight=1.0,
-            reduction='mean'
-        )
     )
 )
 # dataset settings
-dataset_type = 'VAWDataset'
+dataset_type = 'VAWCropDataset'
 img_norm_cfg = dict(
     mean=[0.48145466, 0.4578275, 0.40821073],
     std=[0.26862954, 0.26130258, 0.27577711],
@@ -91,65 +83,60 @@ test_pipeline = [
          transforms=[
             dict(type='Resize', img_scale=(224, 224), keep_ratio=True),
             dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size=(224, 224)),
+            dict(type='Pad', size=(224, 224), center_pad=True),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img'])
         ]
     )
 ]
 
-num_shots = 'all'
-seed = 1
+
 data = dict(
-    samples_per_gpu=256,
+    samples_per_gpu=400,
     workers_per_gpu=8,
     persistent_workers=True,
     train=dict(
         type=dataset_type,
         data_root=data_root,
-        num_shots=num_shots,
         pattern='train',
-        seed=seed,
         test_mode=False,
         pipeline=train_pipeline),
     val=dict(
+        samples_per_gpu=256,
         type=dataset_type,
         data_root=data_root,
-        num_shots=num_shots,
-        pattern='val',
-        seed=seed,
+        pattern='test',
         test_mode=True,
         pipeline=test_pipeline),
     test=dict(
         samples_per_gpu=256,
         type=dataset_type,
         data_root=data_root,
-        num_shots=num_shots,
         pattern='test',
-        seed=seed,
         test_mode=True,
         pipeline=test_pipeline
     )
 )
 #
+# # optimizer
+# optimizer = dict(
+#     constructor='SubModelConstructor',
+#     sub_model='prompt_learner',
+#     type='SGD',
+#     lr=0.005,
+#     momentum=0.9,
+#     weight_decay=0.0005
+# )
+
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model='prompt_learner',
-    type='SGD',
-    lr=0.005,
-    momentum=0.9,
-    weight_decay=0.0005
+    type='AdamW',
+    lr=1e-4,
+    weight_decay=1e-3
 )
 
-# optimizer
-# optimizer = dict(
-#     constructor='SubModelConstructor',
-#     sub_model='prompt_learner',
-#     type='AdamW',
-#     lr=1e-4,
-#     weight_decay=1e-3
-# )
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
 # # # learning policy
@@ -170,8 +157,8 @@ lr_config = dict(
     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=150)
-evaluation = dict(interval=1000, metric='mAP')
+runner = dict(type='EpochBasedRunner', max_epochs=200)
+evaluation = dict(interval=20, metric='mAP')
 
 load_from = None
 resume_from = None

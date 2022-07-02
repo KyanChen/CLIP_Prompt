@@ -60,7 +60,9 @@ class CLIP_Prompter(BaseDetector):
 
         print("Turning off gradients in both the image and the text encoder")
         for name, param in self.named_parameters():
-            if "prompt_learner" not in name:
+            if "prompt_learner" in name:
+                param.requires_grad_(True)
+            else:
                 param.requires_grad_(False)
 
     def extract_feat(self, img):
@@ -104,7 +106,7 @@ class CLIP_Prompter(BaseDetector):
                       img_metas,
                       gt_labels,
                       gt_bboxes_ignore=None):
-        image_features = self.image_encoder(img.type(self.dtype)) # 2x1024
+        image_features, last_f_map, f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
 
         prompts = self.prompt_learner()  # 620x77x512
         tokenized_prompts = self.tokenized_prompts
@@ -153,7 +155,7 @@ class CLIP_Prompter(BaseDetector):
             return self.aug_test(imgs, img_metas, **kwargs)
 
     def simple_test(self, img, img_metas, rescale=False):
-        image_features = self.image_encoder(img.type(self.dtype))  # 2x1024
+        image_features, last_f_map, f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
 
         prompts = self.prompt_learner()  # 620x77x512
         tokenized_prompts = self.tokenized_prompts
