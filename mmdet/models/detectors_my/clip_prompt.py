@@ -67,11 +67,13 @@ class CLIP_Prompter(BaseDetector):
         return img
 
     def train(self, mode=True):
+        self.training = mode
         for name, module in self.named_children():
             if 'prompt_learner' in name:
                 module.train(mode)
             else:
                 module.eval()
+        return self
 
     def forward(self, img, img_metas, return_loss=True, **kwargs):
         if return_loss:

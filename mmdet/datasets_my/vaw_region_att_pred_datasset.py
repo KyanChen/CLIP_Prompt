@@ -49,7 +49,7 @@ class VAWRegionDataset(Dataset):
         self.img_ids = list(self.img_instances_pair.keys())
 
         # self.instances = self.get_instances()
-        # self.instances = self.instances[-100:]
+        self.instances = self.instances[-100:]
         attribute_index_file = os.path.join(self.data_root, "VAW/attribute_index.json")
         self.classname_maps = json.load(open(attribute_index_file))
 
@@ -166,19 +166,19 @@ class VAWRegionDataset(Dataset):
             if not self.test_mode:
                 results = self.__getitem__(np.random.randint(0, len(self)))
 
-        # img = results['img']
-        # img_metas = results['img_metas'].data
-        #
-        # img = img.cpu().numpy().transpose(1, 2, 0)
-        # mean, std = img_metas['img_norm_cfg']['mean'], img_metas['img_norm_cfg']['std']
-        # img = (255*mmcv.imdenormalize(img, mean, std, to_bgr=True)).astype(np.uint8)
-        # # import pdb
-        # # pdb.set_trace()
-        # box = results['proposals'].numpy()[0]
-        # x1, y1, x2, y2 = box.astype(np.int)
-        # img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
-        # os.makedirs('results/tmp', exist_ok=True)
-        # cv2.imwrite('results/tmp' + f'/x{idx}.jpg', img)
+        img = results['img']
+        img_metas = results['img_metas'].data
+
+        img = img.cpu().numpy().transpose(1, 2, 0)
+        mean, std = img_metas['img_norm_cfg']['mean'], img_metas['img_norm_cfg']['std']
+        img = (255*mmcv.imdenormalize(img, mean, std, to_bgr=True)).astype(np.uint8)
+        # import pdb
+        # pdb.set_trace()
+        box = results['proposals'].numpy()[0]
+        x1, y1, x2, y2 = box.astype(np.int)
+        img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
+        os.makedirs('results/tmp', exist_ok=True)
+        cv2.imwrite('results/tmp' + f'/x{idx}.jpg', img)
         return results
 
     def get_labels(self):

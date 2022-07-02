@@ -623,6 +623,7 @@ class Pad:
 
     def _pad_img(self, results):
         """Pad images according to ``self.size``."""
+
         pad_val = self.pad_val.get('img', 0)
         for key in results.get('img_fields', ['img']):
             if self.pad_to_square:
@@ -638,6 +639,11 @@ class Pad:
                     bottom = self.size[1] - h - top
                     padded_img = mmcv.impad(
                         results[key], padding=(left, top, right, bottom), pad_val=pad_val)
+                    for key in results.get('bbox_fields', []):
+                        bboxes = results[key].copy()
+                        bboxes[..., 0::2] += left
+                        bboxes[..., 1::2] += right
+                        results[key] = bboxes
                 else:
                     padded_img = mmcv.impad(
                         results[key], shape=self.size, pad_val=pad_val)
