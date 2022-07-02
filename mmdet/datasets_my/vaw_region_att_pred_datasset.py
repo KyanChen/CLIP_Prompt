@@ -199,6 +199,7 @@ class VAWRegionDataset(Dataset):
 
     def evaluate(self,
                  results,
+                 logger=None,
                  metric='mAP',
                  per_class_out_file=None,
                  is_logit=True
