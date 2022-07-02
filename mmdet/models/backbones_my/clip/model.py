@@ -90,7 +90,7 @@ class AttentionPool2d(nn.Module):
         )
 
         x_map = x[1:]
-        x_map = rearrange(x_map, '(HW) N C -> N C H W', H=H)
+        x_map = rearrange(x_map, '(H W) N C -> N C H W', H=H)
 
         return x[0], x_map
 
