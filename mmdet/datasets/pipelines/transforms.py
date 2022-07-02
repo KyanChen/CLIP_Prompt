@@ -639,11 +639,12 @@ class Pad:
                     bottom = self.size[1] - h - top
                     padded_img = mmcv.impad(
                         results[key], padding=(left, top, right, bottom), pad_val=pad_val)
-                    for key in results.get('bbox_fields', []):
-                        bboxes = results[key].copy()
+                    # !!!!! 注意
+                    for key_box in results.get('bbox_fields', []):
+                        bboxes = results[key_box].copy()
                         bboxes[..., 0::2] += left
                         bboxes[..., 1::2] += top
-                        results[key] = bboxes
+                        results[key_box] = bboxes
                 else:
                     padded_img = mmcv.impad(
                         results[key], shape=self.size, pad_val=pad_val)
