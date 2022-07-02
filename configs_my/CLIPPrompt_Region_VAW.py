@@ -139,26 +139,26 @@ data = dict(
         pipeline=test_pipeline
     )
 )
-# #
-# # optimizer
-# optimizer = dict(
-#     constructor='SubModelConstructor',
-#     # sub_model=['prompt_learner', 'neck', 'roi_head'],
-#     sub_model=['prompt_learner', 'roi_head'],
-#     type='SGD',
-#     lr=0.005,
-#     momentum=0.9,
-#     weight_decay=0.0005
-# )
-
+#
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model=['prompt_learner', 'neck', 'roi_head'],
-    type='AdamW',
-    lr=1e-5,
-    weight_decay=1e-3
+    # sub_model=['prompt_learner', 'roi_head'],
+    type='SGD',
+    lr=0.005,
+    momentum=0.9,
+    weight_decay=0.0005
 )
+
+# # optimizer
+# optimizer = dict(
+#     constructor='SubModelConstructor',
+#     sub_model=['prompt_learner', 'neck', 'roi_head'],
+#     type='AdamW',
+#     lr=1e-5,
+#     weight_decay=1e-3
+# )
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
 # # # learning policy
