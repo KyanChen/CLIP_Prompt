@@ -172,8 +172,8 @@ class VAWRegionDataset(Dataset):
         img = img.cpu().numpy().transpose(1, 2, 0)
         mean, std = img_metas['img_norm_cfg']['mean'], img_metas['img_norm_cfg']['std']
         img = (255*mmcv.imdenormalize(img, mean, std, to_bgr=True)).astype(np.uint8)
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         box = results['proposals'].numpy()[0]
         print(box)
         x1, y1, x2, y2 = box.astype(np.int)
