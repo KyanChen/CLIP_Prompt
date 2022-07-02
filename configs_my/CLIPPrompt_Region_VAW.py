@@ -156,7 +156,7 @@ optimizer = dict(
     constructor='SubModelConstructor',
     sub_model=['prompt_learner', 'neck', 'roi_head'],
     type='AdamW',
-    lr=1e-4,
+    lr=1e-5,
     weight_decay=1e-3
 )
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
