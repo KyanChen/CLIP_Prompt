@@ -69,7 +69,7 @@ class VAWCropDataset(Dataset):
     def __len__(self):
         return len(self.instances)
 
-    def get_data(self, idx):
+    def __getitem__(self, idx):
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
         results = self.instances[idx].copy()
@@ -196,32 +196,3 @@ class VAWCropDataset(Dataset):
         return results
 
 
-#     "image_id": "2373241",
-#     "instance_id": "2373241004",
-#     "instance_bbox": [0.0, 182.5, 500.16666666666663, 148.5],
-#     "instance_polygon": [[[432.5, 214.16666666666669], [425.8333333333333, 194.16666666666666], [447.5, 190.0], [461.6666666666667, 187.5], [464.1666666666667, 182.5], [499.16666666666663, 183.33333333333331], [499.16666666666663, 330.0], [3.3333333333333335, 330.0], [0.0, 253.33333333333334], [43.333333333333336, 245.0], [60.833333333333336, 273.3333333333333], [80.0, 293.3333333333333], [107.5, 307.5], [133.33333333333334, 309.16666666666663], [169.16666666666666, 295.8333333333333], [190.83333333333331, 274.1666666666667], [203.33333333333334, 252.5], [225.0, 260.0], [236.66666666666666, 254.16666666666666], [260.0, 254.16666666666666], [288.3333333333333, 253.33333333333334], [287.5, 257.5], [271.6666666666667, 265.0], [324.1666666666667, 281.6666666666667], [369.16666666666663, 274.1666666666667], [337.5, 261.6666666666667], [338.3333333333333, 257.5], [355.0, 261.6666666666667], [357.5, 257.5], [339.1666666666667, 255.0], [337.5, 240.83333333333334], [348.3333333333333, 238.33333333333334], [359.1666666666667, 248.33333333333331], [377.5, 251.66666666666666], [397.5, 248.33333333333331], [408.3333333333333, 236.66666666666666], [418.3333333333333, 220.83333333333331], [427.5, 217.5], [434.16666666666663, 215.0]]],
-#     "object_name": "floor",
-#     "positive_attributes": ["tiled", "gray", "light colored"],
-#     "negative_attributes": ["multicolored", "maroon", "weathered", "speckled", "carpeted"]
-# }
-
-class DataItem:
-    def __init__(
-        self, image_id, instance_id, instance_bbox,
-        object_name, positive_attributes, negative_attributes,
-        label
-    ):
-        self.image_id = image_id
-        self.instance_id = instance_id
-        self.instance_bbox = instance_bbox
-        self.object_name = object_name
-        self.positive_attributes = positive_attributes
-        self.negative_attributes = negative_attributes
-        self.label = label
-
-    def set_label(self, classname_maps):
-        self.label = np.ones(len(classname_maps.keys())) * 2
-        for att in self.positive_attributes:
-            self.label[classname_maps[att]] = 1
-        for att in self.negative_attributes:
-            self.label[classname_maps[att]] = 0
