@@ -74,6 +74,7 @@ class CLIP_Prompter_Region(BaseDetector):
         return img
 
     def train(self, mode=True):
+        self.training = mode
         for name, module in self.named_children():
             # import pdb
             # pdb.set_trace()
@@ -81,6 +82,7 @@ class CLIP_Prompter_Region(BaseDetector):
                 module.train(mode)
             else:
                 module.eval()
+        return self
 
     def forward(self, img, img_metas, return_loss=True, **kwargs):
         if return_loss:
