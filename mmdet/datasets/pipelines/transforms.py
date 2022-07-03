@@ -641,7 +641,7 @@ class Pad:
                         results[key], padding=(left, top, right, bottom), pad_val=pad_val)
                     # !!!!! 注意
                     for key_box in results.get('bbox_fields', []):
-                        bboxes = results[key_box].copy()
+                        bboxes = results[key_box]
                         bboxes[..., 0::2] += left
                         bboxes[..., 1::2] += top
                         results[key_box] = bboxes

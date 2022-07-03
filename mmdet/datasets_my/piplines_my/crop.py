@@ -75,7 +75,7 @@ class RandomExpandAndCropBox:
         h, w = img.shape[:2]
         # expand bboxes
         for key in results.get('bbox_fields', []):
-            bboxes = results[key].copy()
+            bboxes = results[key]
             # import pdb
             # pdb.set_trace()
             for i in range(len(bboxes)):
@@ -91,7 +91,7 @@ class RandomExpandAndCropBox:
 
         # crop bboxes
         for key in results.get('bbox_fields', []):
-            bboxes = results[key].copy()
+            bboxes = results[key]
             for i in range(len(bboxes)):
                 box_wh = bboxes[i, 2:4] - bboxes[i, 0:2]
                 crop_ratio = np.array([
