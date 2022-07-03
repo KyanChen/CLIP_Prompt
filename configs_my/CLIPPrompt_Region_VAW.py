@@ -103,7 +103,7 @@ train_pipeline = [
     dict(type='Resize', img_scale=img_size, keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size=img_size, center_pad=True),
-    dict(type='RandomExpandAndCropBox', expand_range=(1, 1.01), crop_range=(0.99, 1), prob=1),
+    dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.2), crop_range=(0.9, 1), prob=1),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['proposals', 'gt_labels']),
     dict(type='Collect', keys=['img', 'proposals', 'gt_labels'])
@@ -118,7 +118,7 @@ test_pipeline = [
             dict(type='Resize', img_scale=img_size, keep_ratio=True),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size=img_size,  center_pad=True),
-            dict(type='RandomExpandAndCropBox', expand_range=(1, 1.2), crop_range=(0.9, 1)),
+            dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.2), crop_range=(0.9, 1)),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img', 'proposals'])
         ]
