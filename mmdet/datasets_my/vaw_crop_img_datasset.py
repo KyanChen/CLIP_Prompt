@@ -109,15 +109,15 @@ class VAWCropDataset(Dataset):
                 if not self.test_mode:
                     results = self.__getitem__(np.random.randint(0, len(self)))
 
-        img = results['img']
-        img_metas = results['img_metas'].data
-
-        img = img.cpu().numpy().transpose(1, 2, 0)
-        mean, std = img_metas['img_norm_cfg']['mean'], img_metas['img_norm_cfg']['std']
-        img = (255*mmcv.imdenormalize(img, mean, std, to_bgr=True)).astype(np.uint8)
-
-        os.makedirs('results/tmp', exist_ok=True)
-        cv2.imwrite('results/tmp' + f'/x{idx}.jpg', img)
+        # img = results['img']
+        # img_metas = results['img_metas'].data
+        #
+        # img = img.cpu().numpy().transpose(1, 2, 0)
+        # mean, std = img_metas['img_norm_cfg']['mean'], img_metas['img_norm_cfg']['std']
+        # img = (255*mmcv.imdenormalize(img, mean, std, to_bgr=True)).astype(np.uint8)
+        #
+        # os.makedirs('results/tmp', exist_ok=True)
+        # cv2.imwrite('results/tmp' + f'/x{idx}.jpg', img)
 
         return results
 
