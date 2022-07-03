@@ -72,10 +72,12 @@ class RandomExpandAndCropBox:
                 'Only single img_fields is allowed'
         img = results['img']
 
-        h, w, c = img.shape
+        h, w = img.shape[:2]
         # expand bboxes
         for key in results.get('bbox_fields', []):
             bboxes = results[key].copy()
+            import pdb
+            pdb.set_trace()
             for i in range(len(bboxes)):
                 ratio = random.uniform(self.expand_min_ratio, self.expand_max_ratio)
                 cxcy = (bboxes[i, 0::2] + bboxes[i, 1::2]) / 2
