@@ -121,8 +121,8 @@ class CLIP_Prompter_Region(BaseDetector):
                       ):
         with torch.no_grad():
             image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
 
         # img_f_maps
         # torch.Size([256, 64, 112, 112])

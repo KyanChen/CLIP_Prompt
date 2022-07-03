@@ -103,7 +103,7 @@ train_pipeline = [
     dict(type='Resize', img_scale=img_size, keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size=img_size, center_pad=True),
-    dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.2), crop_range=(0.9, 1), prob=1),
+    dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.25), crop_range=(0.85, 1), prob=0.6),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['proposals', 'gt_labels']),
     dict(type='Collect', keys=['img', 'proposals', 'gt_labels'])
@@ -118,7 +118,7 @@ test_pipeline = [
             dict(type='Resize', img_scale=img_size, keep_ratio=True),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size=img_size,  center_pad=True),
-            dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.2), crop_range=(0.9, 1)),
+            # dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.2), crop_range=(0.9, 1)),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img', 'proposals'])
         ]
@@ -128,9 +128,9 @@ test_pipeline = [
 
 data = dict(
     samples_per_gpu=32,
-    # workers_per_gpu=8,
-    workers_per_gpu=0,
-    # persistent_workers=True,
+    workers_per_gpu=8,
+    # workers_per_gpu=0,
+    persistent_workers=True,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -155,24 +155,24 @@ data = dict(
 )
 # #
 # optimizer
-# optimizer = dict(
-#     constructor='SubModelConstructor',
-#     sub_model=['prompt_learner', 'neck', 'roi_head'],
-#     # sub_model=['prompt_learner', 'roi_head'],
-#     type='SGD',
-#     lr=0.005,
-#     momentum=0.9,
-#     weight_decay=0.0005
-# )
-
-# optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model=['prompt_learner', 'neck', 'roi_head'],
-    type='Adam',
-    lr=1e-5,
-    weight_decay=1e-3
+    # sub_model=['prompt_learner', 'roi_head'],
+    type='SGD',
+    lr=0.005,
+    momentum=0.9,
+    weight_decay=0.0005
 )
+
+# # optimizer
+# optimizer = dict(
+#     constructor='SubModelConstructor',
+#     sub_model=['prompt_learner', 'neck', 'roi_head'],
+#     type='Adam',
+#     lr=1e-5,
+#     weight_decay=1e-3
+# )
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
 # # # learning policy
@@ -193,7 +193,7 @@ lr_config = dict(
     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=100)
+runner = dict(type='EpochBasedRunner', max_epochs=150)
 evaluation = dict(interval=10, metric='mAP')
 
 load_from = None
