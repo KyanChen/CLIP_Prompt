@@ -62,7 +62,7 @@ img_norm_cfg = dict(
 
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
-    dict(type='ScaleCrop', scale_range=[0.0, 0.2]),
+    dict(type='ScaleCrop', scale_range=[0.0, 0.3]),
     dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=(224, 224), keep_ratio=True),
@@ -75,7 +75,7 @@ train_pipeline = [
 
 test_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
-    dict(type='ScaleCrop', scale_range=[0.0, 0.1]),
+    dict(type='ScaleCrop', scale_range=[0.0, 0.2]),
     dict(type='RandomCrop', crop_size=[0.9, 0.9], crop_type='relative_range'),
     dict(type='MultiScaleFlipAug',
          img_scale=(224, 224),
@@ -121,7 +121,8 @@ data = dict(
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
-    sub_model='prompt_learner',
+    # sub_model='prompt_learner',
+    sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     type='SGD',
     lr=0.005,
     momentum=0.9,

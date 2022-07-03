@@ -60,7 +60,8 @@ class CLIP_Prompter(BaseDetector):
 
         print("Turning off gradients in both the image and the text encoder")
         for name, param in self.named_parameters():
-            if "prompt_learner" in name:
+            # if "prompt_learner" in name:
+            if "prompt_learner" in name or 'image_encoder' in name:
                 param.requires_grad_(True)
             else:
                 param.requires_grad_(False)
@@ -71,7 +72,7 @@ class CLIP_Prompter(BaseDetector):
     def train(self, mode=True):
         self.training = mode
         for name, module in self.named_children():
-            if 'prompt_learner' in name:
+            if 'prompt_learner' in name or 'image_encoder' in name:
                 module.train(mode)
             else:
                 module.eval()

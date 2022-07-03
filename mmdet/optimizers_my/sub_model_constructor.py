@@ -10,18 +10,29 @@ class SubModelConstructor(DefaultOptimizerConstructor):
     def __call__(self, model):
         if hasattr(model, 'module'):
             model = model.module
+        import pdb
+        pdb.set_trace()
 
         optimizer_cfg = self.optimizer_cfg.copy()
         sub_models = optimizer_cfg.pop('sub_model', None)
+
         if isinstance(sub_models, str):
-            sub_models = [sub_models]
-        needed_train_sub_models = []
-        for sub_model in sub_models:
-            if hasattr(model, sub_model):
-                sub_model = getattr(model, sub_model)
-                needed_train_sub_models.append(sub_model)
+            sub_models = {sub_models: {}}
+        if isinstance(sub_models, list):
+            sub_models = {x: {} for x in sub_models}
+
+        # set training parameters and lr
+        for sub_model_name, value in sub_models.items():
+            if hasattr(model, sub_model_name):
+                sub_model_ = getattr(model, sub_model_name)
+                sub_models[sub_model_name]['params'] = sub_model_.parameters()
+                lr_mult = value.pop('lr_mult', 1.)
+                sub_models[sub_model_name]['lr'] = self.base_lr * lr_mult
+                if self.base_wd is not None:
+                    decay_mult = value.pop('decay_mult', 1.)
+                    sub_models[sub_model_name]['weight_decay'] = self.base_wd * decay_mult
             else:
-                raise ModuleNotFoundError(f'{optimizer_cfg["sub_model"]} not in model')
+                raise ModuleNotFoundError(f'{sub_model_name} not in model')
 
         _rank, _word_size = get_dist_info()
         if _rank == 0:
@@ -30,12 +41,12 @@ class SubModelConstructor(DefaultOptimizerConstructor):
                 print(name, end=', ')
             print('')
             print('Needed train models:')
-            for needed_train_sub_model in needed_train_sub_models:
-                print(needed_train_sub_model._get_name(), end=', ')
+            for needed_train_sub_model in sub_models.keys():
+                print(needed_train_sub_model, end=', ')
 
         # if no paramwise option is specified, just use the global setting
         if not self.paramwise_cfg:
-            optimizer_cfg['params'] = [{'params': needed_train_sub_model.parameters()} for needed_train_sub_model in needed_train_sub_models]
+            optimizer_cfg['params'] = [value for key, value in sub_models.items()]
             return build_from_cfg(optimizer_cfg, OPTIMIZERS)
         # if not self.paramwise_cfg:
         #     optimizer_cfg['params'] = model.parameters()
