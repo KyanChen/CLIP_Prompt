@@ -163,7 +163,7 @@ class ModifiedResNet(nn.Module):
         outs.append(x)
 
         x_map = None
-        x, x_map = self.attnpool(x)
+        # x, x_map = self.attnpool(x)
 
         return x, x_map, tuple(outs)
 

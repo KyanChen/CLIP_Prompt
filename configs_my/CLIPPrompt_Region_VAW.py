@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=5)
+checkpoint_config = dict(interval=3)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -198,3 +198,4 @@ evaluation = dict(interval=10, metric='mAP')
 
 load_from = None
 resume_from = 'results/EXP20220703_0/latest.pth'
+resume_from = None
