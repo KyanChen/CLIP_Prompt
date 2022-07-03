@@ -36,11 +36,12 @@ model = dict(
         backbone_name='RN50',
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
-        precision='fp16',
+        precision='fp32',
     ),
     neck=dict(
         type='FPN',
         # type='RefineChannel',
+        # in_channels=[256, 512, 1024, 2048],
         in_channels=[64, 256, 512, 1024, 2048],
         out_channels=256,
         num_outs=5),
@@ -56,7 +57,8 @@ model = dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
-            featmap_strides=[2, 4, 8, 16, 32]
+            featmap_strides=[2, 4, 8, 16, 32],
+            # featmap_strides=[4, 8, 16, 32, 64]
             # out_channels=1024,
             # featmap_strides=[32]
         ),
@@ -94,12 +96,14 @@ img_norm_cfg = dict(
 )
 # Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
 img_size = (512, 512)
+# img_size = (896, 896)
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=img_size, keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size=img_size, center_pad=True),
+    # dict(type='RandomExpandAndCropBox', expand_range=(1, 1.2), crop_range=(0.6, 1)),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['proposals', 'gt_labels']),
     dict(type='Collect', keys=['img', 'proposals', 'gt_labels'])
@@ -114,6 +118,7 @@ test_pipeline = [
             dict(type='Resize', img_scale=img_size, keep_ratio=True),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size=img_size,  center_pad=True),
+            # dict(type='RandomExpandAndCropBox', expand_range=(1, 1.2), crop_range=(0.9, 1)),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img', 'proposals'])
         ]
@@ -188,7 +193,7 @@ lr_config = dict(
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=100)
-evaluation = dict(interval=20, metric='mAP')
+evaluation = dict(interval=10, metric='mAP')
 
 load_from = None
 resume_from = None
