@@ -161,4 +161,4 @@ runner = dict(type='EpochBasedRunner', max_epochs=200)
 evaluation = dict(interval=20, metric='mAP')
 
 load_from = None
-resume_from = None
+resume_from = 'results/EXP20220702_3/latest.pth'

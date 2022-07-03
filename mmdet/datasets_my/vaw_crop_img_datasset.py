@@ -85,7 +85,6 @@ class VAWCropDataset(Dataset):
         results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
         results['img_info'] = {}
         results['img_info']['filename'] = f'{results["image_id"]}.jpg'
-        results['instance_bbox'] = results["instance_bbox"]
 
         positive_attributes = results["positive_attributes"]
         negative_attributes = results["negative_attributes"]
@@ -129,6 +128,7 @@ class VAWCropDataset(Dataset):
     def evaluate(self,
                  results,
                  metric='mAP',
+                 logger=None,
                  per_class_out_file=None,
                  is_logit=True
                  ):
