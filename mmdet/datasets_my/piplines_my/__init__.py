@@ -1,5 +1,5 @@
-from .crop import ScaleCrop
+from .crop import ScaleCrop, RandomExpandAndCropBox
 
 __all__ = [
-    'ScaleCrop'
+    'ScaleCrop', 'RandomExpandAndCropBox'
 ]
