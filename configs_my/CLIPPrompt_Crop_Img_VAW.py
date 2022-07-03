@@ -62,8 +62,8 @@ img_norm_cfg = dict(
 
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
-    dict(type='ScaleCrop', scale_range=[0.2, 0.4]),
-    dict(type='RandomCrop', crop_size=[0.7, 0.7], crop_type='relative_range'),
+    dict(type='ScaleCrop', scale_range=[0.0, 0.2]),
+    dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=(224, 224), keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
@@ -75,8 +75,8 @@ train_pipeline = [
 
 test_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
-    dict(type='ScaleCrop', scale_range=[0.2, 0.4]),
-    dict(type='RandomCrop', crop_size=[0.7, 0.7], crop_type='relative_range'),
+    dict(type='ScaleCrop', scale_range=[0.0, 0.1]),
+    dict(type='RandomCrop', crop_size=[0.9, 0.9], crop_type='relative_range'),
     dict(type='MultiScaleFlipAug',
          img_scale=(224, 224),
          flip=False,
@@ -117,25 +117,25 @@ data = dict(
         pipeline=test_pipeline
     )
 )
-#
-# # optimizer
-# optimizer = dict(
-#     constructor='SubModelConstructor',
-#     sub_model='prompt_learner',
-#     type='SGD',
-#     lr=0.005,
-#     momentum=0.9,
-#     weight_decay=0.0005
-# )
 
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model='prompt_learner',
-    type='AdamW',
-    lr=1e-4,
-    weight_decay=1e-3
+    type='SGD',
+    lr=0.005,
+    momentum=0.9,
+    weight_decay=0.0005
 )
+
+# # optimizer
+# optimizer = dict(
+#     constructor='SubModelConstructor',
+#     sub_model='prompt_learner',
+#     type='AdamW',
+#     lr=1e-4,
+#     weight_decay=1e-3
+# )
 
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
@@ -161,4 +161,4 @@ runner = dict(type='EpochBasedRunner', max_epochs=200)
 evaluation = dict(interval=20, metric='mAP')
 
 load_from = None
-resume_from = 'results/EXP20220702_3/latest.pth'
+resume_from = None
