@@ -92,7 +92,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=256,
+    samples_per_gpu=128,
     workers_per_gpu=8,
     persistent_workers=True,
     train=dict(
@@ -102,14 +102,14 @@ data = dict(
         test_mode=False,
         pipeline=train_pipeline),
     val=dict(
-        samples_per_gpu=256,
+        samples_per_gpu=128,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
         test_mode=True,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=256,
+        samples_per_gpu=128,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
