@@ -124,7 +124,7 @@ optimizer = dict(
     # sub_model='prompt_learner',
     sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     type='SGD',
-    lr=0.005,
+    lr=0.01,
     momentum=0.9,
     weight_decay=0.0005
 )
