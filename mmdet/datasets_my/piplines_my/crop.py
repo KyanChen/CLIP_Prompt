@@ -52,6 +52,7 @@ class ScaleCrop:
         return results
 
 
+@PIPELINES.register_module()
 class RandomExpandAndCropBox:
     """
     random expand box and crop box
