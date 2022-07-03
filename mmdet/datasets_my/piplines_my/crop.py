@@ -2,7 +2,7 @@ import copy
 import inspect
 import math
 import warnings
-from random import random
+import random
 
 import cv2
 import mmcv
