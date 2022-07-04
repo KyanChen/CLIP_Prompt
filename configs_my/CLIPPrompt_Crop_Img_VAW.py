@@ -119,25 +119,26 @@ data = dict(
     )
 )
 
+# # optimizer
+# optimizer = dict(
+#     constructor='SubModelConstructor',
+#     # sub_model='prompt_learner',
+#     sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
+#     type='SGD',
+#     lr=0.01,
+#     momentum=0.9,
+#     weight_decay=0.0005
+# )
+#
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
     # sub_model='prompt_learner',
     sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
-    type='SGD',
-    lr=0.01,
-    momentum=0.9,
-    weight_decay=0.0005
+    type='AdamW',
+    lr=1e-4,
+    weight_decay=1e-3
 )
-
-# # optimizer
-# optimizer = dict(
-#     constructor='SubModelConstructor',
-#     sub_model='prompt_learner',
-#     type='AdamW',
-#     lr=1e-4,
-#     weight_decay=1e-3
-# )
 
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
