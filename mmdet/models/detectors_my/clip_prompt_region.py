@@ -122,7 +122,7 @@ class CLIP_Prompter_Region(BaseDetector):
                       **kwargs
                       ):
         self.gc_collect_times += 1
-        if self.gc_collect_times > 500:
+        if self.gc_collect_times > 200:
             self.gc_collect_times = 0
             gc.collect()
         # with torch.no_grad():
