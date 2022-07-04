@@ -34,7 +34,7 @@ class PromptHead(BaseModule):
         neg_rew = torch.from_numpy(np.array([v['neg'] for k, v in attr_freq.items()], dtype=np.float32))
         total_rew = torch.from_numpy(np.array([v['total'] for k, v in attr_freq.items()], dtype=np.float32))
         total_rew = torch.pow(1 / total_rew, self.re_weight_alpha)
-        total_rew = total_rew / total_rew.sum()
+        total_rew = 620 * total_rew / total_rew.sum()
         return total_rew
 
 
