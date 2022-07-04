@@ -4,8 +4,8 @@ import time
 while True:
     os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
               "sh dist_train.sh "
-              "../configs_my/CLIPPrompt_Crop_Img_VAW.py "
-              "results/EXP20220704_0 "
+              "../configs_my/CLIPPrompt_Region_VAW.py "
+              "results/EXP20220703_0 "
               "8")
     time.sleep(60*2)
 

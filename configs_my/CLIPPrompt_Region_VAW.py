@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=3)
+checkpoint_config = dict(interval=5)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -34,6 +34,7 @@ model = dict(
     backbone=dict(
         type='CLIPModel',
         backbone_name='RN50',
+        with_attn=False,
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
         precision='fp32',
@@ -160,7 +161,7 @@ optimizer = dict(
     sub_model=['prompt_learner', 'neck', 'roi_head'],
     # sub_model=['prompt_learner', 'roi_head'],
     type='SGD',
-    lr=0.005,
+    lr=0.01,
     momentum=0.9,
     weight_decay=0.0005
 )
@@ -193,9 +194,9 @@ lr_config = dict(
     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=150)
+runner = dict(type='EpochBasedRunner', max_epochs=100)
 evaluation = dict(interval=10, metric='mAP')
 
 load_from = None
-resume_from = 'results/EXP20220703_0/latest.pth'
-# resume_from = None
+# resume_from = 'results/EXP20220703_0/latest.pth'
+resume_from = None

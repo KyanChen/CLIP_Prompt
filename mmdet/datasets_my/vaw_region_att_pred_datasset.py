@@ -116,7 +116,7 @@ class VAWRegionDataset(Dataset):
             return self.get_test_data(idx)
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
-        item = self.instances[idx]
+        results = self.instances[idx].copy()
         '''
         "image_id": "2373241",
         "instance_id": "2373241004",
@@ -126,7 +126,6 @@ class VAWRegionDataset(Dataset):
         "positive_attributes": ["tiled", "gray", "light colored"],
         "negative_attributes": ["multicolored", "maroon", "weathered", "speckled", "carpeted"]
         '''
-        results = item.copy()
         results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
         results['img_info'] = {}
         results['img_info']['filename'] = f'{results["image_id"]}.jpg'
