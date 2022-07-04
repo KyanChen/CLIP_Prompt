@@ -1,3 +1,4 @@
+import gc
 import json
 
 import torch
@@ -62,6 +63,7 @@ class CLIP_Prompter_Region(BaseDetector):
         self.bbox_head = build_head(bbox_head)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
+        self.gc_collect_times = 0
 
         print("Turning off gradients in both the image and the text encoder")
         for name, param in self.named_parameters():
@@ -119,6 +121,9 @@ class CLIP_Prompter_Region(BaseDetector):
                       gt_labels,
                       **kwargs
                       ):
+        self.gc_collect_times += 1
+        if self.gc_collect_times > 100:
+            gc.collect()
         # with torch.no_grad():
         with torch.no_grad():
             image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
