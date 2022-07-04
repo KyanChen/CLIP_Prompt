@@ -119,26 +119,26 @@ data = dict(
     )
 )
 
+# optimizer
+optimizer = dict(
+    constructor='SubModelConstructor',
+    # sub_model='prompt_learner',
+    sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.05}},
+    type='SGD',
+    lr=0.01,
+    momentum=0.9,
+    weight_decay=0.0005
+)
+#
 # # optimizer
 # optimizer = dict(
 #     constructor='SubModelConstructor',
 #     # sub_model='prompt_learner',
 #     sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
-#     type='SGD',
-#     lr=0.01,
-#     momentum=0.9,
-#     weight_decay=0.0005
+#     type='AdamW',
+#     lr=1e-4,
+#     weight_decay=1e-3
 # )
-#
-# optimizer
-optimizer = dict(
-    constructor='SubModelConstructor',
-    # sub_model='prompt_learner',
-    sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
-    type='AdamW',
-    lr=1e-4,
-    weight_decay=1e-3
-)
 
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
@@ -162,7 +162,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=80)
+runner = dict(type='EpochBasedRunner', max_epochs=100)
 evaluation = dict(interval=10, metric='mAP')
 
 load_from = None
