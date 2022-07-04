@@ -129,11 +129,12 @@ class ModifiedResNet(nn.Module):
         self.layer4 = self._make_layer(width * 8, layers[3], stride=2)  # Bx1024x16x16 -> Bx2048x8x8
 
         embed_dim = width * 32  # the ResNet feature dimension
+        self.with_attn = with_attn
         if self.with_attn:
             self.attnpool = AttentionPool2d(input_resolution // 32, embed_dim, heads, output_dim)
         # import pdb
         # pdb.set_trace()
-        self.with_attn = with_attn
+
 
 
     def _make_layer(self, planes, blocks, stride=1):
