@@ -103,7 +103,7 @@ class ModifiedResNet(nn.Module):
     - The final pooling layer is a QKV attention instead of an average pool
     """
 
-    def __init__(self, layers, output_dim, heads, input_resolution=224, width=64):
+    def __init__(self, layers, output_dim, heads, input_resolution=224, width=64, with_attn=True):
         super().__init__()
         self.output_dim = output_dim  # 1024
         self.input_resolution = input_resolution
@@ -129,6 +129,7 @@ class ModifiedResNet(nn.Module):
         self.attnpool = AttentionPool2d(input_resolution // 32, embed_dim, heads, output_dim)
         # import pdb
         # pdb.set_trace()
+        self.with_attn = with_attn
 
 
     def _make_layer(self, planes, blocks, stride=1):
@@ -162,8 +163,11 @@ class ModifiedResNet(nn.Module):
         x = self.layer4(x)
         outs.append(x)
 
-        x_map = None
-        # x, x_map = self.attnpool(x)
+        if self.with_attn:
+            x, x_map = self.attnpool(x)
+        else:
+            x_map = None
+
 
         return x, x_map, tuple(outs)
 
@@ -267,7 +271,8 @@ class CLIP(nn.Module):
                  vocab_size: int,
                  transformer_width: int,
                  transformer_heads: int,
-                 transformer_layers: int
+                 transformer_layers: int,
+                 with_attn=True
                  ):
         super().__init__()
 
@@ -280,7 +285,8 @@ class CLIP(nn.Module):
                 output_dim=embed_dim,
                 heads=vision_heads,
                 input_resolution=image_resolution,
-                width=vision_width
+                width=vision_width,
+                with_attn=with_attn
             )
         else:
             vision_heads = vision_width // 64
@@ -410,7 +416,7 @@ def convert_weights(model: nn.Module):
     model.apply(_convert_weights_to_fp16)
 
 
-def build_model(state_dict: dict):
+def build_model(state_dict: dict, with_attn=True):
     vit = "visual.proj" in state_dict
 
     if vit:
@@ -438,7 +444,7 @@ def build_model(state_dict: dict):
     model = CLIP(
         embed_dim,
         image_resolution, vision_layers, vision_width, vision_patch_size,
-        context_length, vocab_size, transformer_width, transformer_heads, transformer_layers
+        context_length, vocab_size, transformer_width, transformer_heads, transformer_layers, with_attn
     )
 
     for key in ["input_resolution", "context_length", "vocab_size"]:

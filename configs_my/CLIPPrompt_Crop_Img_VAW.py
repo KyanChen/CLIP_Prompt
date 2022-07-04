@@ -34,6 +34,7 @@ model = dict(
     backbone=dict(
         type='CLIPModel',
         backbone_name='RN50',
+        with_attn=True,
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
         precision='fp32',
@@ -144,10 +145,11 @@ optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 lr_config = dict(
     policy='step',
     warmup='linear',
-    warmup_iters=2000,  # same as burn-in in darknet
+    warmup_iters=2000,
     warmup_ratio=0.1,
     # gamma=0.5,
-    step=[40, 60])
+    step=[40, 60]
+)
 
 # lr_config = dict(
 #     policy='CosineAnnealing',
