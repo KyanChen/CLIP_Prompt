@@ -132,6 +132,8 @@ class ModifiedResNet(nn.Module):
         self.with_attn = with_attn
         if self.with_attn:
             self.attnpool = AttentionPool2d(input_resolution // 32, embed_dim, heads, output_dim)
+        else:
+            self.attnpool = None
         # import pdb
         # pdb.set_trace()
 
