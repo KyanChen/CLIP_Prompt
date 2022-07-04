@@ -1,7 +1,7 @@
 import json
 from collections import OrderedDict
 
-data_root = '/data1/kyanchen/prompt/data/VAW'
+data_root = '/data1/kyanchen/prompt/data/VAW/'
 attr_dict = json.load(open(data_root + 'attribute_index.json'))
 
 
