@@ -120,7 +120,8 @@ class CLIP_Prompter_Region(BaseDetector):
                       **kwargs
                       ):
         # with torch.no_grad():
-        image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
+        with torch.no_grad():
+            image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
         # import pdb
         # pdb.set_trace()
 
