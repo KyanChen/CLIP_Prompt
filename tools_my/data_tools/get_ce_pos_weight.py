@@ -16,7 +16,7 @@ for key, value in attr_dict.items():
     freq_attr[key] = 0
 for instance in tqdm.tqdm(instances):
     positive_attributes = instance['positive_attributes']
-    negative_attributes = instances['negative_attributes']
+    negative_attributes = instance['negative_attributes']
     for item in positive_attributes:
         freq_attr[item] = freq_attr[item] + 1
     for item in negative_attributes:
