@@ -104,7 +104,7 @@ train_pipeline = [
     dict(type='Resize', img_scale=img_size, keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size=img_size, center_pad=True),
-    dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.25), crop_range=(0.85, 1), prob=0.6),
+    # dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.25), crop_range=(0.85, 1), prob=0.6),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['proposals', 'gt_labels']),
     dict(type='Collect', keys=['img', 'proposals', 'gt_labels'])
