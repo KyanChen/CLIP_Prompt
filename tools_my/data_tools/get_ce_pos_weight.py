@@ -1,6 +1,8 @@
 import json
 from collections import OrderedDict
 
+import tqdm
+
 data_root = '/data1/kyanchen/prompt/data/VAW/'
 attr_dict = json.load(open(data_root + 'attribute_index.json'))
 
@@ -12,7 +14,7 @@ instances = []
 freq_attr = OrderedDict()
 for key, value in attr_dict.items():
     freq_attr[key] = 0
-for instance in instances:
+for instance in tqdm.tqdm(instances):
     positive_attributes = instance['positive_attributes']
     negative_attributes = instances['negative_attributes']
     for item in positive_attributes:
