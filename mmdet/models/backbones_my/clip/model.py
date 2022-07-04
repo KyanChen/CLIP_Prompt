@@ -129,7 +129,8 @@ class ModifiedResNet(nn.Module):
         self.layer4 = self._make_layer(width * 8, layers[3], stride=2)  # Bx1024x16x16 -> Bx2048x8x8
 
         embed_dim = width * 32  # the ResNet feature dimension
-        self.attnpool = AttentionPool2d(input_resolution // 32, embed_dim, heads, output_dim)
+        if self.with_attn:
+            self.attnpool = AttentionPool2d(input_resolution // 32, embed_dim, heads, output_dim)
         # import pdb
         # pdb.set_trace()
         self.with_attn = with_attn
@@ -145,6 +146,9 @@ class ModifiedResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
+        # import pdb
+        # pdb.set_trace()
+
         outs = []
         x = x.type(self.conv1.weight.dtype)
         # stem
