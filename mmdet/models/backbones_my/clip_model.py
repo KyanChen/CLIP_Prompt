@@ -11,7 +11,7 @@ class CLIPModel(BaseModule):
     def __init__(self,
                  backbone_name='RN50',
                  with_attn=True,
-                 out_indices=(0, 1, 2, 3, 4),
+                 out_indices=(1, 2, 3, 4),
                  load_ckpt_from=None,
                  precision='fp16',
                  pretrained=None,

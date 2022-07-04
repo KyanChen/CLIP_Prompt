@@ -103,7 +103,7 @@ class ModifiedResNet(nn.Module):
     - The final pooling layer is a QKV attention instead of an average pool
     """
 
-    def __init__(self, layers, output_dim, heads, input_resolution=224, width=64, with_attn=True, out_indices=(0, 1, 2, 3, 4)):
+    def __init__(self, layers, output_dim, heads, input_resolution=224, width=64, with_attn=True, out_indices=(1, 2, 3, 4)):
         super().__init__()
         self.out_indices = out_indices
         assert max(out_indices) < 5
@@ -284,7 +284,7 @@ class CLIP(nn.Module):
                  transformer_heads: int,
                  transformer_layers: int,
                  with_attn=True,
-                 out_indices=(0, 1, 2, 3, 4),
+                 out_indices=(1, 2, 3, 4),
                  ):
         super().__init__()
 
