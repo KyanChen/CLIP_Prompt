@@ -19,7 +19,7 @@ class PromptHead(BaseModule):
                  train_cfg=None,
                  test_cfg=None,
                  init_cfg=None,
-                 re_weight_alpha=2,
+                 re_weight_alpha=0.2,
                  ):
         super(PromptHead, self).__init__(init_cfg)
         self.data_root = data_root
