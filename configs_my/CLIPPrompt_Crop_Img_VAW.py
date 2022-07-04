@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=20)
+checkpoint_config = dict(interval=10)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -140,26 +140,27 @@ optimizer = dict(
 
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
-# # # learning policy
-# lr_config = dict(
-#     policy='step',
-#     warmup='linear',
-#     warmup_iters=2000,  # same as burn-in in darknet
-#     warmup_ratio=0.1,
-#     step=[90, 120])
-
+# # learning policy
 lr_config = dict(
-    policy='CosineAnnealing',
-    by_epoch=False,
-    min_lr_ratio=1e-2,
+    policy='step',
     warmup='linear',
-    warmup_ratio=1e-3,
-    warmup_iters=1,
-    warmup_by_epoch=True)
+    warmup_iters=2000,  # same as burn-in in darknet
+    warmup_ratio=0.1,
+    # gamma=0.5,
+    step=[40, 60])
+
+# lr_config = dict(
+#     policy='CosineAnnealing',
+#     by_epoch=False,
+#     min_lr_ratio=1e-2,
+#     warmup='linear',
+#     warmup_ratio=1e-3,
+#     warmup_iters=1,
+#     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=200)
-evaluation = dict(interval=20, metric='mAP')
+runner = dict(type='EpochBasedRunner', max_epochs=80)
+evaluation = dict(interval=10, metric='mAP')
 
 load_from = None
 resume_from = None
