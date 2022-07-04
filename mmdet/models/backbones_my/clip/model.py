@@ -145,18 +145,18 @@ class ModifiedResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, x_in):
         # import pdb
         # pdb.set_trace()
 
         outs = []
-        x = x.type(self.conv1.weight.dtype)
+        x_in = x_in.type(self.conv1.weight.dtype)
         # stem
         for conv, bn in [(self.conv1, self.bn1), (self.conv2, self.bn2), (self.conv3, self.bn3)]:
-            x = self.relu(bn(conv(x)))
+            x_in = self.relu(bn(conv(x_in)))
         if 0 in self.out_indices:
-            outs.append(x)
-        x = self.avgpool(x)
+            outs.append(x_in)
+        x = self.avgpool(x_in)
 
         # res layers
         x = self.layer1(x)
