@@ -19,21 +19,24 @@ class PromptHead(BaseModule):
                  train_cfg=None,
                  test_cfg=None,
                  init_cfg=None,
-                 re_weight_alpha=0.2,
+                 re_weight_gamma=2,
+                 re_weight_beta=0.99,
                  ):
         super(PromptHead, self).__init__(init_cfg)
         self.data_root = data_root
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
         attr_freq = json.load(open(data_root + '/VAW/attr_freq_wo_sort.json', 'r'))
-        self.re_weight_alpha = re_weight_alpha
+        self.re_weight_gamma = re_weight_gamma
+        self.re_weight_beta = re_weight_beta
         self.reweight_att_frac = self.reweight_att(attr_freq)
 
     def reweight_att(self, attr_freq):
         pos_rew = torch.from_numpy(np.array([v['pos'] for k, v in attr_freq.items()], dtype=np.float32))
         neg_rew = torch.from_numpy(np.array([v['neg'] for k, v in attr_freq.items()], dtype=np.float32))
         total_rew = torch.from_numpy(np.array([v['total'] for k, v in attr_freq.items()], dtype=np.float32))
-        total_rew = torch.pow(1 / total_rew, self.re_weight_alpha)
+        total_rew = 1 - torch.pow(self.re_weight_beta, total_rew)
+        total_rew = (1 - self.re_weight_beta) / total_rew
         total_rew = 620 * total_rew / total_rew.sum()
         return total_rew
 
@@ -47,17 +50,20 @@ class PromptHead(BaseModule):
         total_rew = self.reweight_att_frac.to(gt_labels_flatten.device)
         total_rew = repeat(total_rew, 'N -> (B N)', B=BS)
 
-        pos_neg_mask = gt_labels_flatten < 2
-        bce_loss_pos_neg = F.binary_cross_entropy_with_logits(cls_scores_flatten[pos_neg_mask],
-                                                              gt_labels_flatten[pos_neg_mask].float(),
-                                                              weight=total_rew[pos_neg_mask],
-                                                              reduction='mean')
-        pred_unk = cls_scores_flatten[~pos_neg_mask]
-        gt_labels_unk = pred_unk.new_zeros(pred_unk.size())
-        weight_fac = total_rew[~pos_neg_mask]
-        bce_loss_unk = F.binary_cross_entropy_with_logits(pred_unk, gt_labels_unk, weight=weight_fac, reduction='mean')
+        cls_scores_flatten = F.sigmoid(cls_scores_flatten)
+        pos_mask = gt_labels_flatten == 1
+        neg_mask = gt_labels_flatten == 0
+        unk_mask = gt_labels_flatten == 2
+        loss_pos = - total_rew[pos_mask] * torch.pow(1-cls_scores_flatten[pos_mask], self.re_weight_gamma) * torch.log(cls_scores_flatten[pos_mask])
+        loss_neg = - total_rew[neg_mask] * torch.pow(cls_scores_flatten[neg_mask], self.re_weight_gamma) * torch.log(1-cls_scores_flatten[neg_mask])
+        loss_pos = loss_pos.mean()
+        loss_neg = loss_neg.mean()
 
-        bce_loss = bce_loss_pos_neg + 0.1 * bce_loss_unk
+        pred_unk = cls_scores_flatten[unk_mask]
+        gt_labels_unk = pred_unk.new_zeros(pred_unk.size())
+        bce_loss_unk = F.binary_cross_entropy(pred_unk, gt_labels_unk, reduction='mean')
+
+        bce_loss = loss_pos + loss_neg + 0.2 * bce_loss_unk
         return bce_loss
 
     def loss(self,
