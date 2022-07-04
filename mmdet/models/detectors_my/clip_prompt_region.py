@@ -121,10 +121,10 @@ class CLIP_Prompter_Region(BaseDetector):
                       gt_labels,
                       **kwargs
                       ):
-        self.gc_collect_times += 1
-        if self.gc_collect_times > 100:
-            self.gc_collect_times = 0
-            gc.collect()
+        # self.gc_collect_times += 1
+        # if self.gc_collect_times > 100:
+        #     self.gc_collect_times = 0
+        #     gc.collect()
         # with torch.no_grad():
         with torch.no_grad():
             image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
