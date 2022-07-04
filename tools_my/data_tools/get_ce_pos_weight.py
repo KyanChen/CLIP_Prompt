@@ -21,4 +21,6 @@ for instance in tqdm.tqdm(instances):
         freq_attr[item] = freq_attr[item] + 1
     for item in negative_attributes:
         freq_attr[item] = freq_attr[item] + 1
+freq_attr = sorted(freq_attr.items(), key=lambda kv: kv[1], reverse=True)
+
 json.dump(freq_attr, open(data_root + 'attr_freq.json', 'w'), indent=4)
