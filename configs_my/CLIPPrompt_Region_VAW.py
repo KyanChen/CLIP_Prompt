@@ -59,7 +59,8 @@ model = dict(
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
             # featmap_strides=[2, 4, 8, 16, 32],
-            featmap_strides=[4, 8, 16, 32, 64]
+            # featmap_strides=[4, 8, 16, 32, 64]
+            featmap_strides=[4, 8, 16, 32]
             # out_channels=1024,
             # featmap_strides=[32]
         ),
