@@ -35,6 +35,7 @@ model = dict(
         type='CLIPModel',
         backbone_name='RN50',
         with_attn=False,
+        out_indices=(1, 2, 3, 4),
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
         precision='fp32',
@@ -45,7 +46,7 @@ model = dict(
         in_channels=[256, 512, 1024, 2048],
         # in_channels=[64, 256, 512, 1024, 2048],
         out_channels=256,
-        num_outs=4),
+        num_outs=5),
     # neck=dict(
     #     # type='FPN',
     #     type='RefineChannel',
@@ -59,8 +60,7 @@ model = dict(
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
             # featmap_strides=[2, 4, 8, 16, 32],
-            # featmap_strides=[4, 8, 16, 32, 64]
-            featmap_strides=[4, 8, 16, 32]
+            featmap_strides=[4, 8, 16, 32, 64]
             # out_channels=1024,
             # featmap_strides=[32]
         ),

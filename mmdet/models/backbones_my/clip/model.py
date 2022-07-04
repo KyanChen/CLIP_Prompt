@@ -103,8 +103,11 @@ class ModifiedResNet(nn.Module):
     - The final pooling layer is a QKV attention instead of an average pool
     """
 
-    def __init__(self, layers, output_dim, heads, input_resolution=224, width=64, with_attn=True):
+    def __init__(self, layers, output_dim, heads, input_resolution=224, width=64, with_attn=True, out_indices=(0, 1, 2, 3, 4)):
         super().__init__()
+        self.out_indices = out_indices
+        assert max(out_indices) < 5
+
         self.output_dim = output_dim  # 1024
         self.input_resolution = input_resolution
 
@@ -147,27 +150,31 @@ class ModifiedResNet(nn.Module):
         # stem
         for conv, bn in [(self.conv1, self.bn1), (self.conv2, self.bn2), (self.conv3, self.bn3)]:
             x = self.relu(bn(conv(x)))
-        outs.append(x)
+        if 0 in self.out_indices:
+            outs.append(x)
         x = self.avgpool(x)
 
         # res layers
         x = self.layer1(x)
-        outs.append(x)
+        if 1 in self.out_indices:
+            outs.append(x)
 
         x = self.layer2(x)
-        outs.append(x)
+        if 2 in self.out_indices:
+            outs.append(x)
 
         x = self.layer3(x)
-        outs.append(x)
+        if 3 in self.out_indices:
+            outs.append(x)
 
         x = self.layer4(x)
-        outs.append(x)
+        if 4 in self.out_indices:
+            outs.append(x)
 
         if self.with_attn:
             x, x_map = self.attnpool(x)
         else:
             x_map = None
-
 
         return x, x_map, tuple(outs)
 
@@ -272,7 +279,8 @@ class CLIP(nn.Module):
                  transformer_width: int,
                  transformer_heads: int,
                  transformer_layers: int,
-                 with_attn=True
+                 with_attn=True,
+                 out_indices=(0, 1, 2, 3, 4),
                  ):
         super().__init__()
 
@@ -286,7 +294,8 @@ class CLIP(nn.Module):
                 heads=vision_heads,
                 input_resolution=image_resolution,
                 width=vision_width,
-                with_attn=with_attn
+                with_attn=with_attn,
+                out_indices=out_indices
             )
         else:
             vision_heads = vision_width // 64
@@ -416,7 +425,7 @@ def convert_weights(model: nn.Module):
     model.apply(_convert_weights_to_fp16)
 
 
-def build_model(state_dict: dict, with_attn=True):
+def build_model(state_dict: dict, with_attn=True, out_indices=(0, 1, 2, 3, 4)):
     vit = "visual.proj" in state_dict
 
     if vit:
@@ -444,7 +453,8 @@ def build_model(state_dict: dict, with_attn=True):
     model = CLIP(
         embed_dim,
         image_resolution, vision_layers, vision_width, vision_patch_size,
-        context_length, vocab_size, transformer_width, transformer_heads, transformer_layers, with_attn
+        context_length, vocab_size, transformer_width, transformer_heads, transformer_layers, with_attn,
+        out_indices
     )
 
     for key in ["input_resolution", "context_length", "vocab_size"]:

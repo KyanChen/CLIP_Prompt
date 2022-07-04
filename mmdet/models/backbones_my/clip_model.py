@@ -11,6 +11,7 @@ class CLIPModel(BaseModule):
     def __init__(self,
                  backbone_name='RN50',
                  with_attn=True,
+                 out_indices=(0, 1, 2, 3, 4),
                  load_ckpt_from=None,
                  precision='fp16',
                  pretrained=None,
@@ -31,7 +32,7 @@ class CLIPModel(BaseModule):
         except RuntimeError:
             state_dict = torch.load(load_ckpt_from, map_location="cpu")
 
-        self.model = build_model(state_dict, with_attn)
+        self.model = build_model(state_dict, with_attn, out_indices=out_indices)
 
         if precision == "fp32" or precision == "amp":
             # CLIP's default precision is fp16
