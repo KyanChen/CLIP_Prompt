@@ -180,8 +180,6 @@ class ModifiedResNet(nn.Module):
             x, x_map = self.attnpool(x)
         else:
             x_map = None
-        if 0 not in self.out_indices:
-            gc.collect()
         return x, x_map, tuple(outs)
 
 
