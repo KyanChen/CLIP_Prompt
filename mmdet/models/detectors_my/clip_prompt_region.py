@@ -132,7 +132,7 @@ class CLIP_Prompter_Region(BaseDetector):
         # torch.Size([256, 1024, 14, 14])
         # torch.Size([256, 2048, 7, 7])
 
-        # img_f_maps = tuple([x.float() for x in img_f_maps])
+        img_f_maps = tuple([x.detach() for x in img_f_maps])
         # img_f_maps = tuple([final_map.float()])
 
         # img_f_maps = self.neck(img_f_maps[:len(self.neck.in_channels)])
