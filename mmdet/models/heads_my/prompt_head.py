@@ -50,7 +50,7 @@ class PromptHead(BaseModule):
         total_rew = self.reweight_att_frac.to(gt_labels_flatten.device)
         total_rew = repeat(total_rew, 'N -> (B N)', B=BS)
 
-        cls_scores_flatten = F.sigmoid(cls_scores_flatten)
+        cls_scores_flatten = torch.sigmoid(cls_scores_flatten)
         pos_mask = gt_labels_flatten == 1
         neg_mask = gt_labels_flatten == 0
         unk_mask = gt_labels_flatten == 2
