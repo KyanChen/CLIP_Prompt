@@ -149,7 +149,7 @@ lr_config = dict(
     warmup_iters=2000,
     warmup_ratio=0.1,
     # gamma=0.5,
-    step=[40, 60]
+    step=[50, 70]
 )
 
 # lr_config = dict(
