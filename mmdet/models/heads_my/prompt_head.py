@@ -54,8 +54,10 @@ class PromptHead(BaseModule):
         pos_mask = gt_labels_flatten == 1
         neg_mask = gt_labels_flatten == 0
         unk_mask = gt_labels_flatten == 2
-        loss_pos = - total_rew[pos_mask] * torch.pow(1-cls_scores_flatten[pos_mask], self.re_weight_gamma) * torch.log(cls_scores_flatten[pos_mask]+ 1e-10)
-        loss_neg = - total_rew[neg_mask] * torch.pow(cls_scores_flatten[neg_mask], self.re_weight_gamma) * torch.log(1-cls_scores_flatten[neg_mask]+ 1e-10)
+        pos_pred = torch.clamp(cls_scores_flatten[pos_mask], 1e-10, 1-1e-10)
+        neg_pred = torch.clamp(1-cls_scores_flatten[neg_mask], 1e-10, 1-1e-10)
+        loss_pos = - total_rew[pos_mask] * torch.pow(1-cls_scores_flatten[pos_mask], self.re_weight_gamma) * torch.log(pos_pred)
+        loss_neg = - total_rew[neg_mask] * torch.pow(cls_scores_flatten[neg_mask], self.re_weight_gamma) * torch.log(neg_pred)
         loss_pos = loss_pos.mean()
         loss_neg = loss_neg.mean()
 
@@ -63,7 +65,7 @@ class PromptHead(BaseModule):
         gt_labels_unk = pred_unk.new_zeros(pred_unk.size())
         bce_loss_unk = F.binary_cross_entropy(pred_unk, gt_labels_unk, reduction='mean')
 
-        bce_loss = loss_pos + loss_neg + 0.2 * bce_loss_unk
+        bce_loss = loss_pos + loss_neg + 0.1 * bce_loss_unk
         return bce_loss
 
     def loss(self,
