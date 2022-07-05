@@ -44,6 +44,8 @@ class PromptHead(BaseModule):
     def get_classify_loss(self, cls_scores, gt_labels):
         # cls_scores: BxN
         # gt_labels: BxN
+        import pdb
+        pdb.set_trace()
         BS = cls_scores.size(0)
         cls_scores_flatten = rearrange(cls_scores, 'B N -> (B N)')
         gt_labels_flatten = rearrange(gt_labels, 'B N -> (B N)')
@@ -75,8 +77,8 @@ class PromptHead(BaseModule):
 
         # tmp_output = cls_scores.view(-1)
         # tmp_label = gt_labels.view(-1)
-        # import pdb
-        # pdb.set_trace()
+        import pdb
+        pdb.set_trace()
         loss = self.get_classify_loss(cls_scores, gt_labels)
         # tmp_mask = (tmp_label >= 0)
         # loss = loss * tmp_mask
