@@ -44,8 +44,6 @@ class PromptHead(BaseModule):
     def get_classify_loss(self, cls_scores, gt_labels):
         # cls_scores: BxN
         # gt_labels: BxN
-        import pdb
-        pdb.set_trace()
         BS = cls_scores.size(0)
         cls_scores_flatten = rearrange(cls_scores, 'B N -> (B N)')
         gt_labels_flatten = rearrange(gt_labels, 'B N -> (B N)')
@@ -56,8 +54,8 @@ class PromptHead(BaseModule):
         pos_mask = gt_labels_flatten == 1
         neg_mask = gt_labels_flatten == 0
         unk_mask = gt_labels_flatten == 2
-        loss_pos = - total_rew[pos_mask] * torch.pow(1-cls_scores_flatten[pos_mask], self.re_weight_gamma) * torch.log(cls_scores_flatten[pos_mask])
-        loss_neg = - total_rew[neg_mask] * torch.pow(cls_scores_flatten[neg_mask], self.re_weight_gamma) * torch.log(1-cls_scores_flatten[neg_mask])
+        loss_pos = - total_rew[pos_mask] * torch.pow(1-cls_scores_flatten[pos_mask], self.re_weight_gamma) * torch.log(cls_scores_flatten[pos_mask]+ 1e-10)
+        loss_neg = - total_rew[neg_mask] * torch.pow(cls_scores_flatten[neg_mask], self.re_weight_gamma) * torch.log(1-cls_scores_flatten[neg_mask]+ 1e-10)
         loss_pos = loss_pos.mean()
         loss_neg = loss_neg.mean()
 
@@ -77,8 +75,6 @@ class PromptHead(BaseModule):
 
         # tmp_output = cls_scores.view(-1)
         # tmp_label = gt_labels.view(-1)
-        import pdb
-        pdb.set_trace()
         loss = self.get_classify_loss(cls_scores, gt_labels)
         # tmp_mask = (tmp_label >= 0)
         # loss = loss * tmp_mask
