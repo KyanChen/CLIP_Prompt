@@ -42,8 +42,8 @@ class PromptHead(BaseModule):
         total_rew = 1 - torch.pow(self.re_weight_beta, total_rew)
         total_rew = (1 - self.re_weight_beta) / total_rew
         total_rew = 620 * total_rew / total_rew.sum()
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         # total_rew = 1 / torch.pow(total_rew, self.re_weight_alpha)
         # total_rew = 620 * total_rew / total_rew.sum()
         return total_rew
