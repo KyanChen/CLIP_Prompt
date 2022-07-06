@@ -19,7 +19,7 @@ class PromptHead(BaseModule):
                  train_cfg=None,
                  test_cfg=None,
                  init_cfg=None,
-                 re_weight_alpha=0.4,
+                 re_weight_alpha=0.2,  # 0.2:68, 0.4
                  re_weight_gamma=2,
                  re_weight_beta=0.995,  # 越小，加权越弱
                  ):

@@ -46,7 +46,7 @@ model = dict(
         # in_channels=[256, 512, 1024, 2048],
         in_channels=[64, 256, 512, 1024, 2048],
         out_channels=256,
-        num_outs=6),
+        num_outs=5),
     # neck=dict(
     #     # type='FPN',
     #     type='RefineChannel',
@@ -60,7 +60,7 @@ model = dict(
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
             # featmap_strides=[4, 8, 16, 32],
-            featmap_strides=[4, 8, 16, 32, 64]
+            featmap_strides=[4, 8, 16, 32]
             # out_channels=1024,
             # featmap_strides=[32]
         ),
@@ -106,7 +106,7 @@ train_pipeline = [
     dict(type='Normalize', **img_norm_cfg),
     # dict(type='Pad', size=img_size),
     dict(type='Pad', size=img_size, center_pad=True),
-    dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.25), crop_range=(0.85, 1), prob=0.6),
+    dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.2), crop_range=(0.85, 1), prob=0.6),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['proposals', 'gt_labels']),
     dict(type='Collect', keys=['img', 'proposals', 'gt_labels'])
@@ -131,7 +131,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=28,
+    samples_per_gpu=40,
     workers_per_gpu=4,
     # workers_per_gpu=0,
     persistent_workers=True,
@@ -142,14 +142,14 @@ data = dict(
         test_mode=False,
         pipeline=train_pipeline),
     val=dict(
-        samples_per_gpu=28,
+        samples_per_gpu=40,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
         test_mode=True,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=28,
+        samples_per_gpu=40,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
@@ -179,22 +179,22 @@ optimizer = dict(
 # )
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
-# # # learning policy
-# lr_config = dict(
-#     policy='step',
-#     warmup='linear',
-#     warmup_iters=2000,  # same as burn-in in darknet
-#     warmup_ratio=0.1,
-#     step=[90, 120])
-
+# # learning policy
 lr_config = dict(
-    policy='CosineAnnealing',
-    by_epoch=False,
-    min_lr_ratio=1e-2,
+    policy='step',
     warmup='linear',
-    warmup_ratio=1e-3,
-    warmup_iters=1,
-    warmup_by_epoch=True)
+    warmup_iters=2000,
+    warmup_ratio=0.1,
+    step=[60, 80])
+
+# lr_config = dict(
+#     policy='CosineAnnealing',
+#     by_epoch=False,
+#     min_lr_ratio=1e-2,
+#     warmup='linear',
+#     warmup_ratio=1e-3,
+#     warmup_iters=1,
+#     warmup_by_epoch=True)
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=100)
