@@ -19,8 +19,9 @@ class PromptHead(BaseModule):
                  train_cfg=None,
                  test_cfg=None,
                  init_cfg=None,
+                 re_weight_alpha=2,
                  re_weight_gamma=2,
-                 re_weight_beta=0.95,  # 越小，加权越弱
+                 re_weight_beta=0.995,  # 越小，加权越弱
                  ):
         super(PromptHead, self).__init__(init_cfg)
         self.data_root = data_root
@@ -29,15 +30,22 @@ class PromptHead(BaseModule):
         attr_freq = json.load(open(data_root + '/VAW/attr_freq_wo_sort.json', 'r'))
         self.re_weight_gamma = re_weight_gamma
         self.re_weight_beta = re_weight_beta
+        self.re_weight_alpha = re_weight_alpha
         self.reweight_att_frac = self.reweight_att(attr_freq)
 
     def reweight_att(self, attr_freq):
         pos_rew = torch.from_numpy(np.array([v['pos'] for k, v in attr_freq.items()], dtype=np.float32))
         neg_rew = torch.from_numpy(np.array([v['neg'] for k, v in attr_freq.items()], dtype=np.float32))
-        total_rew = torch.from_numpy(np.array([v['total'] for k, v in attr_freq.items()], dtype=np.float32))
+        total_rew_bak = torch.from_numpy(np.array([v['total'] for k, v in attr_freq.items()], dtype=np.float32))
+
+        total_rew = 99 * (total_rew_bak - total_rew_bak.min()) / (total_rew_bak.max() - total_rew_bak.min()) + 1
         total_rew = 1 - torch.pow(self.re_weight_beta, total_rew)
         total_rew = (1 - self.re_weight_beta) / total_rew
         total_rew = 620 * total_rew / total_rew.sum()
+        import pdb
+        pdb.set_trace()
+        # total_rew = 1 / torch.pow(total_rew, self.re_weight_alpha)
+        # total_rew = 620 * total_rew / total_rew.sum()
         return total_rew
 
 
@@ -56,10 +64,10 @@ class PromptHead(BaseModule):
         unk_mask = gt_labels_flatten == 2
         pos_pred = torch.clamp(cls_scores_flatten[pos_mask], 1e-10, 1-1e-10)
         neg_pred = torch.clamp(1-cls_scores_flatten[neg_mask], 1e-10, 1-1e-10)
-        # loss_pos = - total_rew[pos_mask] * torch.pow(1-cls_scores_flatten[pos_mask], self.re_weight_gamma) * torch.log(pos_pred)
-        # loss_neg = - total_rew[neg_mask] * torch.pow(cls_scores_flatten[neg_mask], self.re_weight_gamma) * torch.log(neg_pred)
-        loss_pos = - total_rew[pos_mask] * torch.log(pos_pred)
-        loss_neg = - total_rew[neg_mask] * torch.log(neg_pred)
+        loss_pos = - total_rew[pos_mask] * torch.pow(1-cls_scores_flatten[pos_mask], self.re_weight_gamma) * torch.log(pos_pred)
+        loss_neg = - total_rew[neg_mask] * torch.pow(cls_scores_flatten[neg_mask], self.re_weight_gamma) * torch.log(neg_pred)
+        # loss_pos = - total_rew[pos_mask] * torch.log(pos_pred)
+        # loss_neg = - total_rew[neg_mask] * torch.log(neg_pred)
         loss_pos = loss_pos.mean()
         loss_neg = loss_neg.mean()
 
