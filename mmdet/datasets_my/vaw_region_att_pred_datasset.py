@@ -158,8 +158,31 @@ class VAWRegionDataset(Dataset):
         results['gt_labels'] = DataContainer(results['gt_labels'], stack=False)
         return results
 
+    def get_test_img_instances(self, idx):
+        img_id = self.img_ids[idx]
+        instances = self.img_instances_pair[img_id]
+
+        results = {}
+        results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
+        results['img_info'] = {}
+        results['img_info']['filename'] = f'{img_id}.jpg'
+
+        bbox_list = []
+        attr_label_list = []
+        for instance in instances:
+            x, y, w, h = instance["instance_bbox"]
+            bbox_list.append([x, y, x + w, y + h])
+
+        proposals = np.array(bbox_list, dtype=np.float32)
+        results['proposals'] = proposals
+        results['bbox_fields'] = ['proposals']
+        results = self.pipeline(results)
+        results['proposals'] = DataContainer(results['proposals'], stack=False)
+        return results
 
     def __getitem__(self, idx):
+        if self.test_mode:
+            return self.get_test_img_instances(idx)
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
         return self.get_img_instances(idx)
