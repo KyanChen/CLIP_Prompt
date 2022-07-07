@@ -161,7 +161,7 @@ data = dict(
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
-    sub_model=['prompt_learner', 'neck', 'roi_head'],
+    sub_model=['prompt_learner', 'neck', 'roi_head', 'bbox_head'],
     # sub_model=['prompt_learner', 'roi_head'],
     type='SGD',
     lr=0.01,
@@ -201,5 +201,5 @@ runner = dict(type='EpochBasedRunner', max_epochs=100)
 evaluation = dict(interval=10, metric='mAP')
 
 load_from = None
-resume_from = 'results/EXP20220706_1/latest.pth'
-# resume_from = None
+# resume_from = 'results/EXP20220706_1/latest.pth'
+resume_from = None
