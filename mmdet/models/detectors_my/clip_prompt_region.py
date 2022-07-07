@@ -173,7 +173,7 @@ class CLIP_Prompter_Region(BaseModule):
         # torch.Size([256, 2048, 7, 7])
         # import pdb
         # pdb.set_trace()
-        img_f_maps = self.neck(img_f_maps)
+        img_f_maps = self.neck([image_features])
         # torch.Size([28, 256, 224, 224]),
         # torch.Size([28, 256, 112, 112]),
         # torch.Size([28, 256, 56, 56]),
