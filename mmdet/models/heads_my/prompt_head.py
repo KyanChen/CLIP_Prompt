@@ -19,7 +19,7 @@ class PromptHead(BaseModule):
                  train_cfg=None,
                  test_cfg=None,
                  init_cfg=None,
-                 re_weight_alpha=0.2,  # 0.2:68, 0.4
+                 re_weight_alpha=0.2,  # 0.2:68, 0.4:67
                  re_weight_gamma=2,
                  re_weight_beta=0.995,  # 越小，加权越弱
                  ):
@@ -65,10 +65,10 @@ class PromptHead(BaseModule):
         unk_mask = gt_labels_flatten == 2
         pos_pred = torch.clamp(cls_scores_flatten[pos_mask], 1e-10, 1-1e-10)
         neg_pred = torch.clamp(1-cls_scores_flatten[neg_mask], 1e-10, 1-1e-10)
-        # loss_pos = - total_rew[pos_mask] * torch.pow(1-cls_scores_flatten[pos_mask], self.re_weight_gamma) * torch.log(pos_pred)
-        # loss_neg = - total_rew[neg_mask] * torch.pow(cls_scores_flatten[neg_mask], self.re_weight_gamma) * torch.log(neg_pred)
-        loss_pos = - total_rew[pos_mask] * torch.log(pos_pred)
-        loss_neg = - total_rew[neg_mask] * torch.log(neg_pred)
+        loss_pos = - total_rew[pos_mask] * torch.pow(1-cls_scores_flatten[pos_mask], self.re_weight_gamma) * torch.log(pos_pred)
+        loss_neg = - total_rew[neg_mask] * torch.pow(cls_scores_flatten[neg_mask], self.re_weight_gamma) * torch.log(neg_pred)
+        # loss_pos = - total_rew[pos_mask] * torch.log(pos_pred)
+        # loss_neg = - total_rew[neg_mask] * torch.log(neg_pred)
         loss_pos = loss_pos.mean()
         loss_neg = loss_neg.mean()
 
