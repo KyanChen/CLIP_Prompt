@@ -168,7 +168,6 @@ class VAWRegionDataset(Dataset):
         results['img_info']['filename'] = f'{img_id}.jpg'
 
         bbox_list = []
-        attr_label_list = []
         for instance in instances:
             x, y, w, h = instance["instance_bbox"]
             bbox_list.append([x, y, x + w, y + h])
@@ -272,6 +271,23 @@ class VAWRegionDataset(Dataset):
             np_gt_labels.append(gt_labels.astype(np.int))
         return np.stack(np_gt_labels, axis=0)
 
+    def get_img_instance_labels(self):
+        attr_label_list = []
+        for img_id in self.img_ids:
+            instances = self.img_instances_pair[img_id]
+            for instance in instances:
+                x, y, w, h = instance["instance_bbox"]
+                positive_attributes = instance["positive_attributes"]
+                negative_attributes = instance["negative_attributes"]
+                labels = np.ones(len(self.classname_maps.keys())) * 2
+                for att in positive_attributes:
+                    labels[self.classname_maps[att]] = 1
+                for att in negative_attributes:
+                    labels[self.classname_maps[att]] = 0
+                attr_label_list.append(labels)
+        gt_labels = np.stack(attr_label_list, axis=0)
+        return gt_labels
+
     def evaluate(self,
                  results,
                  logger=None,
@@ -282,7 +298,7 @@ class VAWRegionDataset(Dataset):
 
         results = np.array(results)
         preds = torch.from_numpy(results)
-        gts = self.get_labels()
+        gts = self.get_img_instance_labels()
         gts = torch.from_numpy(gts)
 
         output = cal_metrics(self.data_root + '/VAW',
