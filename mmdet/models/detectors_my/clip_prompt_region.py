@@ -121,15 +121,15 @@ class CLIP_Prompter_Region(BaseModule):
         # torch.Size([256, 512, 28, 28])
         # torch.Size([256, 1024, 14, 14])
         # torch.Size([256, 2048, 7, 7])
-
+        import pdb
+        pdb.set_trace()
         img_f_maps = self.neck(img_f_maps)
         # torch.Size([28, 256, 224, 224]),
         # torch.Size([28, 256, 112, 112]),
         # torch.Size([28, 256, 56, 56]),
         # torch.Size([28, 256, 28, 28]),
         # torch.Size([28, 256, 14, 14])
-        import pdb
-        pdb.set_trace()
+
         proposal_features, bbox_feats = self.roi_head(img_f_maps, proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
         proposal_features = rearrange(proposal_features, 'B C H W -> B (C H W)')
 
