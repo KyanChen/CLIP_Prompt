@@ -31,34 +31,34 @@ class ProposalEncoder(BaseModule):
         self.bbox_head = self.init_bbox_head(in_channels, out_channels)
 
     def init_bbox_head(self, in_channels, out_channels):
-        # bbox_head = nn.Sequential(
-        #     ConvModule(
-        #         in_channels,
-        #         in_channels,
-        #         3,
-        #         stride=2,
-        #         padding=1,
-        #         norm_cfg=dict(type='BN'),
-        #         act_cfg=dict(type='ReLU')
-        #     ),
-        #     ConvModule(
-        #         in_channels,
-        #         in_channels*2,
-        #         3,
-        #         stride=2,
-        #         padding=1,
-        #         norm_cfg=dict(type='BN'),
-        #         act_cfg=dict(type='ReLU')
-        #     ),
-        #     nn.Conv2d(in_channels * 2, in_channels * 4, kernel_size=2),
-        #     nn.BatchNorm2d(in_channels * 4),
-        #     nn.ReLU(),
-        #     nn.Conv2d(in_channels * 4, out_channels, kernel_size=1),
-        # )
         bbox_head = nn.Sequential(
-            nn.AdaptiveAvgPool2d((1, 1)),
-            nn.Conv2d(in_channels, out_channels, 1)
+            ConvModule(
+                in_channels,
+                in_channels,
+                3,
+                stride=2,
+                padding=1,
+                norm_cfg=dict(type='BN'),
+                act_cfg=dict(type='ReLU')
+            ),
+            ConvModule(
+                in_channels,
+                in_channels*2,
+                3,
+                stride=2,
+                padding=1,
+                norm_cfg=dict(type='BN'),
+                act_cfg=dict(type='ReLU')
+            ),
+            nn.Conv2d(in_channels * 2, in_channels * 4, kernel_size=2),
+            nn.BatchNorm2d(in_channels * 4),
+            nn.ReLU(),
+            nn.Conv2d(in_channels * 4, out_channels, kernel_size=1),
         )
+        # bbox_head = nn.Sequential(
+        #     nn.AdaptiveAvgPool2d((1, 1)),
+        #     nn.Conv2d(in_channels, out_channels, 1)
+        # )
         return bbox_head
 
     def forward(self, x, proposal_list, **kwargs):
