@@ -22,6 +22,7 @@ class PromptHead(BaseModule):
                  re_weight_alpha=0.2,  # 0.2:68, 0.4:67
                  re_weight_gamma=2,
                  re_weight_beta=0.995,  # 越小，加权越弱
+                 balance_unk=0.1,
                  ):
         super(PromptHead, self).__init__(init_cfg)
         self.data_root = data_root
@@ -32,6 +33,7 @@ class PromptHead(BaseModule):
         self.re_weight_beta = re_weight_beta
         self.re_weight_alpha = re_weight_alpha
         self.reweight_att_frac = self.reweight_att(attr_freq)
+        self.balance_unk = balance_unk
 
     def reweight_att(self, attr_freq):
         pos_rew = torch.from_numpy(np.array([v['pos'] for k, v in attr_freq.items()], dtype=np.float32))
@@ -76,7 +78,7 @@ class PromptHead(BaseModule):
         gt_labels_unk = pred_unk.new_zeros(pred_unk.size())
         bce_loss_unk = F.binary_cross_entropy(pred_unk, gt_labels_unk, reduction='mean')
 
-        bce_loss = loss_pos + loss_neg + 0.1 * bce_loss_unk
+        bce_loss = loss_pos + loss_neg + self.balance_unk * bce_loss_unk
         return bce_loss
 
     def loss(self,

@@ -87,6 +87,10 @@ model = dict(
     bbox_head=dict(
         type='PromptHead',
         data_root=data_root,
+        re_weight_alpha=0.2,
+        re_weight_gamma=2,
+        re_weight_beta=0.995,
+        balance_unk=0.1
     )
 )
 # dataset settings
