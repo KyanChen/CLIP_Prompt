@@ -13,6 +13,7 @@ import mmcv
 import numpy as np
 import torch
 from mmcv import tensor2imgs
+from mmcv.parallel import DataContainer
 
 from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
@@ -152,6 +153,9 @@ class VAWRegionDataset(Dataset):
                 return
             if not self.test_mode:
                 results = self.__getitem__(np.random.randint(0, len(self)))
+
+        results['proposals'] = DataContainer(results['proposals'], stack=False)
+        results['gt_labels'] = DataContainer(results['gt_labels'], stack=False)
         return results
 
 
