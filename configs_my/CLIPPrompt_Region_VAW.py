@@ -200,4 +200,4 @@ evaluation = dict(interval=10, metric='mAP')
 
 load_from = None
 resume_from = 'results/EXP20220707_1/latest.pth'
-resume_from = None
+# resume_from = None
