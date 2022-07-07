@@ -76,7 +76,7 @@ class PromptHead(BaseModule):
         gt_labels_unk = pred_unk.new_zeros(pred_unk.size())
         bce_loss_unk = F.binary_cross_entropy(pred_unk, gt_labels_unk, reduction='mean')
 
-        bce_loss = loss_pos + loss_neg + 0.2 * bce_loss_unk
+        bce_loss = loss_pos + loss_neg + 0.1 * bce_loss_unk
         return bce_loss
 
     def loss(self,
