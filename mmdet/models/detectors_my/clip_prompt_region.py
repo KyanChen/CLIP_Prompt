@@ -121,8 +121,8 @@ class CLIP_Prompter_Region(BaseModule):
         # torch.Size([256, 512, 28, 28])
         # torch.Size([256, 1024, 14, 14])
         # torch.Size([256, 2048, 7, 7])
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         img_f_maps = self.neck(img_f_maps)
         # torch.Size([28, 256, 224, 224]),
         # torch.Size([28, 256, 112, 112]),
@@ -140,11 +140,11 @@ class CLIP_Prompter_Region(BaseModule):
 
         proposal_features = proposal_features / proposal_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-        text_features = text_features.float()
 
-        logit_scale = self.logit_scale.exp().float()
+        logit_scale = self.logit_scale.exp()
         logits = logit_scale * proposal_features @ text_features.t()  # 2x620
 
+        gt_labels = torch.cat(gt_labels, dim=0)
         losses = self.bbox_head.forward_train(logits, img_metas, gt_labels)
 
         return losses
