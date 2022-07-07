@@ -468,11 +468,10 @@ def build_model(state_dict: dict, with_attn=True, out_indices=(1, 2, 3, 4)):
         if key in state_dict:
             del state_dict[key]
     if not with_attn:
-        for k, v in state_dict.items():
-            if 'visual.attnpool' in k:
-                import pdb
-                pdb.set_trace()
-                del state_dict[k]
+        visual_attnpool_key = [x for x in state_dict.keys() if 'visual.attnpool' in x]
+        print('delete visual attnpool key: ', visual_attnpool_key)
+        for key in visual_attnpool_key:
+            del state_dict[key]
     convert_weights(model)
     model.load_state_dict(state_dict)
     print('load clip model')
