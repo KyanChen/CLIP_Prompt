@@ -131,7 +131,10 @@ class ModifiedResNet(nn.Module):
 
         embed_dim = width * 32  # the ResNet feature dimension
         self.with_attn = with_attn
-        self.attnpool = AttentionPool2d(input_resolution // 32, embed_dim, heads, output_dim)
+        if with_attn:
+            self.attnpool = AttentionPool2d(input_resolution // 32, embed_dim, heads, output_dim)
+        else:
+            self.attnpool = None
         # import pdb
         # pdb.set_trace()
 
@@ -429,7 +432,7 @@ def convert_weights(model: nn.Module):
     model.apply(_convert_weights_to_fp16)
 
 
-def build_model(state_dict: dict, with_attn=True, out_indices=(0, 1, 2, 3, 4)):
+def build_model(state_dict: dict, with_attn=True, out_indices=(1, 2, 3, 4)):
     vit = "visual.proj" in state_dict
 
     if vit:
@@ -464,7 +467,12 @@ def build_model(state_dict: dict, with_attn=True, out_indices=(0, 1, 2, 3, 4)):
     for key in ["input_resolution", "context_length", "vocab_size"]:
         if key in state_dict:
             del state_dict[key]
-
+    if not with_attn:
+        for k, v in state_dict.items():
+            import pdb
+            pdb.set_trace()
+            if 'visual.attnpool' in k:
+                del state_dict[k]
     convert_weights(model)
     model.load_state_dict(state_dict)
     print('load clip model')

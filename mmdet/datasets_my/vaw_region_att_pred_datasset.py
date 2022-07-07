@@ -43,6 +43,7 @@ class VAWRegionDataset(Dataset):
             self.instances, self.img_instances_pair = self.read_data(['val.json'])
         elif pattern == 'test':
             self.instances, self.img_instances_pair = self.read_data(['test.json'])
+        print('num img_instance_pair: ', len(self.img_instances_pair))
         print('num instances: ', len(self.instances))
         print('data len: ', len(self.instances))
         self.error_list = set()
@@ -98,7 +99,7 @@ class VAWRegionDataset(Dataset):
         return instances, img_instances_pair
 
     def __len__(self):
-        return len(self.instances)
+        return len(self.img_instances_pair)
 
     def get_test_data(self, idx):
         results = self.instances[idx].copy()
@@ -111,11 +112,57 @@ class VAWRegionDataset(Dataset):
         results = self.pipeline(results)
         return results
 
+    def get_img_instances(self, idx):
+        img_id = self.img_ids[idx]
+        instances = self.img_instances_pair[img_id]
+
+        results = {}
+        results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
+        results['img_info'] = {}
+        results['img_info']['filename'] = f'{img_id}.jpg'
+
+        bbox_list = []
+        attr_label_list = []
+        for instance in instances:
+            x, y, w, h = instance["instance_bbox"]
+            bbox_list.append([x, y, x + w, y + h])
+            positive_attributes = instance["positive_attributes"]
+            negative_attributes = instance["negative_attributes"]
+            labels = np.ones(len(self.classname_maps.keys())) * 2
+            for att in positive_attributes:
+                labels[self.classname_maps[att]] = 1
+            for att in negative_attributes:
+                labels[self.classname_maps[att]] = 0
+            attr_label_list.append(labels)
+        proposals = np.array(bbox_list, dtype=np.float32).reshape(-1, 4)
+        gt_labels = np.concatenate(attr_label_list, axis=0)
+        results['proposals'] = proposals
+        results['bbox_fields'] = ['proposals']
+        results['gt_labels'] = gt_labels.astype(np.int)
+        assert len(gt_labels) == len(proposals)
+        try:
+            results = self.pipeline(results)
+        except Exception as e:
+            print(e)
+            self.error_list.add(idx)
+            self.error_list.add(results['img_info']['filename'])
+            print(self.error_list)
+            if len(self.error_list) > 20:
+                return
+            if not self.test_mode:
+                results = self.__getitem__(np.random.randint(0, len(self)))
+                return results
+
+
     def __getitem__(self, idx):
-        if self.test_mode:
-            return self.get_test_data(idx)
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
+        return self.get_img_instances(idx)
+
+
+        if self.test_mode:
+            return self.get_test_data(idx)
+
         results = self.instances[idx].copy()
         '''
         "image_id": "2373241",

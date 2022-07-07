@@ -7,10 +7,11 @@ from einops import rearrange
 from ..builder import DETECTORS, build_backbone, build_head, build_neck
 from ..detectors.base import BaseDetector
 import warnings
+from mmcv.runner import BaseModule
 
 
 @DETECTORS.register_module()
-class CLIP_Prompter_Region(BaseDetector):
+class CLIP_Prompter_Region(BaseModule):
     def __init__(self,
                  classname_path,
                  backbone,
@@ -63,25 +64,21 @@ class CLIP_Prompter_Region(BaseDetector):
         self.bbox_head = build_head(bbox_head)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
-        self.gc_collect_times = 0
 
         print("Turning off gradients in both the image and the text encoder")
         for name, param in self.named_parameters():
-            if 'prompt_learner' in name or 'neck' in name or 'roi_head' in name:
-                param.requires_grad_(True)
+            for need_train_name in ['prompt_learner', 'neck', 'roi_head', 'bbox_head']:
+                if need_train_name in name:
+                    param.requires_grad_(True)
             else:
                 param.requires_grad_(False)
-
-    def extract_feat(self, img):
-        return img
 
     def train(self, mode=True):
         self.training = mode
         for name, module in self.named_children():
-            # import pdb
-            # pdb.set_trace()
-            if 'prompt_learner' in name or 'neck' in name or 'roi_head' in name:
-                module.train(mode)
+            for need_train_name in ['prompt_learner', 'neck', 'roi_head', 'bbox_head']:
+                if need_train_name in name:
+                    module.train(mode)
             else:
                 module.eval()
         return self
@@ -94,10 +91,6 @@ class CLIP_Prompter_Region(BaseDetector):
 
     def train_step(self, data, optimizer):
         losses = self(**data)
-        # for loss_name, loss_value in losses.items():
-        #     if isinstance(loss_value, torch.LongTensor):
-        #         import pdb
-        #         pdb.set_trace()
         loss, log_vars = self._parse_losses(losses)
 
         outputs = dict(
@@ -121,16 +114,7 @@ class CLIP_Prompter_Region(BaseDetector):
                       gt_labels,
                       **kwargs
                       ):
-        # self.gc_collect_times += 1
-        # if self.gc_collect_times > 100:
-        #     self.gc_collect_times = 0
-        #     gc.collect()
-        # with torch.no_grad():
-        with torch.no_grad():
-            image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
-        # import pdb
-        # pdb.set_trace()
-
+        image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
         # img_f_maps
         # torch.Size([256, 64, 112, 112])
         # torch.Size([256, 256, 56, 56])
@@ -138,18 +122,14 @@ class CLIP_Prompter_Region(BaseDetector):
         # torch.Size([256, 1024, 14, 14])
         # torch.Size([256, 2048, 7, 7])
 
-        img_f_maps = tuple([x.detach() for x in img_f_maps])
-        # img_f_maps = tuple([final_map.float()])
-
-        # img_f_maps = self.neck(img_f_maps[:len(self.neck.in_channels)])
         img_f_maps = self.neck(img_f_maps)
         # torch.Size([28, 256, 224, 224]),
         # torch.Size([28, 256, 112, 112]),
         # torch.Size([28, 256, 56, 56]),
         # torch.Size([28, 256, 28, 28]),
         # torch.Size([28, 256, 14, 14])
-        # import pdb
-        # pdb.set_trace()
+        import pdb
+        pdb.set_trace()
         proposal_features, bbox_feats = self.roi_head(img_f_maps, proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
         proposal_features = rearrange(proposal_features, 'B C H W -> B (C H W)')
 

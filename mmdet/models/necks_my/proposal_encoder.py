@@ -28,7 +28,6 @@ class ProposalEncoder(BaseModule):
             self.shared_head = build_shared_head(shared_head)
 
         self.bbox_roi_extractor = build_roi_extractor(bbox_roi_extractor)
-
         self.bbox_head = self.init_bbox_head(in_channels, out_channels)
 
     def init_bbox_head(self, in_channels, out_channels):
