@@ -152,7 +152,7 @@ class VAWRegionDataset(Dataset):
                 return
             if not self.test_mode:
                 results = self.__getitem__(np.random.randint(0, len(self)))
-                return results
+        return results
 
 
     def __getitem__(self, idx):
