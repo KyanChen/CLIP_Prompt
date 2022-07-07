@@ -469,9 +469,9 @@ def build_model(state_dict: dict, with_attn=True, out_indices=(1, 2, 3, 4)):
             del state_dict[key]
     if not with_attn:
         for k, v in state_dict.items():
-            import pdb
-            pdb.set_trace()
             if 'visual.attnpool' in k:
+                import pdb
+                pdb.set_trace()
                 del state_dict[k]
     convert_weights(model)
     model.load_state_dict(state_dict)
