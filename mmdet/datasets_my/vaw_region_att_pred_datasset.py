@@ -134,6 +134,8 @@ class VAWRegionDataset(Dataset):
             for att in negative_attributes:
                 labels[self.classname_maps[att]] = 0
             attr_label_list.append(labels)
+        import pdb
+        pdb.set_trace()
         proposals = np.array(bbox_list, dtype=np.float32).reshape(-1, 4)
         gt_labels = np.concatenate(attr_label_list, axis=0)
         results['proposals'] = proposals
