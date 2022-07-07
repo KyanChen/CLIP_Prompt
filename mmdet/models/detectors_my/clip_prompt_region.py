@@ -70,6 +70,8 @@ class CLIP_Prompter_Region(BaseModule):
         for name, param in self.named_parameters():
             for need_train_name in ['prompt_learner', 'neck', 'roi_head', 'bbox_head']:
                 if need_train_name in name:
+                    import pdb
+                    pdb.set_trace()
                     param.requires_grad_(True)
             else:
                 param.requires_grad_(False)
@@ -161,6 +163,8 @@ class CLIP_Prompter_Region(BaseModule):
                       **kwargs
                       ):
         image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
+        import pdb
+        pdb.set_trace()
         # img_f_maps
         # torch.Size([256, 64, 112, 112])
         # torch.Size([256, 256, 56, 56])
@@ -256,9 +260,4 @@ class CLIP_Prompter_Region(BaseModule):
 
         pred = list(logits.detach().cpu().numpy())
         return pred
-
-
-    def aug_test(self, imgs, img_metas, **kwargs):
-        """Test function with test time augmentation."""
-        pass
 
