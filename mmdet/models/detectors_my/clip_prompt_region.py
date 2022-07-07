@@ -16,10 +16,10 @@ class CLIP_Prompter_Region(BaseModule):
     def __init__(self,
                  classname_path,
                  backbone,
-                 roi_head,
                  prompt_learner,
                  prompt_learner_weights='',
                  neck=None,
+                 roi_head=None,
                  bbox_head=None,
                  train_cfg=None,
                  test_cfg=None,
@@ -60,8 +60,6 @@ class CLIP_Prompter_Region(BaseModule):
         if roi_head is not None:
             self.roi_head = build_head(roi_head)
 
-        bbox_head.update(train_cfg=train_cfg)
-        bbox_head.update(test_cfg=test_cfg)
         self.bbox_head = build_head(bbox_head)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
@@ -173,14 +171,16 @@ class CLIP_Prompter_Region(BaseModule):
         # torch.Size([256, 2048, 7, 7])
         # import pdb
         # pdb.set_trace()
-        img_f_maps = self.neck([image_features])
+        if hasattr(self, 'neck'):
+            img_f_maps = self.neck(img_f_maps)
         # torch.Size([28, 256, 224, 224]),
         # torch.Size([28, 256, 112, 112]),
         # torch.Size([28, 256, 56, 56]),
         # torch.Size([28, 256, 28, 28]),
         # torch.Size([28, 256, 14, 14])
+        if hasattr(self, 'roi_head'):
+            proposal_features, bbox_feats = self.roi_head(img_f_maps, proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
 
-        proposal_features, bbox_feats = self.roi_head(img_f_maps, proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
         proposal_features = rearrange(proposal_features, 'B C H W -> B (C H W)')
 
         prompts = self.prompt_learner()  # 620x77x512
