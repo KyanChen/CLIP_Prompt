@@ -68,20 +68,21 @@ class CLIP_Prompter_Region(BaseModule):
 
         print("Turning off gradients in both the image and the text encoder")
         for name, param in self.named_parameters():
+            flag = False
             for need_train_name in ['prompt_learner', 'neck', 'roi_head', 'bbox_head']:
                 if need_train_name in name:
-                    import pdb
-                    pdb.set_trace()
-                    param.requires_grad_(True)
-            else:
-                param.requires_grad_(False)
+                    flag = True
+            param.requires_grad_(flag)
 
     def train(self, mode=True):
         self.training = mode
         for name, module in self.named_children():
+            flag = False
             for need_train_name in ['prompt_learner', 'neck', 'roi_head', 'bbox_head']:
                 if need_train_name in name:
-                    module.train(mode)
+                    flag = True
+            if flag:
+                module.train(mode)
             else:
                 module.eval()
         return self
