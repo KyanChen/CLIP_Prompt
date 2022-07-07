@@ -73,8 +73,8 @@ model = dict(
         #     inplanes=256,
         #     planes=128,
         # ),
-        in_channels=512,
-        # in_channels=256,
+        # in_channels=512,
+        in_channels=256,
         out_channels=1024,
     ),
     prompt_learner=dict(
