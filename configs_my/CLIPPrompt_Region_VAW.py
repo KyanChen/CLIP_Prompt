@@ -41,8 +41,8 @@ model = dict(
         precision='fp32',
     ),
     neck=dict(
-        type='FPN',
-        # type='RefineChannel',
+        # type='FPN',
+        type='RefineChannel',
         # in_channels=[256, 512, 1024, 2048],
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
@@ -135,7 +135,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=40,
+    samples_per_gpu=42,
     workers_per_gpu=4,
     # workers_per_gpu=0,
     persistent_workers=True,
@@ -146,14 +146,14 @@ data = dict(
         test_mode=False,
         pipeline=train_pipeline),
     val=dict(
-        samples_per_gpu=40,
+        samples_per_gpu=42,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
         test_mode=True,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=40,
+        samples_per_gpu=42,
         type=dataset_type,
         data_root=data_root,
         pattern='test',

@@ -26,11 +26,18 @@ class RefineChannel(BaseModule):
             self.ops.append(
                 nn.Conv2d(i, out_channels, kernel_size=1)
             )
+        if num_outs > len(self.in_channels):
+            self.ops.append(
+                nn.Conv2d(in_channels[-1], out_channels, kernel_size=3, stride=2, padding=1)
+            )
 
     def forward(self, inputs):
         """Forward function."""
         assert len(inputs) == len(self.in_channels)
         outs = []
-        for i, layer in enumerate(self.ops):
+        for i, layer in enumerate(self.ops[:len(self.in_channels)]):
             outs.append(layer(inputs[i]))
+        for i, layer in enumerate(self.ops[len(self.in_channels):]):
+            outs.append(layer(inputs[-1]))
+
         return tuple(outs)
