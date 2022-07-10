@@ -100,7 +100,8 @@ class VAWRegionDataset(Dataset):
         return instances, img_instances_pair
 
     def __len__(self):
-        return len(self.img_instances_pair)
+        # return len(self.img_instances_pair)
+        return 84
 
     def get_test_data(self, idx):
         results = self.instances[idx].copy()
