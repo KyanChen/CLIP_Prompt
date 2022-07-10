@@ -46,14 +46,14 @@ model = dict(
         in_channels=[256, 512, 1024, 2048],
         # in_channels=[2048],
         out_channels=256,
-        num_outs=5),
+        num_outs=4),
     roi_head=dict(
         type='ProposalEncoder',
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
-            featmap_strides=[4, 8, 16, 32, 64],
+            featmap_strides=[4, 8, 16, 32],
             # featmap_strides=[32]
             # out_channels=1024,
             # featmap_strides=[32]
