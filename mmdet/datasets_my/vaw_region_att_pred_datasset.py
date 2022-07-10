@@ -176,7 +176,8 @@ class VAWRegionDataset(Dataset):
         results['proposals'] = proposals
         results['bbox_fields'] = ['proposals']
         results = self.pipeline(results)
-        results['proposals'] = DataContainer(results['proposals'], stack=False)
+        # results['proposals'] = DataContainer(results['proposals'], stack=False)
+        results['proposals'] = results['proposals']
         return results
 
     def __getitem__(self, idx):
