@@ -297,8 +297,6 @@ class VAWRegionDataset(Dataset):
                  per_class_out_file=None,
                  is_logit=True
                  ):
-        import pdb
-        pdb.set_trace()
         if isinstance(results[0], type(np.array(0))):
             results = np.concatenate(results, axis=0)
         else:
