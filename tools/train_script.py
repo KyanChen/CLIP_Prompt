@@ -6,7 +6,7 @@ while True:
               "sh dist_train.sh "
               "../configs_my/CLIPPrompt_Crop_Img_VAW.py "
               # "../configs_my/CLIPPrompt_Region_VAW.py "
-              "results/EXP20220707_1 "
+              "results/EXP20220710_0 "
               "8")
     time.sleep(60*2)
 
