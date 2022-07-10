@@ -58,6 +58,7 @@ class PromptHead(BaseModule):
         BS = cls_scores.size(0)
         cls_scores_flatten = rearrange(cls_scores, 'B N -> (B N)')
         gt_labels_flatten = rearrange(gt_labels, 'B N -> (B N)')
+        gt_labels_flatten = gt_labels_flatten.float()
         total_rew = self.reweight_att_frac.to(gt_labels_flatten.device)
         total_rew = repeat(total_rew, 'N -> (B N)', B=BS)
 
