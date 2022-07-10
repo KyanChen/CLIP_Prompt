@@ -61,24 +61,31 @@ class PromptHead(BaseModule):
         total_rew = self.reweight_att_frac.to(gt_labels_flatten.device)
         total_rew = repeat(total_rew, 'N -> (B N)', B=BS)
 
-        cls_scores_flatten = torch.sigmoid(cls_scores_flatten)
         pos_mask = gt_labels_flatten == 1
         neg_mask = gt_labels_flatten == 0
         unk_mask = gt_labels_flatten == 2
-        pos_pred = torch.clamp(cls_scores_flatten[pos_mask], 1e-10, 1-1e-10)
-        neg_pred = torch.clamp(1-cls_scores_flatten[neg_mask], 1e-10, 1-1e-10)
-        loss_pos = - total_rew[pos_mask] * torch.pow(1-cls_scores_flatten[pos_mask], self.re_weight_gamma) * torch.log(pos_pred)
-        loss_neg = - total_rew[neg_mask] * torch.pow(cls_scores_flatten[neg_mask], self.re_weight_gamma) * torch.log(neg_pred)
-        # loss_pos = - total_rew[pos_mask] * torch.log(pos_pred)
-        # loss_neg = - total_rew[neg_mask] * torch.log(neg_pred)
-        loss_pos = loss_pos.mean()
-        loss_neg = loss_neg.mean()
+
+        # cls_scores_flatten = torch.sigmoid(cls_scores_flatten)
+        # pos_pred = torch.clamp(cls_scores_flatten[pos_mask], 1e-10, 1-1e-10)
+        # neg_pred = torch.clamp(1-cls_scores_flatten[neg_mask], 1e-10, 1-1e-10)
+        # loss_pos = - total_rew[pos_mask] * torch.pow(1-cls_scores_flatten[pos_mask], self.re_weight_gamma) * torch.log(pos_pred)
+        # loss_neg = - total_rew[neg_mask] * torch.pow(cls_scores_flatten[neg_mask], self.re_weight_gamma) * torch.log(neg_pred)
+        # # loss_pos = - total_rew[pos_mask] * torch.log(pos_pred)
+        # # loss_neg = - total_rew[neg_mask] * torch.log(neg_pred)
+        # loss_pos = loss_pos.mean()
+        # loss_neg = loss_neg.mean()
+        loss_pos_neg = F.binary_cross_entropy_with_logits(
+            cls_scores_flatten[~unk_mask], gt_labels_flatten[~unk_mask], weight=total_rew[~unk_mask], reduction='mean')
 
         pred_unk = cls_scores_flatten[unk_mask]
         gt_labels_unk = pred_unk.new_zeros(pred_unk.size())
-        bce_loss_unk = F.binary_cross_entropy(pred_unk, gt_labels_unk, reduction='mean')
 
-        bce_loss = loss_pos + loss_neg + self.balance_unk * bce_loss_unk
+        # bce_loss_unk = F.binary_cross_entropy(pred_unk, gt_labels_unk, reduction='mean')
+        # bce_loss = loss_pos + loss_neg + self.balance_unk * bce_loss_unk
+
+        bce_loss_unk = F.binary_cross_entropy_with_logits(pred_unk, gt_labels_unk, reduction='mean')
+        bce_loss = loss_pos_neg + self.balance_unk * bce_loss_unk
+
         return bce_loss
 
     def loss(self,
