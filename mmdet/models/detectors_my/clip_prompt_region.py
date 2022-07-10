@@ -234,8 +234,8 @@ class CLIP_Prompter_Region(BaseModule):
     def simple_test(self,
                     img, img_metas, proposals,
                     rescale=False, **kwargs):
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
         # img_f_maps = tuple([x.float() for x in img_f_maps])
         # img_f_maps = tuple([final_map.float()])
