@@ -299,10 +299,11 @@ class VAWRegionDataset(Dataset):
                  ):
         import pdb
         pdb.set_trace()
-        if isinstance(results[0], np.array(0)):
+        if isinstance(results[0], type(np.array(0))):
             results = np.concatenate(results, axis=0)
         else:
             results = np.array(results)
+        assert len(results) == len(self.instances)
         preds = torch.from_numpy(results)
         gts = self.get_img_instance_labels()
         gts = torch.from_numpy(gts)
