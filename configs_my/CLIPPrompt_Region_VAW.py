@@ -41,8 +41,8 @@ model = dict(
         precision='fp32',
     ),
     neck=dict(
-        # type='FPN',
-        type='RefineChannel',
+        type='FPN',
+        # type='RefineChannel',
         in_channels=[256, 512, 1024, 2048],
         # in_channels=[2048],
         out_channels=256,
