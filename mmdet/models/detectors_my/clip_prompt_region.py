@@ -200,6 +200,8 @@ class CLIP_Prompter_Region(BaseModule):
         return losses
 
     def forward_test(self, imgs, img_metas, **kwargs):
+        import pdb
+        pdb.set_trace()
         for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:
             if not isinstance(var, list):
                 raise TypeError(f'{name} must be a list, but got {type(var)}')
