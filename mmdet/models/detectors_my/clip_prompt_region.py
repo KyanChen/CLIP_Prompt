@@ -241,6 +241,7 @@ class CLIP_Prompter_Region(BaseModule):
         # img_f_maps = tuple([final_map.float()])
 
         # img_f_maps = self.neck(img_f_maps[:len(self.neck.in_channels)])
+        per_img_proposals = [len(x) for x in proposals]
         img_f_maps = self.neck(img_f_maps)
         proposal_features, bbox_feats = self.roi_head(img_f_maps,
                                                       proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
@@ -257,7 +258,7 @@ class CLIP_Prompter_Region(BaseModule):
 
         logit_scale = self.logit_scale.exp().float()
         logits = logit_scale * proposal_features @ text_features.t()  # 2x620
-
-        pred = list(logits.detach().cpu().numpy())
+        logits = torch.split(logits, per_img_proposals, dim=0)
+        pred = [x.detach().cpu().numpy() for x in logits]
         return pred
 

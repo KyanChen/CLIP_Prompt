@@ -100,8 +100,8 @@ class VAWRegionDataset(Dataset):
         return instances, img_instances_pair
 
     def __len__(self):
-        # return len(self.img_instances_pair)
-        return 84
+        return len(self.img_instances_pair)
+        # return 84
 
     def get_test_data(self, idx):
         results = self.instances[idx].copy()
@@ -297,8 +297,12 @@ class VAWRegionDataset(Dataset):
                  per_class_out_file=None,
                  is_logit=True
                  ):
-
-        results = np.array(results)
+        import pdb
+        pdb.set_trace()
+        if isinstance(results[0], np.array(0)):
+            results = np.concatenate(results, axis=0)
+        else:
+            results = np.array(results)
         preds = torch.from_numpy(results)
         gts = self.get_img_instance_labels()
         gts = torch.from_numpy(gts)
