@@ -42,7 +42,7 @@ while total_test_instances < 30000:
     random_id = random.randint(0, n_category)
     if random_id in test_ids:
         continue
-    test_ids = test_ids.add(random_id)
+    test_ids += [random_id]
     test_category_instance = category_instances[random_id]
     test_category_instances.append(test_category_instance)
     total_test_instances += test_category_instance[1]
