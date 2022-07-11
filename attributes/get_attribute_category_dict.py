@@ -37,7 +37,7 @@ json.dump(freq_attr, open(data_root + 'category_attr_pair.json', 'w'), indent=4)
 n_category = len(category_instances)
 total_test_instances = 0
 test_category_instances = []
-test_ids = set()
+test_ids = []
 while total_test_instances < 30000:
     random_id = random.randint(0, n_category)
     if random_id in test_ids:
