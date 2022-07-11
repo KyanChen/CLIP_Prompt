@@ -17,9 +17,9 @@ for instance in tqdm.tqdm(instances):
     negative_attributes = instance['negative_attributes']
     category = instance['object_name']
     freq_attr[category] = freq_attr.get(category, {})
+    freq_attr[category]['n_instance'] = freq_attr[category].get('n_instance', 0) + 1
     freq_attr[category]['pos'] = freq_attr[category].get('pos', {})
     freq_attr[category]['neg'] = freq_attr[category].get('neg', {})
-    freq_attr[category]['n_instance'] = freq_attr[category].get('n_instance', 0) + 1
     for item in positive_attributes:
         freq_attr[category]['pos'][item] = freq_attr[category]['pos'].get(item, 0) + 1
 
