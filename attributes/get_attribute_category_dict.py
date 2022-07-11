@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import tqdm
 
-data_root = '/data1/kyanchen/prompt/data/VAW/'
+data_root = '/data/kyanchen/prompt/data/VAW/'
 attr_dict = json.load(open(data_root + 'attribute_index.json'))
 
 json_file_list = ["train_part1.json", "train_part2.json", 'test.json', 'val.json']
