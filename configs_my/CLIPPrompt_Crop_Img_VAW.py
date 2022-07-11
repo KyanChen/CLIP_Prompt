@@ -53,7 +53,7 @@ model = dict(
         re_weight_alpha=0.25,
         re_weight_gamma=2,
         re_weight_beta=0.995,
-        balance_unk=0.2
+        balance_unk=0.15
     )
 )
 # dataset settings
@@ -105,6 +105,7 @@ data = dict(
         data_root=data_root,
         pattern='train',
         test_mode=False,
+        open_category=True,
         pipeline=train_pipeline),
     val=dict(
         samples_per_gpu=128,
@@ -112,6 +113,7 @@ data = dict(
         data_root=data_root,
         pattern='test',
         test_mode=True,
+        open_category=True,
         pipeline=test_pipeline),
     test=dict(
         samples_per_gpu=128,
@@ -119,6 +121,7 @@ data = dict(
         data_root=data_root,
         pattern='test',
         test_mode=True,
+        open_category=True,
         pipeline=test_pipeline
     )
 )

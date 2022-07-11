@@ -29,6 +29,7 @@ class VAWCropDataset(Dataset):
                  pipeline,
                  pattern,
                  test_mode=False,
+                 open_category=True,
                  file_client_args=dict(backend='disk')
                  ):
 
@@ -36,12 +37,17 @@ class VAWCropDataset(Dataset):
         self.test_mode = test_mode
         self.pipeline = Compose(pipeline)
         self.data_root = data_root
-        if pattern == 'train':
-            self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
-        elif pattern == 'val':
-            self.instances, self.img_instances_pair = self.read_data(['val.json'])
-        elif pattern == 'test':
-            self.instances, self.img_instances_pair = self.read_data(['test.json'])
+        if open_category:
+            self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json", 'val.json', 'test.json'])
+            self.instances = self.split_instance_by_category(pattern=pattern)
+        else:
+            if pattern == 'train':
+                self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
+            elif pattern == 'val':
+                self.instances, self.img_instances_pair = self.read_data(['val.json'])
+            elif pattern == 'test':
+                self.instances, self.img_instances_pair = self.read_data(['test.json'])
+
         print('num instances: ', len(self.instances))
         print('data len: ', len(self.instances))
         self.error_list = set()
@@ -60,12 +66,16 @@ class VAWCropDataset(Dataset):
         for instance in instances:
             img_id = instance['image_id']
             img_instances_pair[img_id] = img_instances_pair.get(img_id, []) + [instance]
-        # sub = {}
-        # sub_keys = list(img_instances_pair.keys())[:10]
-        # for k in sub_keys:
-        #     sub[k] = img_instances_pair[k]
-
         return instances, img_instances_pair
+
+    def split_instance_by_category(self, pattern='train'):
+        categories = json.load(open(self.data_root + '/VAW/' + 'category_instances_split.json'))[f'{pattern}_category']
+        categories = [x[0] for x in categories]
+        instances = []
+        for instance in self.instances:
+            if instance['object_name'] in categories:
+                instances.append(instance)
+        return instances
 
     def __len__(self):
         return len(self.instances)
