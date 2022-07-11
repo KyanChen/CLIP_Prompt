@@ -34,6 +34,7 @@ category_instances = sorted(category_instances.items(), key=lambda kv: kv[1], re
 json.dump(category_instances, open(data_root + 'category_instances.json', 'w'), indent=4)
 json.dump(freq_attr, open(data_root + 'category_attr_pair.json', 'w'), indent=4)
 
+# 2260个类别
 n_category = len(category_instances)
 total_test_instances = 0
 test_category_instances = []
@@ -43,8 +44,6 @@ while total_test_instances < 30000:
     if random_id in test_ids:
         continue
     test_ids += [random_id]
-    import pdb
-    pdb.set_trace()
     test_category_instance = category_instances[random_id]
     test_category_instances.append(test_category_instance)
     total_test_instances += test_category_instance[1]
