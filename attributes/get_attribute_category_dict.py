@@ -46,7 +46,7 @@ while total_test_instances < 30000:
     test_category_instance = category_instances[random_id]
     test_category_instances.append(test_category_instance)
     total_test_instances += test_category_instance[1]
-
+print(total_test_instances)
 train_category_instances = []
 for i in range(n_category):
     if i not in test_ids:
