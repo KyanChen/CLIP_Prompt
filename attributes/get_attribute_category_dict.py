@@ -29,6 +29,7 @@ for instance in tqdm.tqdm(instances):
 category_instances = OrderedDict()
 for k, v in freq_attr.items():
     category_instances[k] = v['n_instance']
+category_instances = sorted(category_instances.items(), key=lambda kv: kv[1], reverse=True)
 json.dump(category_instances, open(data_root + 'category_instances.json', 'w'), indent=4)
 json.dump(freq_attr, open(data_root + 'category_attr_pair.json', 'w'), indent=4)
 
