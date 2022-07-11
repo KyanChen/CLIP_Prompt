@@ -39,7 +39,7 @@ n_category = len(category_instances)
 total_test_instances = 0
 test_category_instances = []
 test_ids = []
-while total_test_instances < 30000:
+while total_test_instances < 40000:
     random_id = random.randint(0, n_category)
     if random_id in test_ids:
         continue
@@ -47,7 +47,9 @@ while total_test_instances < 30000:
     test_category_instance = category_instances[random_id]
     test_category_instances.append(test_category_instance)
     total_test_instances += test_category_instance[1]
+# 30781
 print(total_test_instances)
+
 train_category_instances = []
 for i in range(n_category):
     if i not in test_ids:
