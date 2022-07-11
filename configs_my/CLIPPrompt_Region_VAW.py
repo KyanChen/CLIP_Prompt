@@ -159,8 +159,8 @@ data = dict(
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
-    # sub_model=['prompt_learner', 'neck', 'roi_head', 'bbox_head'],
-    sub_model={'prompt_learner': {}, 'neck': {}, 'roi_head': {}, 'bbox_head': {}, 'image_encoder': {'lr_mult': 0.01}},
+    sub_model=['prompt_learner', 'neck', 'roi_head', 'bbox_head'],
+    # sub_model={'prompt_learner': {}, 'neck': {}, 'roi_head': {}, 'bbox_head': {}, 'image_encoder': {'lr_mult': 0.01}},
     type='SGD',
     lr=0.01,
     momentum=0.9,

@@ -1,4 +1,5 @@
 import json
+import random
 from collections import OrderedDict
 
 import tqdm
@@ -32,4 +33,27 @@ for k, v in freq_attr.items():
 category_instances = sorted(category_instances.items(), key=lambda kv: kv[1], reverse=True)
 json.dump(category_instances, open(data_root + 'category_instances.json', 'w'), indent=4)
 json.dump(freq_attr, open(data_root + 'category_attr_pair.json', 'w'), indent=4)
+
+n_category = len(category_instances)
+total_test_instances = 0
+test_category_instances = []
+test_ids = set()
+while total_test_instances < 30000:
+    random_id = random.randint(0, n_category)
+    if random_id in test_ids:
+        continue
+    test_ids = test_ids.add(random_id)
+    test_category_instance = category_instances[random_id]
+    test_category_instances.append(test_category_instance)
+    total_test_instances += test_category_instance[1]
+
+train_category_instances = []
+for i in range(n_category):
+    if i not in test_ids:
+        train_category_instances.append(category_instances[i])
+category_instances = {'train_category': train_category_instances, 'test_category': test_category_instances}
+json.dump(category_instances, open(data_root + 'category_instances_split.json', 'w'), indent=4)
+
+
+
 
