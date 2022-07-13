@@ -150,8 +150,7 @@ class VAWRegionDataset(Dataset):
         results['bbox_fields'] = ['proposals']
         results['gt_labels'] = gt_labels.astype(np.int)
         assert len(gt_labels) == len(proposals)
-        import pdb
-        pdb.set_trace()
+
         if self.kd_pipeline:
             kd_results = results.copy()
             kd_results.pop('gt_labels')
@@ -159,12 +158,14 @@ class VAWRegionDataset(Dataset):
         try:
             results = self.pipeline(results)
             if self.kd_pipeline:
-                kd_results = self.pipeline(kd_results, 0)
+                kd_results = self.kd_pipeline(kd_results, 0)
                 img_crops = []
+                import pdb
+                pdb.set_trace()
                 for proposal in kd_results['proposals']:
                     kd_results_tmp = kd_results.copy()
                     kd_results_tmp['crop_box'] = proposal
-                    kd_results_tmp = self.pipeline(kd_results_tmp, (1, -1))
+                    kd_results_tmp = self.kd_pipeline(kd_results_tmp, (1, -1))
                     img_crops.append(kd_results_tmp['img'])
                 img_crops = torch.stack(img_crops, dim=0)
                 results['img_crops'] = img_crops
