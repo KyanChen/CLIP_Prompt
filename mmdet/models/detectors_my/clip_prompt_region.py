@@ -203,7 +203,7 @@ class CLIP_Prompter_Region(BaseModule):
         import pdb
         pdb.set_trace()
         extra_info = {'proposal_features': proposal_features}
-        if img_crops and hasattr(self.kd_model):
+        if img_crops and hasattr(self, 'kd_model'):
             img_crops = torch.cat(img_crops, dim=0)
             with torch.no_grad():
                 img_crop_features = self.kd_model(img_crops)
