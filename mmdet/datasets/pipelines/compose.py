@@ -41,7 +41,13 @@ class Compose:
         elif isinstance(idx, int):
             transforms = self.transforms[idx:idx+1]
         elif isinstance(idx, tuple):
-            transforms = self.transforms[idx[0]: idx[1]]
+            assert len(idx) == 2
+            if idx[0] == ':':
+                transforms = self.transforms[: idx[1]]
+            elif idx[1] == ':':
+                transforms = self.transforms[idx[0]:]
+            else:
+                transforms = self.transforms[idx[0]: idx[1]]
         else:
             raise NotImplementedError
 

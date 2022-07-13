@@ -165,7 +165,7 @@ class VAWRegionDataset(Dataset):
                 for proposal in kd_results['proposals']:
                     kd_results_tmp = kd_results.copy()
                     kd_results_tmp['crop_box'] = proposal
-                    kd_results_tmp = self.kd_pipeline(kd_results_tmp, (1, -1))
+                    kd_results_tmp = self.kd_pipeline(kd_results_tmp, (1, ':'))
                     img_crops.append(kd_results_tmp['img'])
                 img_crops = torch.stack(img_crops, dim=0)
                 results['img_crops'] = img_crops
