@@ -121,6 +121,7 @@ train_pipeline = [
 ]
 
 kd_pipeline = [
+    dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
     dict(type='ScaleCrop', scale_range=[0.0, 0.3]),
     dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
