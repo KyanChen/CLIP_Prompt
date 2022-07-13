@@ -102,8 +102,6 @@ class PromptHead(BaseModule):
 
         # tmp_output = cls_scores.view(-1)
         # tmp_label = gt_labels.view(-1)
-        import pdb
-        pdb.set_trace()
         loss = self.get_classify_loss(cls_scores, gt_labels)
 
         losses = {}
