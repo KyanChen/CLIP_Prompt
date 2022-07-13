@@ -107,8 +107,8 @@ class PromptHead(BaseModule):
         loss = self.get_classify_loss(cls_scores, gt_labels)
 
         losses = {}
-        img_crop_features = kwargs.get('img_crop_features', None)
-        if img_crop_features and self.kd_model_loss:
+        if 'img_crop_features' in kwargs and self.kd_model_loss:
+            img_crop_features = kwargs.get('img_crop_features', None)
             proposal_features = kwargs.get('proposal_features', None)
             img_crop_features = torch.sigmoid(img_crop_features)
             proposal_features = torch.sigmoid(proposal_features)

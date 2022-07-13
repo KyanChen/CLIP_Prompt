@@ -12,6 +12,7 @@ import warnings
 from mmcv.runner import BaseModule
 import torch.distributed as dist
 
+
 @DETECTORS.register_module()
 class CLIP_Prompter_Region(BaseModule):
     def __init__(self,
@@ -188,7 +189,8 @@ class CLIP_Prompter_Region(BaseModule):
         # torch.Size([28, 256, 28, 28]),
         # torch.Size([28, 256, 14, 14])
         if hasattr(self, 'roi_head'):
-            proposal_features, bbox_feats = self.roi_head(img_f_maps, proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
+            proposal_features, bbox_feats = self.roi_head(img_f_maps,
+                                                          proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
 
         proposal_features = rearrange(proposal_features, 'B C H W -> B (C H W)')
 
@@ -199,9 +201,9 @@ class CLIP_Prompter_Region(BaseModule):
 
         proposal_features = proposal_features / proposal_features.norm(dim=-1, keepdim=True)
 
-        img_crops = kwargs.get('img_crops', None)
         extra_info = {'proposal_features': proposal_features}
-        if img_crops and hasattr(self, 'kd_model'):
+        if "img_crops" in kwargs and hasattr(self, 'kd_model'):
+            img_crops = kwargs.get('img_crops', None)
             img_crops = torch.cat(img_crops, dim=0)
             with torch.no_grad():
                 img_crop_features, _, _ = self.kd_model(img_crops)
@@ -280,4 +282,3 @@ class CLIP_Prompter_Region(BaseModule):
         logits = torch.split(logits, per_img_proposals, dim=0)
         pred = [x.detach().cpu().numpy() for x in logits]
         return pred
-
