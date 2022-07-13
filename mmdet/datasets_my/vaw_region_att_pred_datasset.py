@@ -168,20 +168,20 @@ class VAWRegionDataset(Dataset):
                 img_crops = torch.stack(img_crops, dim=0)
                 results['img_crops'] = img_crops
 
+            results['proposals'] = DataContainer(results['proposals'], stack=False)
+            results['gt_labels'] = DataContainer(results['gt_labels'], stack=False)
+            if self.kd_pipeline:
+                results['img_crops'] = DataContainer(results['img_crops'], stack=False)
         except Exception as e:
             print(e)
             self.error_list.add(idx)
             self.error_list.add(f'{img_id}.jpg')
             print(self.error_list)
             if len(self.error_list) > 20:
-                return
+                return None
             if not self.test_mode:
                 results = self.__getitem__(np.random.randint(0, len(self)))
 
-        results['proposals'] = DataContainer(results['proposals'], stack=False)
-        results['gt_labels'] = DataContainer(results['gt_labels'], stack=False)
-        if self.kd_pipeline:
-            results['img_crops'] = DataContainer(results['img_crops'], stack=False)
         return results
 
     def get_test_img_instances(self, idx):
