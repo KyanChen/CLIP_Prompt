@@ -23,6 +23,8 @@ class PromptHead(BaseModule):
                  re_weight_gamma=2,
                  re_weight_beta=0.995,  # 越小，加权越弱
                  balance_unk=0.1,
+                 kd_model_loss=None,
+                 balance_kd=0.1
                  ):
         super(PromptHead, self).__init__(init_cfg)
         self.data_root = data_root
@@ -34,6 +36,8 @@ class PromptHead(BaseModule):
         self.re_weight_alpha = re_weight_alpha
         self.reweight_att_frac = self.reweight_att(attr_freq)
         self.balance_unk = balance_unk
+        self.kd_model_loss = kd_model_loss
+        self.balance_kd = balance_kd
 
     def reweight_att(self, attr_freq):
         pos_rew = torch.from_numpy(np.array([v['pos'] for k, v in attr_freq.items()], dtype=np.float32))
@@ -99,6 +103,16 @@ class PromptHead(BaseModule):
         # tmp_output = cls_scores.view(-1)
         # tmp_label = gt_labels.view(-1)
         loss = self.get_classify_loss(cls_scores, gt_labels)
+
+        losses = {}
+        img_crop_features = kwargs.get('img_crop_features', None)
+        if img_crop_features and self.kd_model_loss:
+            proposal_features = kwargs.get('proposal_features', None)
+            img_crop_features = torch.sigmoid(img_crop_features)
+            proposal_features = torch.sigmoid(proposal_features)
+            loss_kd = F.kl_div(img_crop_features, proposal_features) + F.kl_div(proposal_features, img_crop_features)
+            losses['loss_kd'] = self.balance_kd * loss_kd
+
         # tmp_mask = (tmp_label >= 0)
         # loss = loss * tmp_mask
         # loss = loss.sum() / tmp_mask.sum()
@@ -110,10 +124,9 @@ class PromptHead(BaseModule):
             print(e)
             acc = torch.tensor(0., dtype=torch.float32)
         acc = acc.to(loss.device)
-        losses = {
-            "loss": loss,
-            "acc": acc
-        }
+
+        losses['loss'] = loss
+        losses['acc'] = acc
         return losses
 
     def forward_train(self,
@@ -121,7 +134,7 @@ class PromptHead(BaseModule):
                       img_metas,
                       gt_labels,
                       **kwargs):
-        losses = self.loss(x, gt_labels, img_metas)
+        losses = self.loss(x, gt_labels, img_metas, **kwargs)
 
         return losses
 

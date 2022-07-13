@@ -3,6 +3,7 @@ import json
 from collections import OrderedDict
 
 import torch
+from torch import nn
 from einops import rearrange
 
 from ..builder import DETECTORS, build_backbone, build_head, build_neck
@@ -18,6 +19,7 @@ class CLIP_Prompter_Region(BaseModule):
                  backbone,
                  prompt_learner,
                  prompt_learner_weights='',
+                 kd_model=None,
                  neck=None,
                  roi_head=None,
                  bbox_head=None,
@@ -34,9 +36,16 @@ class CLIP_Prompter_Region(BaseModule):
         classname_maps = json.load(open(classname_path))
         classnames = list(classname_maps.keys())
 
+        if kd_model:
+            kd_model = build_backbone(backbone).model
+            self.kd_model = kd_model.visual.eval()
+
         clip_model = build_backbone(backbone).model
         self.image_encoder = clip_model.visual
-        self.logit_scale = clip_model.logit_scale
+        # self.logit_scale = clip_model.logit_scale
+        # self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
+        self.logit_scale = nn.Parameter(clip_model.logit_scale.data)
+
         self.dtype = clip_model.dtype
 
         self.text_encoder = build_backbone(
@@ -67,7 +76,7 @@ class CLIP_Prompter_Region(BaseModule):
         print("Turning off gradients in both the image and the text encoder")
         for name, param in self.named_parameters():
             flag = False
-            for need_train_name in ['prompt_learner', 'neck', 'roi_head', 'bbox_head']:
+            for need_train_name in ['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale']:
                 if need_train_name in name:
                     flag = True
             param.requires_grad_(flag)
@@ -76,7 +85,7 @@ class CLIP_Prompter_Region(BaseModule):
         self.training = mode
         for name, module in self.named_children():
             flag = False
-            for need_train_name in ['prompt_learner', 'neck', 'roi_head', 'bbox_head']:
+            for need_train_name in ['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale']:
                 if need_train_name in name:
                     flag = True
             if flag:
@@ -189,13 +198,24 @@ class CLIP_Prompter_Region(BaseModule):
         text_features = self.text_encoder(prompts, tokenized_prompts)  # torch.Size([620, 1024])
 
         proposal_features = proposal_features / proposal_features.norm(dim=-1, keepdim=True)
+
+        img_crops = kwargs.get('img_crops', None)
+
+        extra_info = {'proposal_features': proposal_features}
+        if img_crops and hasattr(self.kd_model):
+            img_crops = torch.cat(img_crops, dim=0)
+            with torch.no_grad():
+                img_crop_features = self.kd_model(img_crops)
+            img_crop_features = img_crop_features / img_crop_features.norm(dim=-1, keepdim=True)
+            extra_info['img_crop_features'] = img_crop_features
+
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * proposal_features @ text_features.t()  # 2x620
 
         gt_labels = torch.cat(gt_labels, dim=0)
-        losses = self.bbox_head.forward_train(logits, img_metas, gt_labels)
+        losses = self.bbox_head.forward_train(logits, img_metas, gt_labels, **extra_info)
 
         return losses
 

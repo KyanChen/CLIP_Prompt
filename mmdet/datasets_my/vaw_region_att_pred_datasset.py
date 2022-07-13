@@ -31,12 +31,19 @@ class VAWRegionDataset(Dataset):
                  data_root,
                  pipeline,
                  pattern,
+                 kd_pipeline=None,
                  test_mode=False,
                  file_client_args=dict(backend='disk')
                  ):
         assert pattern in ['train', 'val', 'test']
         self.test_mode = test_mode
         self.pipeline = Compose(pipeline)
+
+        if kd_pipeline:
+            self.kd_pipeline = Compose(kd_pipeline)
+        else:
+            self.kd_pipeline = kd_pipeline
+
         self.data_root = data_root
         if pattern == 'train':
             self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
@@ -143,8 +150,25 @@ class VAWRegionDataset(Dataset):
         results['bbox_fields'] = ['proposals']
         results['gt_labels'] = gt_labels.astype(np.int)
         assert len(gt_labels) == len(proposals)
+        import pdb
+        pdb.set_trace()
+        if self.kd_pipeline:
+            kd_results = results.copy()
+            kd_results.pop('gt_labels')
+            kd_results.pop('bbox_fields')
         try:
             results = self.pipeline(results)
+            if self.kd_pipeline:
+                kd_results = self.pipeline(kd_results, 0)
+                img_crops = []
+                for proposal in results['proposals']:
+                    kd_results_tmp = kd_results.copy()
+                    kd_results_tmp['crop_box'] = proposal
+                    kd_results_tmp = self.pipeline(kd_results_tmp, (1, -1))
+                    img_crops.append(kd_results_tmp['img'])
+                img_crops = torch.stack(img_crops, dim=0)
+                results['img_crops'] = img_crops
+
         except Exception as e:
             print(e)
             self.error_list.add(idx)
@@ -157,6 +181,8 @@ class VAWRegionDataset(Dataset):
 
         results['proposals'] = DataContainer(results['proposals'], stack=False)
         results['gt_labels'] = DataContainer(results['gt_labels'], stack=False)
+        if self.kd_pipeline:
+            results['img_crops'] = DataContainer(results['img_crops'], stack=False)
         return results
 
     def get_test_img_instances(self, idx):

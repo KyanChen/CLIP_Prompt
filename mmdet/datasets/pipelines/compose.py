@@ -27,7 +27,7 @@ class Compose:
             else:
                 raise TypeError('transform must be callable or a dict')
 
-    def __call__(self, data):
+    def __call__(self, data, idx=None):
         """Call function to apply transforms sequentially.
 
         Args:
@@ -36,8 +36,16 @@ class Compose:
         Returns:
            dict: Transformed data.
         """
+        if idx is None:
+            transforms = self.transforms
+        elif isinstance(idx, int):
+            transforms = self.transforms[idx:idx+1]
+        elif isinstance(idx, tuple):
+            transforms = self.transforms[idx[0]: idx[1]]
+        else:
+            raise NotImplementedError
 
-        for t in self.transforms:
+        for t in transforms:
             data = t(data)
             if data is None:
                 return None
