@@ -161,7 +161,7 @@ class VAWRegionDataset(Dataset):
             if self.kd_pipeline:
                 kd_results = self.pipeline(kd_results, 0)
                 img_crops = []
-                for proposal in results['proposals']:
+                for proposal in kd_results['proposals']:
                     kd_results_tmp = kd_results.copy()
                     kd_results_tmp['crop_box'] = proposal
                     kd_results_tmp = self.pipeline(kd_results_tmp, (1, -1))
