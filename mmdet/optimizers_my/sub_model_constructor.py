@@ -25,7 +25,11 @@ class SubModelConstructor(DefaultOptimizerConstructor):
         for sub_model_name, value in sub_models.items():
             if hasattr(model, sub_model_name):
                 sub_model_ = getattr(model, sub_model_name)
-                sub_models[sub_model_name]['params'] = sub_model_.parameters()
+                if isinstance(sub_model_, torch.nn.Parameter):
+                    sub_models[sub_model_name]['params'] = sub_model_
+                else:
+                    sub_models[sub_model_name]['params'] = sub_model_.parameters()
+
                 lr_mult = value.pop('lr_mult', 1.)
                 sub_models[sub_model_name]['lr'] = self.base_lr * lr_mult
                 if self.base_wd is not None:
