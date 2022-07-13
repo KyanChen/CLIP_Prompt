@@ -200,7 +200,8 @@ class CLIP_Prompter_Region(BaseModule):
         proposal_features = proposal_features / proposal_features.norm(dim=-1, keepdim=True)
 
         img_crops = kwargs.get('img_crops', None)
-
+        import pdb
+        pdb.set_trace()
         extra_info = {'proposal_features': proposal_features}
         if img_crops and hasattr(self.kd_model):
             img_crops = torch.cat(img_crops, dim=0)

@@ -160,8 +160,6 @@ class VAWRegionDataset(Dataset):
             if self.kd_pipeline:
                 kd_results = self.kd_pipeline(kd_results, 0)
                 img_crops = []
-                import pdb
-                pdb.set_trace()
                 for proposal in kd_results['proposals']:
                     kd_results_tmp = kd_results.copy()
                     kd_results_tmp['crop_box'] = proposal
