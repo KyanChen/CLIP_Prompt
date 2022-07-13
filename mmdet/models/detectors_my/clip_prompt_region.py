@@ -37,7 +37,7 @@ class CLIP_Prompter_Region(BaseModule):
         classnames = list(classname_maps.keys())
 
         if kd_model:
-            kd_model = build_backbone(backbone).model
+            kd_model = build_backbone(kd_model).model
             self.kd_model = kd_model.visual.eval()
 
         clip_model = build_backbone(backbone).model
@@ -206,7 +206,7 @@ class CLIP_Prompter_Region(BaseModule):
         if img_crops and hasattr(self, 'kd_model'):
             img_crops = torch.cat(img_crops, dim=0)
             with torch.no_grad():
-                img_crop_features = self.kd_model(img_crops)
+                img_crop_features, _, _ = self.kd_model(img_crops)
             img_crop_features = img_crop_features / img_crop_features.norm(dim=-1, keepdim=True)
             extra_info['img_crop_features'] = img_crop_features
 
