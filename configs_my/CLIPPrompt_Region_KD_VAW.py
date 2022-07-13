@@ -94,7 +94,7 @@ model = dict(
         re_weight_gamma=2,
         re_weight_beta=0.995,
         balance_unk=0.15,
-        balance_kd=100,
+        balance_kd=1e3,
         kd_model_loss=True
     )
 )
@@ -151,11 +151,11 @@ test_pipeline = [
 
 
 data = dict(
-    # samples_per_gpu=42,
-    # workers_per_gpu=4,
-    samples_per_gpu=4,
-    workers_per_gpu=0,
-    # persistent_workers=True,
+    samples_per_gpu=42,
+    workers_per_gpu=4,
+    # samples_per_gpu=4,
+    # workers_per_gpu=0,
+    persistent_workers=True,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -184,7 +184,7 @@ data = dict(
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
-    sub_model=['prompt_learner', 'neck', 'roi_head', 'bbox_head'],
+    sub_model=['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale'],
     # sub_model={'prompt_learner': {}, 'neck': {}, 'roi_head': {}, 'bbox_head': {}, 'image_encoder': {'lr_mult': 0.01}},
     type='SGD',
     lr=0.01,
