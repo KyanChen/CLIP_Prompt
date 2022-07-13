@@ -94,6 +94,7 @@ model = dict(
         re_weight_gamma=2,
         re_weight_beta=0.995,
         balance_unk=0.15,
+        balance_kd=100,
         kd_model_loss=True
     )
 )

@@ -110,9 +110,17 @@ class PromptHead(BaseModule):
         if 'img_crop_features' in kwargs and self.kd_model_loss:
             img_crop_features = kwargs.get('img_crop_features', None)
             proposal_features = kwargs.get('proposal_features', None)
-            img_crop_features = torch.sigmoid(img_crop_features)
-            proposal_features = torch.sigmoid(proposal_features)
-            loss_kd = F.kl_div(img_crop_features, proposal_features) + F.kl_div(proposal_features, img_crop_features)
+
+            # img_crop_sigmoid = torch.sigmoid(img_crop_features)
+            # proposal_sigmoid = torch.sigmoid(proposal_features)
+
+            # loss_kd = F.kl_div(img_crop_features, proposal_features) + F.kl_div(proposal_features, img_crop_features)
+            # loss_kd = F.kl_div(proposal_features, img_crop_features, reduction='mean')
+
+            # similarity = torch.cosine_similarity(img_crop_features, proposal_features, dim=-1)
+            # loss = 1 - similarity
+
+            loss_kd = F.smooth_l1_loss(proposal_features, img_crop_features, reduction='mean')
             losses['loss_kd'] = self.balance_kd * loss_kd
 
         # tmp_mask = (tmp_label >= 0)
