@@ -171,7 +171,7 @@ class VAWRegionDataset(Dataset):
         except Exception as e:
             print(e)
             self.error_list.add(idx)
-            self.error_list.add(results['img_info']['filename'])
+            self.error_list.add(f'{img_id}.jpg')
             print(self.error_list)
             if len(self.error_list) > 20:
                 return
