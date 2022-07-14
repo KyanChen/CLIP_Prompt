@@ -120,6 +120,8 @@ class PromptHead(BaseModule):
             if self.kd_model_loss == 'smooth-l1':
                 loss_kd = F.smooth_l1_loss(proposal_features, img_crop_features, reduction='mean')
             elif self.kd_model_loss == 'ce':
+                proposal_features = torch.sigmoid(proposal_features)
+                img_crop_features = torch.sigmoid(img_crop_features)
                 loss_kd = F.binary_cross_entropy_with_logits(proposal_features, img_crop_features, reduction='mean')
             else:
                 raise NotImplementedError
