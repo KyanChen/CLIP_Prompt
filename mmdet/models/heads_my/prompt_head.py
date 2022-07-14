@@ -139,7 +139,7 @@ class PromptHead(BaseModule):
             acc = torch.tensor(0., dtype=torch.float32)
         acc = acc.to(loss_ce.device)
 
-        # losses['loss_ce'] = loss_ce
+        losses['loss_ce'] = loss_ce * 0
         losses['acc'] = acc
         return losses
 
