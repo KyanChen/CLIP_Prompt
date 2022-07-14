@@ -119,15 +119,14 @@ class PromptHead(BaseModule):
             # loss = 1 - similarity
             if self.kd_model_loss == 'smooth-l1':
                 loss_kd = F.smooth_l1_loss(proposal_features, img_crop_features, reduction='mean')
+                loss_kd = self.balance_kd * loss_kd
             elif self.kd_model_loss == 'ce':
-                import pdb
-                pdb.set_trace()
-                proposal_features = torch.sigmoid(proposal_features)
-                img_crop_features = torch.sigmoid(img_crop_features)
+                proposal_features = torch.sigmoid(self.balance_kd * proposal_features)
+                img_crop_features = torch.sigmoid(self.balance_kd * img_crop_features)
                 loss_kd = F.binary_cross_entropy(proposal_features, img_crop_features, reduction='mean')
             else:
                 raise NotImplementedError
-            losses['loss_kd'] = self.balance_kd * loss_kd
+            losses['loss_kd'] = loss_kd
 
         # tmp_mask = (tmp_label >= 0)
         # loss = loss * tmp_mask
