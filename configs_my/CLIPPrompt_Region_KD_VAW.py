@@ -94,7 +94,7 @@ model = dict(
         re_weight_gamma=2,
         re_weight_beta=0.995,
         balance_unk=0.15,
-        balance_kd=1e5,
+        balance_kd=1e3,
         # kd_model_loss='smooth-l1'
         kd_model_loss='ce'
     )
@@ -108,8 +108,8 @@ img_norm_cfg = dict(
 )
 # Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
 # img_size = (512, 512)
-# img_size = (896, 896)
-img_size = (1024, 1024)
+img_size = (896, 896)
+# img_size = (1024, 1024)
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
     dict(type='RandomFlip', flip_ratio=0.5),
