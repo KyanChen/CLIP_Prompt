@@ -102,7 +102,7 @@ class PromptHead(BaseModule):
 
         # tmp_output = cls_scores.view(-1)
         # tmp_label = gt_labels.view(-1)
-        loss = self.get_classify_loss(cls_scores, gt_labels)
+        loss_ce = self.get_classify_loss(cls_scores, gt_labels)
 
         losses = {}
         if 'img_crop_features' in kwargs and self.kd_model_loss:
@@ -117,8 +117,12 @@ class PromptHead(BaseModule):
 
             # similarity = torch.cosine_similarity(img_crop_features, proposal_features, dim=-1)
             # loss = 1 - similarity
-
-            loss_kd = F.smooth_l1_loss(proposal_features, img_crop_features, reduction='mean')
+            if self.kd_model_loss == 'smooth-l1':
+                loss_kd = F.smooth_l1_loss(proposal_features, img_crop_features, reduction='mean')
+            elif self.kd_model_loss == 'ce':
+                loss_kd = F.binary_cross_entropy_with_logits(proposal_features, img_crop_features, reduction='mean')
+            else:
+                raise NotImplementedError
             losses['loss_kd'] = self.balance_kd * loss_kd
 
         # tmp_mask = (tmp_label >= 0)
@@ -131,9 +135,9 @@ class PromptHead(BaseModule):
         except Exception as e:
             print(e)
             acc = torch.tensor(0., dtype=torch.float32)
-        acc = acc.to(loss.device)
+        acc = acc.to(loss_ce.device)
 
-        losses['loss'] = loss
+        losses['loss_ce'] = loss_ce
         losses['acc'] = acc
         return losses
 
