@@ -122,7 +122,7 @@ class PromptHead(BaseModule):
             elif self.kd_model_loss == 'ce':
                 proposal_features = torch.sigmoid(proposal_features)
                 img_crop_features = torch.sigmoid(img_crop_features)
-                loss_kd = F.binary_cross_entropy_with_logits(proposal_features, img_crop_features, reduction='mean')
+                loss_kd = F.binary_cross_entropy(proposal_features, img_crop_features, reduction='mean')
             else:
                 raise NotImplementedError
             losses['loss_kd'] = self.balance_kd * loss_kd
