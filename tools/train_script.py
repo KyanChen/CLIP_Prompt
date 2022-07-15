@@ -7,7 +7,7 @@ while True:
               # "../configs_my/CLIPPrompt_Crop_Img_VAW.py "
               "../configs_my/CLIPPrompt_Region_KD_VAW.py "
               # "../configs_my/CLIPPrompt_Region_VAW.py "
-              "results/EXP20220714_3 "
+              "results/EXP20220715_1 "
               "8")
     time.sleep(60*2)
 
