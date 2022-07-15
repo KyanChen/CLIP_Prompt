@@ -54,7 +54,7 @@ class VAWRegionDataset(Dataset):
         print('num img_instance_pair: ', len(self.img_instances_pair))
         print('num instances: ', len(self.instances))
         print('data len: ', len(self.instances))
-        self.error_list = set()
+        self.error_list = set({18531, 36440})
         self.img_ids = list(self.img_instances_pair.keys())
 
         # self.instances = self.get_instances()

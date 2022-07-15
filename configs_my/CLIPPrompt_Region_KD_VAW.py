@@ -67,17 +67,17 @@ model = dict(
             # out_channels=1024,
             # featmap_strides=[32]
         ),
-        # shared_head=dict(
-        #     type='ResLayer',
-        #     depth=50,
-        #     stage=3,
-        #     stride=1,
-        #     norm_eval=False,
-        #     inplanes=256,
-        #     planes=128,
-        # ),
-        # in_channels=512,
-        in_channels=256,
+        shared_head=dict(
+            type='ResLayer',
+            depth=50,
+            stage=3,
+            stride=1,
+            norm_eval=False,
+            inplanes=256,
+            planes=128,
+        ),
+        in_channels=512,
+        # in_channels=256,
         out_channels=1024,
     ),
     prompt_learner=dict(
@@ -94,8 +94,9 @@ model = dict(
         re_weight_gamma=2,
         re_weight_beta=0.995,
         balance_unk=0.15,
-        balance_kd=1e3,
-        # kd_model_loss='smooth-l1'
+        # balance_kd=1e5,
+        # kd_model_loss='smooth-l1',
+        balance_kd=1e2,
         kd_model_loss='ce'
     )
 )
@@ -108,8 +109,8 @@ img_norm_cfg = dict(
 )
 # Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
 # img_size = (512, 512)
-img_size = (896, 896)
-# img_size = (1024, 1024)
+# img_size = (896, 896)
+img_size = (1024, 1024)
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
     dict(type='RandomFlip', flip_ratio=0.5),
@@ -210,7 +211,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=2000,
     warmup_ratio=0.1,
-    step=[60, 80])
+    step=[60, 75, 90])
 
 # lr_config = dict(
 #     policy='CosineAnnealing',
