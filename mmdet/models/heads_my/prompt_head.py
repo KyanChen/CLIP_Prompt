@@ -105,8 +105,6 @@ class PromptHead(BaseModule):
         loss_ce = self.get_classify_loss(cls_scores, gt_labels)
 
         losses = {}
-        import pdb
-        pdb.set_trace()
         if 'img_crop_features' in kwargs and self.kd_model_loss:
             img_crop_features = kwargs.get('img_crop_features', None)
             proposal_features = kwargs.get('proposal_features', None)
