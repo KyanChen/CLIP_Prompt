@@ -50,7 +50,7 @@ class VAWCropDataset(Dataset):
 
         print('num instances: ', len(self.instances))
         print('data len: ', len(self.instances))
-        self.error_list = set()
+        self.error_list = set({74197, 171246})
         self.img_ids = list(self.img_instances_pair.keys())
 
         # self.instances = self.get_instances()
