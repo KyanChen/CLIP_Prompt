@@ -31,7 +31,7 @@ data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='CLIP_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
-    need_train_names=['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale'],
+    need_train_names=['prompt_learner', 'text_encoder', 'img_proj_head', 'bbox_head', 'logit_scale'],
     # need_train_names=['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale'],
     img_encoder=dict(
         type='VisionTransformer',
@@ -65,11 +65,14 @@ model = dict(
 )
 # dataset settings
 dataset_type = 'VAWCropDataset'
-IMAGENET_DEFAULT_MEAN = (0.485, 0.456, 0.406)
-IMAGENET_DEFAULT_STD = (0.229, 0.224, 0.225)
+# img_norm_cfg = dict(
+#     mean=[0.48145466, 0.4578275, 0.40821073],
+#     std=[0.26862954, 0.26130258, 0.27577711],
+#     to_rgb=False
+# )
 img_norm_cfg = dict(
-    mean=[0.48145466, 0.4578275, 0.40821073],
-    std=[0.26862954, 0.26130258, 0.27577711],
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225],
     to_rgb=False
 )
 # Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
@@ -141,7 +144,9 @@ optimizer = dict(
     # sub_model='prompt_learner',
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
-    sub_model={'prompt_learner': {}, 'text_encoder': {'lr_mult': 0.1}, 'bbox_head': {}, 'logit_scale': {}},
+    sub_model={'prompt_learner': {}, 'text_encoder': {'lr_mult': 0.1},
+               'bbox_head': {}, 'logit_scale': {}, 'img_proj_head': {}
+               },
     type='SGD',
     lr=0.01,
     momentum=0.9,

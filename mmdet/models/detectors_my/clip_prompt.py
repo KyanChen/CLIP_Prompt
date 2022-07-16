@@ -1,6 +1,7 @@
 import json
 
 import torch
+from torch import nn
 
 from ..builder import DETECTORS, build_backbone, build_head, build_neck
 from ..detectors.base import BaseDetector
@@ -36,6 +37,7 @@ class CLIP_Prompter(BaseDetector):
             self.image_encoder = clip_model.visual
         else:
             self.image_encoder = build_backbone(img_encoder)
+            self.img_proj_head = nn.Linear(768, 1024)
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
 
@@ -117,8 +119,8 @@ class CLIP_Prompter(BaseDetector):
                       img_metas,
                       gt_labels,
                       gt_bboxes_ignore=None):
-        # import pdb
-        # pdb.set_trace()
+        import pdb
+        pdb.set_trace()
         image_features, last_f_map, f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
 
         prompts = self.prompt_learner()  # 620x77x512

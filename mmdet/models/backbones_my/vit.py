@@ -4,7 +4,7 @@ import torch.nn as nn
 import timm.models.vision_transformer
 
 from ..builder import BACKBONES
-
+from einops import rearrange
 
 @BACKBONES.register_module()
 class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
@@ -42,8 +42,6 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             del self.norm  # remove the original norm
 
         if load_pretrain is not None:
-            import pdb
-            pdb.set_trace()
             checkpoint = torch.load(load_pretrain, map_location='cpu')
             print("Load pre-trained vit checkpoint from: %s" % load_pretrain)
             checkpoint_model = checkpoint['model']
@@ -64,11 +62,9 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
                 assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
 
     def forward_features(self, x):
-        import pdb
-        pdb.set_trace()
-
         B = x.shape[0]
-        x = self.patch_embed(x)
+        H = x.shape[-2]
+        x = self.patch_embed(x)  # 128x196x768
 
         cls_tokens = self.cls_token.expand(B, -1, -1)  # stole cls_tokens impl from Phil Wang, thanks
         x = torch.cat((cls_tokens, x), dim=1)
@@ -77,15 +73,18 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
 
         for blk in self.blocks:
             x = blk(x)
-
+        # import pdb
+        # pdb.set_trace()
         if self.global_pool:
             x = x[:, 1:, :].mean(dim=1)  # global pool without cls token
             outcome = self.fc_norm(x)
         else:
             x = self.norm(x)
             outcome = x[:, 0]
+            last_f_map = x[:, 1:]
+            last_f_map = rearrange(last_f_map, 'B N C -> B C H W', H=H)
 
-        return outcome
+        return outcome, last_f_map, None
 
     def forward(self, x):
         return self.forward_features(x)
