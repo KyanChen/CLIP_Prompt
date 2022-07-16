@@ -83,7 +83,8 @@ class VAWCropDataset(Dataset):
     def __getitem__(self, idx):
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
-        results = self.instances[idx].copy()
+        instance = self.instances[idx]
+        results = {}
         '''
         "image_id": "2373241",
         "instance_id": "2373241004",
@@ -95,10 +96,13 @@ class VAWCropDataset(Dataset):
         '''
         results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
         results['img_info'] = {}
-        results['img_info']['filename'] = f'{results["image_id"]}.jpg'
+        results['img_info']['filename'] = f'{instance["image_id"]}.jpg'
 
-        positive_attributes = results["positive_attributes"]
-        negative_attributes = results["negative_attributes"]
+        x, y, w, h = instance["instance_bbox"]
+        results['crop_box'] = np.array([x, y, x + w, y + h])
+
+        positive_attributes = instance["positive_attributes"]
+        negative_attributes = instance["negative_attributes"]
         labels = np.ones(len(self.classname_maps.keys())) * 2
         for att in positive_attributes:
             labels[self.classname_maps[att]] = 1
