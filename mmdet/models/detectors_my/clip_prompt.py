@@ -14,6 +14,7 @@ class CLIP_Prompter(BaseDetector):
                  backbone,
                  prompt_learner,
                  need_train_names,
+                 img_encoder=None,
                  prompt_learner_weights='',
                  neck=None,
                  bbox_head=None,
@@ -31,7 +32,10 @@ class CLIP_Prompter(BaseDetector):
         classnames = list(classname_maps.keys())
 
         clip_model = build_backbone(backbone).model
-        self.image_encoder = clip_model.visual
+        if img_encoder is None:
+            self.image_encoder = clip_model.visual
+        else:
+            self.image_encoder = build_backbone(image_encoder)
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
 
