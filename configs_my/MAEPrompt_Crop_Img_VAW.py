@@ -32,7 +32,7 @@ data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='CLIP_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
-    need_train_names=['prompt_learner', 'image_encoder', 'img_proj_head', 'bbox_head', 'logit_scale'],
+    need_train_names=['prompt_learner', 'image_encoder', 'text_encoder', 'img_proj_head', 'bbox_head', 'logit_scale'],
     # need_train_names=['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale'],
     img_encoder=dict(
         type='VisionTransformer',
@@ -145,14 +145,20 @@ optimizer = dict(
     # sub_model='prompt_learner',
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
-    sub_model={'prompt_learner': {},
-               'image_encoder': {'lr_mult': 0.1},
-               'bbox_head': {}, 'logit_scale': {}, 'img_proj_head': {}
-               },
-    type='SGD',
-    lr=0.01,
-    momentum=0.9,
-    weight_decay=0.0005
+    sub_model={
+        'prompt_learner': {},
+        'image_encoder': {'lr_mult': 0.1},
+        'text_encoder': {'lr_mult': 0.1},
+        'bbox_head': {}, 'logit_scale': {}, 'img_proj_head': {}
+    },
+    # type='SGD',
+    # lr=0.01,
+    # momentum=0.9,
+    # weight_decay=0.0005,
+    type='AdamW',
+    lr=1e-4,
+    weight_decay=1e-3
+
 )
 #
 # # optimizer
