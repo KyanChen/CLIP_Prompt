@@ -46,7 +46,11 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             pdb.set_trace()
             checkpoint = torch.load(load_pretrain, map_location='cpu')
             print("Load pre-trained vit checkpoint from: %s" % load_pretrain)
-            checkpoint_model = checkpoint['model']
+            if 'model' in checkpoint.keys():
+                checkpoint_model = checkpoint['model']
+            else:
+                checkpoint_model = checkpoint
+
             state_dict = self.state_dict()
             for k in ['head.weight', 'head.bias']:
                 if k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape:
