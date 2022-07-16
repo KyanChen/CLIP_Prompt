@@ -42,6 +42,8 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             del self.norm  # remove the original norm
 
         if load_pretrain is not None:
+            import pdb
+            pdb.set_trace()
             checkpoint = torch.load(load_pretrain, map_location='cpu')
             print("Load pre-trained vit checkpoint from: %s" % load_pretrain)
             checkpoint_model = checkpoint['model']
