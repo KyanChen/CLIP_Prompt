@@ -119,14 +119,14 @@ class CLIP_Prompter(BaseDetector):
                       img_metas,
                       gt_labels,
                       gt_bboxes_ignore=None):
-        import pdb
-        pdb.set_trace()
         image_features, last_f_map, f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
 
         prompts = self.prompt_learner()  # 620x77x512
         tokenized_prompts = self.tokenized_prompts
         text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
 
+        if hasattr(self, 'img_proj_head'):
+            image_features = getattr(self, 'img_proj_head')(image_features)
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
@@ -176,6 +176,8 @@ class CLIP_Prompter(BaseDetector):
         tokenized_prompts = self.tokenized_prompts
         text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
 
+        if hasattr(self, 'img_proj_head'):
+            image_features = getattr(self, 'img_proj_head')(image_features)
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
