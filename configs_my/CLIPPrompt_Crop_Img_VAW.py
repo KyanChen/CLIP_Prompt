@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=10)
+checkpoint_config = dict(interval=20)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -31,6 +31,8 @@ data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='CLIP_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
+    need_train_names=['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale'],
+    # need_train_names=['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale'],
     backbone=dict(
         type='CLIPModel',
         backbone_name='RN50',
@@ -105,7 +107,7 @@ data = dict(
         data_root=data_root,
         pattern='train',
         test_mode=False,
-        open_category=True,
+        open_category=False,
         pipeline=train_pipeline),
     val=dict(
         samples_per_gpu=128,
@@ -113,7 +115,7 @@ data = dict(
         data_root=data_root,
         pattern='test',
         test_mode=True,
-        open_category=True,
+        open_category=False,
         pipeline=test_pipeline),
     test=dict(
         samples_per_gpu=128,
@@ -121,7 +123,7 @@ data = dict(
         data_root=data_root,
         pattern='test',
         test_mode=True,
-        open_category=True,
+        open_category=False,
         pipeline=test_pipeline
     )
 )
@@ -130,7 +132,9 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     # sub_model='prompt_learner',
-    sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
+    # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
+    # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
+    sub_model={'prompt_learner': {}, 'text_encoder': {'lr_mult': 0.1}, 'bbox_head': {}, 'logit_scale': {}},
     type='SGD',
     lr=0.01,
     momentum=0.9,
@@ -156,7 +160,7 @@ lr_config = dict(
     warmup_iters=2000,
     warmup_ratio=0.1,
     # gamma=0.5,
-    step=[50, 80]
+    step=[60, 75, 90]
 )
 
 # lr_config = dict(
