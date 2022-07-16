@@ -82,7 +82,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             x = self.norm(x)
             outcome = x[:, 0]
             last_f_map = x[:, 1:]
-            last_f_map = rearrange(last_f_map, 'B N C -> B C H W', H=H)
+            last_f_map = rearrange(last_f_map, 'B N C -> B C H W', H=H//16)
 
         return outcome, last_f_map, None
 
