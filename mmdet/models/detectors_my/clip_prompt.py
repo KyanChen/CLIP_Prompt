@@ -35,7 +35,7 @@ class CLIP_Prompter(BaseDetector):
         if img_encoder is None:
             self.image_encoder = clip_model.visual
         else:
-            self.image_encoder = build_backbone(image_encoder)
+            self.image_encoder = build_backbone(img_encoder)
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
 
