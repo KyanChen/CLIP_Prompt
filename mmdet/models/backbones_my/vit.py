@@ -44,8 +44,6 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         self.load_pretrain = load_pretrain
 
     def load_pretrain_model(self):
-        import pdb
-        pdb.set_trace()
         if self.load_pretrain is not None:
             # import pdb
             # pdb.set_trace()
@@ -67,7 +65,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
 
             # load pre-trained model
             msg = self.load_state_dict(checkpoint_model, strict=False)
-            if self.load_pretrain:
+            if self.global_pool:
                 assert set(msg.missing_keys) == {'head.weight', 'head.bias', 'fc_norm.weight', 'fc_norm.bias'}
             else:
                 assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
