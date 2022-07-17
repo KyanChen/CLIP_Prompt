@@ -73,8 +73,6 @@ class CLIP_Prompter(BaseDetector):
                 if need_train_name in name:
                     flag = True
             param.requires_grad_(flag)
-        import pdb
-        pdb.set_trace()
 
     def extract_feat(self, img):
         return img
@@ -90,6 +88,8 @@ class CLIP_Prompter(BaseDetector):
                 module.train(mode)
             else:
                 module.eval()
+        import pdb
+        pdb.set_trace()
         return self
 
     def forward(self, img, img_metas, return_loss=True, **kwargs):
