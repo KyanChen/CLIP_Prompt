@@ -81,7 +81,6 @@ class VAWCropDataset(Dataset):
         return len(self.instances)
 
     def __getitem__(self, idx):
-        idx = 1
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
         instance = self.instances[idx]
