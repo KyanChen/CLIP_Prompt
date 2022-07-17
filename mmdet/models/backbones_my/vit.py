@@ -28,9 +28,10 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         )
     }
 
-    def __init__(self, arch, load_pretrain=None, global_pool=False, weight_init='skip', **kwargs):
+    def __init__(self, arch, load_pretrain=None, global_pool=False, **kwargs):
         arch = self.archs[arch]
         arch.update(kwargs)
+        arch['weight_init'] = 'skip'
         super(VisionTransformer, self).__init__(**arch)
 
         self.global_pool = global_pool
