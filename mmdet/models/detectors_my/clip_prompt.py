@@ -73,6 +73,8 @@ class CLIP_Prompter(BaseDetector):
                 if need_train_name in name:
                     flag = True
             param.requires_grad_(flag)
+        import pdb
+        pdb.set_trace()
 
     def extract_feat(self, img):
         return img
