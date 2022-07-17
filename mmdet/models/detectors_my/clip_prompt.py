@@ -88,8 +88,6 @@ class CLIP_Prompter(BaseDetector):
                 module.train(mode)
             else:
                 module.eval()
-        import pdb
-        pdb.set_trace()
         return self
 
     def forward(self, img, img_metas, return_loss=True, **kwargs):
@@ -121,8 +119,6 @@ class CLIP_Prompter(BaseDetector):
                       img_metas,
                       gt_labels,
                       gt_bboxes_ignore=None):
-        import pdb
-        pdb.set_trace()
         image_features, last_f_map, f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
 
         prompts = self.prompt_learner()  # 620x77x512
