@@ -43,6 +43,8 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
         self.load_pretrain = load_pretrain
 
     def load_pretrain_model(self):
+        import pdb
+        pdb.set_trace()
         if self.load_pretrain is not None:
             # import pdb
             # pdb.set_trace()
@@ -69,7 +71,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             else:
                 assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
 
-    def init_weights(self, mode=''):
+    def init_weights(self):
         self.load_pretrain_model()
 
     def forward_features(self, x):
