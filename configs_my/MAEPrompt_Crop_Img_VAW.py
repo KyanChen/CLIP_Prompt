@@ -32,7 +32,7 @@ data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='CLIP_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
-    need_train_names=['prompt_learner', 'img_proj_head', 'image_encoder', 'bbox_head', 'logit_scale'],
+    need_train_names=['prompt_learner', 'img_proj_head', 'image_encoder', 'text_encoder', 'bbox_head', 'logit_scale'],
     # need_train_names=['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale'],
     img_encoder=dict(
         type='VisionTransformer',
@@ -112,7 +112,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=100,
+    samples_per_gpu=48,
     workers_per_gpu=8,
     persistent_workers=True,
     train=dict(
@@ -123,7 +123,7 @@ data = dict(
         open_category=False,
         pipeline=train_pipeline),
     val=dict(
-        samples_per_gpu=100,
+        samples_per_gpu=48,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
@@ -131,7 +131,7 @@ data = dict(
         open_category=False,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=100,
+        samples_per_gpu=48,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
@@ -150,7 +150,7 @@ optimizer = dict(
     sub_model={
         'prompt_learner': {},
         'image_encoder': {'lr_mult': 0.1},
-        # 'text_encoder': {'lr_mult': 0.1},
+        'text_encoder': {'lr_mult': 0.1},
         'bbox_head': {}, 'logit_scale': {}, 'img_proj_head': {}
     },
     # type='SGD',
