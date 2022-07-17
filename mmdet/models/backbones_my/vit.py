@@ -71,7 +71,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             else:
                 assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
 
-    def init_weights(self):
+    def init_weights(self, mode=''):
         self.load_pretrain_model()
 
     def forward_features(self, x):
