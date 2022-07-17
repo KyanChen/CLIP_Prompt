@@ -37,8 +37,8 @@ model = dict(
     img_encoder=dict(
         type='VisionTransformer',
         arch='vit_base_patch16',
-        # load_pretrain='../pretrain/dino_vitbase16_pretrain.pth'
-        load_pretrain='../pretrain/mae_pretrain_vit_base.pth',
+        load_pretrain='../pretrain/dino_vitbase16_pretrain.pth'
+        # load_pretrain='../pretrain/mae_pretrain_vit_base.pth',
     ),
     backbone=dict(
         type='CLIPModel',
