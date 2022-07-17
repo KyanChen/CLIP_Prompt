@@ -40,12 +40,14 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             self.fc_norm = norm_layer(embed_dim)
 
             del self.norm  # remove the original norm
+        self.load_pretrain = load_pretrain
 
-        if load_pretrain is not None:
+    def load_pretrain(self):
+        if self.load_pretrain is not None:
             # import pdb
             # pdb.set_trace()
-            checkpoint = torch.load(load_pretrain, map_location='cpu')
-            print("Load pre-trained vit checkpoint from: %s" % load_pretrain)
+            checkpoint = torch.load(self.load_pretrain, map_location='cpu')
+            print("Load pre-trained vit checkpoint from: %s" % self.load_pretrain)
             if 'model' in checkpoint.keys():
                 checkpoint_model = checkpoint['model']
             else:
@@ -62,10 +64,15 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
 
             # load pre-trained model
             msg = self.load_state_dict(checkpoint_model, strict=False)
-            if global_pool:
+            if self.load_pretrain:
                 assert set(msg.missing_keys) == {'head.weight', 'head.bias', 'fc_norm.weight', 'fc_norm.bias'}
             else:
                 assert set(msg.missing_keys) == {'head.weight', 'head.bias'}
+
+    def init_weights(self, mode=''):
+        import pdb
+        pdb.set_trace()
+        self.load_pretrain()
 
     def forward_features(self, x):
         B = x.shape[0]
