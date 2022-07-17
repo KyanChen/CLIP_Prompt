@@ -54,7 +54,7 @@ class VAWCropDataset(Dataset):
         self.img_ids = list(self.img_instances_pair.keys())
 
         # self.instances = self.get_instances()
-        self.instances = self.instances[-10:]
+        # self.instances = self.instances[-10:]
         attribute_index_file = os.path.join(self.data_root, "VAW/attribute_index.json")
         self.classname_maps = json.load(open(attribute_index_file))
 
@@ -81,6 +81,7 @@ class VAWCropDataset(Dataset):
         return len(self.instances)
 
     def __getitem__(self, idx):
+        idx = 1
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
         instance = self.instances[idx]
