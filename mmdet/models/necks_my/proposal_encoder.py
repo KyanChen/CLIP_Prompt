@@ -28,33 +28,85 @@ class ProposalEncoder(BaseModule):
             self.shared_head = build_shared_head(shared_head)
 
         self.bbox_roi_extractor = build_roi_extractor(bbox_roi_extractor)
-        self.bbox_head = self.init_bbox_head(in_channels, out_channels)
+        roi_size = bbox_roi_extractor['roi_layer']['output_size']
+        self.bbox_head = self.init_bbox_head(in_channels, out_channels, roi_size)
 
-    def init_bbox_head(self, in_channels, out_channels):
-        bbox_head = nn.Sequential(
-            ConvModule(
-                in_channels,
-                in_channels,
-                3,
-                stride=2,
-                padding=1,
-                norm_cfg=dict(type='BN'),
-                act_cfg=dict(type='ReLU')
-            ),
-            ConvModule(
-                in_channels,
-                in_channels*2,
-                3,
-                stride=2,
-                padding=1,
-                norm_cfg=dict(type='BN'),
-                act_cfg=dict(type='ReLU')
-            ),
-            nn.Conv2d(in_channels * 2, in_channels * 4, kernel_size=2),
-            nn.BatchNorm2d(in_channels * 4),
-            nn.ReLU(),
-            nn.Conv2d(in_channels * 4, out_channels, kernel_size=1),
-        )
+    def init_bbox_head(self, in_channels, out_channels, roi_size=7):
+        if roi_size == 7:
+            bbox_head = nn.Sequential(
+                ConvModule(
+                    in_channels,
+                    in_channels,
+                    3,
+                    stride=2,
+                    padding=1,
+                    norm_cfg=dict(type='BN'),
+                    act_cfg=dict(type='ReLU')
+                ),
+                ConvModule(
+                    in_channels,
+                    in_channels*2,
+                    3,
+                    stride=2,
+                    padding=1,
+                    norm_cfg=dict(type='BN'),
+                    act_cfg=dict(type='ReLU')
+                ),
+                ConvModule(
+                    in_channels * 2,
+                    in_channels * 4,
+                    3,
+                    stride=2,
+                    padding=1,
+                    norm_cfg=dict(type='BN'),
+                    act_cfg=dict(type='ReLU')
+                ),
+                nn.AdaptiveAvgPool2d((1, 1)),
+                nn.Conv2d(in_channels * 4, out_channels, kernel_size=1),
+            )
+        elif roi_size == 14:
+            bbox_head = nn.Sequential(
+                ConvModule(
+                    in_channels,
+                    in_channels,
+                    3,
+                    stride=2,
+                    padding=1,
+                    norm_cfg=dict(type='BN'),
+                    act_cfg=dict(type='ReLU')
+                ),
+                ConvModule(
+                    in_channels*2,
+                    in_channels*2,
+                    3,
+                    stride=2,
+                    padding=1,
+                    norm_cfg=dict(type='BN'),
+                    act_cfg=dict(type='ReLU')
+                ),
+                ConvModule(
+                    in_channels * 2,
+                    in_channels * 2,
+                    3,
+                    stride=2,
+                    padding=1,
+                    norm_cfg=dict(type='BN'),
+                    act_cfg=dict(type='ReLU')
+                ),
+                ConvModule(
+                    in_channels * 2,
+                    in_channels * 4,
+                    3,
+                    stride=2,
+                    padding=1,
+                    norm_cfg=dict(type='BN'),
+                    act_cfg=dict(type='ReLU')
+                ),
+                nn.AdaptiveAvgPool2d((1, 1)),
+                nn.Conv2d(in_channels * 4, out_channels, kernel_size=1),
+            )
+        else:
+            raise NotImplementedError
         # bbox_head = nn.Sequential(
         #     nn.AdaptiveAvgPool2d((1, 1)),
         #     nn.Conv2d(in_channels, out_channels, 1)
