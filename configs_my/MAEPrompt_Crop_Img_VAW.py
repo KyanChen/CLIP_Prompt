@@ -33,7 +33,7 @@ model = dict(
     type='CLIP_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
     need_train_names=['prompt_learner', 'img_proj_head',
-                      'image_encoder'
+                      'image_encoder',
                       # 'text_encoder',
                       'bbox_head', 'logit_scale'],
     # need_train_names=['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale'],
