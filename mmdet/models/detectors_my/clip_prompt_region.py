@@ -19,6 +19,7 @@ class CLIP_Prompter_Region(BaseModule):
                  classname_path,
                  backbone,
                  prompt_learner,
+                 need_train_names,
                  prompt_learner_weights='',
                  kd_model=None,
                  neck=None,
@@ -29,6 +30,7 @@ class CLIP_Prompter_Region(BaseModule):
                  pretrained=None,
                  init_cfg=None):
         super(CLIP_Prompter_Region, self).__init__(init_cfg)
+        self.need_train_names = need_train_names
         if pretrained:
             warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
@@ -77,7 +79,7 @@ class CLIP_Prompter_Region(BaseModule):
         print("Turning off gradients in both the image and the text encoder")
         for name, param in self.named_parameters():
             flag = False
-            for need_train_name in ['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale']:
+            for need_train_name in self.need_train_names:
                 if need_train_name in name:
                     flag = True
             param.requires_grad_(flag)
@@ -86,7 +88,7 @@ class CLIP_Prompter_Region(BaseModule):
         self.training = mode
         for name, module in self.named_children():
             flag = False
-            for need_train_name in ['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale']:
+            for need_train_name in self.need_train_names:
                 if need_train_name in name:
                     flag = True
             if flag:

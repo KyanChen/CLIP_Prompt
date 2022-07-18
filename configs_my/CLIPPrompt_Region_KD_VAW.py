@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=10)
+checkpoint_config = dict(interval=20)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -31,6 +31,7 @@ data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='CLIP_Prompter_Region',
     classname_path=data_root+'/VAW/attribute_index.json',
+    need_train_names=['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale'],
     backbone=dict(
         type='CLIPModel',
         backbone_name='RN50',
@@ -55,14 +56,14 @@ model = dict(
         in_channels=[256, 512, 1024, 2048],
         # in_channels=[2048],
         out_channels=256,
-        num_outs=4),
+        num_outs=5),
     roi_head=dict(
         type='ProposalEncoder',
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
-            featmap_strides=[4, 8, 16, 32],
+            featmap_strides=[4, 8, 16, 32, 64],
             # featmap_strides=[32]
             # out_channels=1024,
             # featmap_strides=[32]
@@ -187,7 +188,10 @@ data = dict(
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
-    sub_model=['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale'],
+    sub_model=[
+        'prompt_learner', 'neck',
+        'roi_head', 'bbox_head', 'logit_scale'
+        ],
     # sub_model={'prompt_learner': {}, 'neck': {}, 'roi_head': {}, 'bbox_head': {}, 'image_encoder': {'lr_mult': 0.01}},
     type='SGD',
     lr=0.01,
