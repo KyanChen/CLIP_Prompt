@@ -68,7 +68,7 @@ class ProposalEncoder(BaseModule):
             bbox_head = nn.Sequential(
                 ConvModule(
                     in_channels,
-                    in_channels,
+                    in_channels*2,
                     3,
                     stride=2,
                     padding=1,
