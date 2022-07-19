@@ -31,7 +31,10 @@ data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='CLIP_Prompter',
     classname_path=data_root+'/VAW/attribute_index.json',
-    need_train_names=['prompt_learner', 'image_encoder', 'text_encoder', 'bbox_head', 'logit_scale'],
+    need_train_names=[
+        'prompt_learner', 'image_encoder', 'text_encoder',
+        'bbox_head', 'logit_scale'
+    ],
     backbone=dict(
         type='CLIPModel',
         backbone_name='RN50',

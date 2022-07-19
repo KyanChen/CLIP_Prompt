@@ -31,7 +31,12 @@ data_root = '/data/kyanchen/prompt/data'
 model = dict(
     type='CLIP_Prompter_Region',
     classname_path=data_root+'/VAW/attribute_index.json',
-    need_train_names=['prompt_learner', 'neck', 'roi_head', 'bbox_head', 'logit_scale'],
+    need_train_names=[
+        'image_encoder',
+        'text_encoder'
+        'prompt_learner', 'neck', 'roi_head',
+        'bbox_head', 'logit_scale'
+    ],
     backbone=dict(
         type='CLIPModel',
         backbone_name='RN50',
@@ -187,30 +192,36 @@ data = dict(
 )
 # #
 # optimizer
-# optimizer = dict(
-#     constructor='SubModelConstructor',
-#     sub_model=[
-#         'prompt_learner', 'neck',
-#         'roi_head', 'bbox_head', 'logit_scale'
-#         ],
-#     # sub_model={'prompt_learner': {}, 'neck': {}, 'roi_head': {}, 'bbox_head': {}, 'image_encoder': {'lr_mult': 0.01}},
-#     type='SGD',
-#     lr=0.01,
-#     momentum=0.9,
-#     weight_decay=0.0005
-# )
-
-# optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
-    sub_model=[
-        'prompt_learner', 'neck',
-        'roi_head', 'bbox_head', 'logit_scale'
-        ],
-    type='Adam',
-    lr=1e-4,
-    weight_decay=1e-3
+    sub_model={
+        'prompt_learner': {},
+        'text_encoder': {'lr_mult': 0.01},
+        'image_encoder': {'lr_mult': 0.01},
+        'neck': {}, 'roi_head': {},
+        'bbox_head': {}, 'logit_scale': {}
+    },
+    type='SGD',
+    lr=0.01,
+    momentum=0.9,
+    weight_decay=0.0005
 )
+
+# # optimizer
+# optimizer = dict(
+#     constructor='SubModelConstructor',
+#     sub_model={
+#         'prompt_learner': {},
+#         'text_encoder': {'lr_mult': 0.1},
+#         'image_encoder': {'lr_mult': 0.1},
+#         'neck': {}, 'roi_head': {},
+#         'bbox_head': {}, 'logit_scale': {}
+#         }
+#     ,
+#     type='AdamW',
+#     lr=1e-4,
+#     weight_decay=1e-3
+# )
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
 # # learning policy
