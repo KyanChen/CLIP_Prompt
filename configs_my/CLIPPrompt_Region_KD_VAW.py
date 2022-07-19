@@ -32,8 +32,8 @@ model = dict(
     type='CLIP_Prompter_Region',
     classname_path=data_root+'/VAW/attribute_index.json',
     need_train_names=[
-        'image_encoder',
-        'text_encoder'
+        # 'image_encoder',
+        # 'text_encoder'
         'prompt_learner', 'neck', 'roi_head',
         'bbox_head', 'logit_scale'
     ],
@@ -69,7 +69,7 @@ model = dict(
             roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
             out_channels=256,
             featmap_strides=[4, 8, 16, 32, 64],
-            finest_scale=32
+            finest_scale=28
             # featmap_strides=[32]
             # out_channels=1024,
             # featmap_strides=[32]
@@ -116,8 +116,8 @@ img_norm_cfg = dict(
 )
 # Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
 # img_size = (512, 512)
-# img_size = (896, 896)
-img_size = (1024, 1024)
+img_size = (896, 896)
+# img_size = (1024, 1024)
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
     dict(type='RandomFlip', flip_ratio=0.5),
@@ -161,7 +161,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=42,
+    samples_per_gpu=64,
     workers_per_gpu=4,
     # samples_per_gpu=4,
     # workers_per_gpu=0,
@@ -175,14 +175,14 @@ data = dict(
         kd_pipeline=kd_pipeline
     ),
     val=dict(
-        samples_per_gpu=42,
+        samples_per_gpu=64,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
         test_mode=True,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=42,
+        samples_per_gpu=64,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
@@ -196,8 +196,8 @@ optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
         'prompt_learner': {},
-        'text_encoder': {'lr_mult': 0.01},
-        'image_encoder': {'lr_mult': 0.01},
+        # 'text_encoder': {'lr_mult': 0.01},
+        # 'image_encoder': {'lr_mult': 0.01},
         'neck': {}, 'roi_head': {},
         'bbox_head': {}, 'logit_scale': {}
     },
