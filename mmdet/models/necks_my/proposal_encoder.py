@@ -168,6 +168,7 @@ class TransformerAttrHead(BaseModule):
         if self.use_abs_pos_embed:
             embed_len = self.num_patches + 1 if self.cls_token is not None else self.num_patches
             self.absolute_pos_embed = nn.Parameter(torch.randn(1, embed_len, self.embed_dim) * .02)
+
         self.drop_after_pos = nn.Dropout(p=drop_rate)
 
         if num_patches == 14*14:
@@ -199,11 +200,11 @@ class TransformerAttrHead(BaseModule):
 
         x = rearrange(x, 'b c h w -> b (h w) c')
 
-        if self.class_token:
+        if self.class_token is not None:
             cls_tokens = self.cls_token.expand(B, -1, -1)
             x = torch.cat((cls_tokens, x), dim=1)
 
-        if self.use_abs_pos_embed:
+        if self.use_abs_pos_embed is not  None:
             x = x + self.absolute_pos_embed
         x = self.drop_after_pos(x)
 
