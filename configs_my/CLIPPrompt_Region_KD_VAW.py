@@ -32,8 +32,8 @@ model = dict(
     type='CLIP_Prompter_Region',
     classname_path=data_root+'/VAW/attribute_index.json',
     need_train_names=[
-        # 'image_encoder',
-        # 'text_encoder'
+        'image_encoder',
+        'text_encoder'
         'prompt_learner', 'neck', 'roi_head',
         'bbox_head', 'logit_scale'
     ],
@@ -196,8 +196,8 @@ optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
         'prompt_learner': {},
-        # 'text_encoder': {'lr_mult': 0.01},
-        # 'image_encoder': {'lr_mult': 0.01},
+        'text_encoder': {'lr_mult': 0.01},
+        'image_encoder': {'lr_mult': 0.01},
         'neck': {}, 'roi_head': {},
         'bbox_head': {}, 'logit_scale': {}
     },
