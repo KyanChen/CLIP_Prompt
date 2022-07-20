@@ -61,15 +61,15 @@ model = dict(
         in_channels=[256, 512, 1024, 2048],
         # in_channels=[2048],
         out_channels=256,
-        num_outs=4),
+        num_outs=5),
     roi_head=dict(
         type='ProposalEncoder',
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
             out_channels=256,
-            featmap_strides=[4, 8, 16, 32],
-            finest_scale=56
+            featmap_strides=[4, 8, 16, 32, 64],
+            finest_scale=42
             # featmap_strides=[32]
             # out_channels=1024,
             # featmap_strides=[32]
@@ -230,7 +230,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=2000,
     warmup_ratio=0.1,
-    step=[60, 75, 90])
+    step=[60, 80])
 
 # lr_config = dict(
 #     policy='CosineAnnealing',
