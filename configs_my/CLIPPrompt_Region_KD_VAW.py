@@ -32,8 +32,8 @@ model = dict(
     type='CLIP_Prompter_Region',
     classname_path=data_root+'/VAW/attribute_index.json',
     need_train_names=[
-        'image_encoder',
-        'text_encoder'
+        # 'image_encoder',
+        # 'text_encoder'
         'prompt_learner', 'neck', 'roi_head',
         'bbox_head', 'logit_scale'
     ],
@@ -64,12 +64,13 @@ model = dict(
         num_outs=5),
     roi_head=dict(
         type='ProposalEncoder',
+        out_channels=1024,
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
             out_channels=256,
             featmap_strides=[4, 8, 16, 32, 64],
-            finest_scale=42
+            finest_scale=32
             # featmap_strides=[32]
             # out_channels=1024,
             # featmap_strides=[32]
@@ -83,9 +84,17 @@ model = dict(
         #     inplanes=256,
         #     planes=128,
         # ),
-        # in_channels=512,
-        in_channels=256,
-        out_channels=1024,
+        attribute_head=dict(
+            type='TransformerAttrHead',
+            in_channel=256,
+            embed_dim=512,
+            num_patches=14*14,
+            use_abs_pos_embed=True,
+            drop_rate=0.,
+            class_token=True,
+            num_encoder_layers=3,
+            global_pool=False,
+        )
     ),
     prompt_learner=dict(
         type='PromptLearner',
@@ -161,7 +170,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=19,
+    samples_per_gpu=56,
     workers_per_gpu=4,
     # samples_per_gpu=4,
     # workers_per_gpu=0,
@@ -175,14 +184,14 @@ data = dict(
         kd_pipeline=kd_pipeline
     ),
     val=dict(
-        samples_per_gpu=19,
+        samples_per_gpu=56,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
         test_mode=True,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=19,
+        samples_per_gpu=56,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
@@ -196,8 +205,8 @@ optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
         'prompt_learner': {},
-        'text_encoder': {'lr_mult': 0.01},
-        'image_encoder': {'lr_mult': 0.01},
+        # 'text_encoder': {'lr_mult': 0.01},
+        # 'image_encoder': {'lr_mult': 0.01},
         'neck': {}, 'roi_head': {},
         'bbox_head': {}, 'logit_scale': {}
     },
