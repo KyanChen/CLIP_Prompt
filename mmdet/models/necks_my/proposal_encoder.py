@@ -172,9 +172,9 @@ class TransformerAttrHead(BaseModule):
         self.drop_after_pos = nn.Dropout(p=drop_rate)
 
         if num_patches == 14*14:
-            self.patch_merger = PatchMerging(in_channel, embed_dim)
+            self.patch_merger = PatchMerging(in_channel, self.embed_dim)
         elif num_patches == 7*7:
-            self.patch_merger = nn.Conv2d(in_channel, embed_dim, kernel_size=1)
+            self.patch_merger = nn.Conv2d(in_channel, self.embed_dim, kernel_size=1)
         else:
             raise NotImplementedError
         self.transformer_decoder = self.build_transformer_decoder(num_encoder_layers=num_encoder_layers, dim_feedforward=self.embed_dim * 2)
@@ -183,14 +183,14 @@ class TransformerAttrHead(BaseModule):
             self, num_encoder_layers=3, dim_feedforward=2048
     ):
         encoder_layer = TransformerEncoderLayer(
-            d_model=self.model_dim,
+            d_model=self.embed_dim,
             nhead=8,
             dim_feedforward=dim_feedforward,
             dropout=0.1,
             activation='gelu',
             batch_first=True
         )
-        encoder_norm = LayerNorm(self.model_dim)
+        encoder_norm = LayerNorm(self.embed_dim)
         encoder = TransformerEncoder(encoder_layer, num_encoder_layers, encoder_norm)
 
         return encoder
