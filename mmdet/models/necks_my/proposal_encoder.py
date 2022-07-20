@@ -163,11 +163,11 @@ class TransformerAttrHead(BaseModule):
         self.global_pool = global_pool
 
         if self.class_token:
-            self.cls_token = nn.Parameter(torch.zeros(1, 1, self.embed_dim))
+            self.cls_token = nn.Parameter(torch.zeros(1, 1, self.in_channel))
 
         if self.use_abs_pos_embed:
             embed_len = self.num_patches + 1 if self.cls_token is not None else self.num_patches
-            self.absolute_pos_embed = nn.Parameter(torch.randn(1, embed_len, self.embed_dim) * .02)
+            self.absolute_pos_embed = nn.Parameter(torch.randn(1, embed_len, self.in_channel) * .02)
 
         self.drop_after_pos = nn.Dropout(p=drop_rate)
 
