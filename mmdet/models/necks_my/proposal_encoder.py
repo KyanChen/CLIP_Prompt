@@ -164,11 +164,10 @@ class TransformerAttrHead(BaseModule):
         self.in_channel = in_channel
 
         if self.class_token:
-            self.cls_token = nn.Parameter(torch.zeros(1, 1, self.in_channel))
+            self.cls_token = nn.Parameter(torch.zeros(1, 1, self.embed_dim))
 
         if self.use_abs_pos_embed:
-            embed_len = self.num_patches + 1 if self.cls_token is not None else self.num_patches
-            self.absolute_pos_embed = nn.Parameter(torch.randn(1, embed_len, self.in_channel) * .02)
+            self.absolute_pos_embed = nn.Parameter(torch.randn(1, self.num_patches, self.in_channel) * .02)
 
         self.drop_after_pos = nn.Dropout(p=drop_rate)
 
@@ -201,11 +200,7 @@ class TransformerAttrHead(BaseModule):
 
         x = rearrange(x, 'b c h w -> b (h w) c')
 
-        if self.class_token is not None:
-            cls_tokens = self.cls_token.expand(B, -1, -1)
-            x = torch.cat((cls_tokens, x), dim=1)
-
-        if self.use_abs_pos_embed is not  None:
+        if self.use_abs_pos_embed is not None:
             x = x + self.absolute_pos_embed
         x = self.drop_after_pos(x)
 
@@ -213,6 +208,10 @@ class TransformerAttrHead(BaseModule):
             x, down_hw_shape = self.patch_merger(x, (14, 14))
         else:
             x = self.patch_merger(x)
+
+        if self.class_token is not None:
+            cls_tokens = self.cls_token.expand(B, -1, -1)
+            x = torch.cat((cls_tokens, x), dim=1)
 
         x = self.transformer_decoder(x)
 
