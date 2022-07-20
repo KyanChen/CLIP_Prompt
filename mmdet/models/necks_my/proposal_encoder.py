@@ -161,6 +161,7 @@ class TransformerAttrHead(BaseModule):
         self.num_patches = num_patches
         self.class_token = class_token
         self.global_pool = global_pool
+        self.in_channel = in_channel
 
         if self.class_token:
             self.cls_token = nn.Parameter(torch.zeros(1, 1, self.in_channel))
