@@ -34,9 +34,10 @@ model = dict(
     need_train_names=[
         # 'image_encoder',
         # 'text_encoder'
-        'prompt_learner', 'neck', 'roi_head',
-        'kd_logit_scale', 'kd_img_align',
-        'bbox_head', 'logit_scale'
+        # 'prompt_learner', 'neck', 'roi_head',
+        'kd_model', 'kd_logit_scale', 'kd_img_align',
+        'text_encoder', 'prompt_learner'
+        # 'bbox_head', 'logit_scale'
     ],
     backbone=dict(
         type='CLIPModel',
@@ -172,7 +173,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=48,
+    samples_per_gpu=100,
     workers_per_gpu=4,
     # samples_per_gpu=4,
     # workers_per_gpu=0,
@@ -186,14 +187,14 @@ data = dict(
         kd_pipeline=kd_pipeline
     ),
     val=dict(
-        samples_per_gpu=48,
+        samples_per_gpu=100,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
         test_mode=True,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=48,
+        samples_per_gpu=100,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
@@ -206,12 +207,16 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        'prompt_learner': {},
-        # 'text_encoder': {'lr_mult': 0.01},
-        # 'image_encoder': {'lr_mult': 0.01},
-        'neck': {}, 'roi_head': {},
+        # 'prompt_learner': {},
+        # # 'text_encoder': {'lr_mult': 0.01},
+        # # 'image_encoder': {'lr_mult': 0.01},
+        # 'neck': {}, 'roi_head': {},
+        # 'kd_logit_scale': {}, 'kd_img_align': {},
+        # 'bbox_head': {}, 'logit_scale': {},
+        'text_encoder': {'lr_mult': 0.01},
+        'kd_model': {'lr_mult': 0.1},
         'kd_logit_scale': {}, 'kd_img_align': {},
-        'bbox_head': {}, 'logit_scale': {}
+        'prompt_learner': {},
     },
     type='SGD',
     lr=0.01,
