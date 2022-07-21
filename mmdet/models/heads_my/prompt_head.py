@@ -99,9 +99,11 @@ class PromptHead(BaseModule):
              **kwargs
              ):
 
-        # loss_s_ce = self.get_classify_loss(cls_scores, gt_labels)
+        loss_s_ce = self.get_classify_loss(cls_scores, gt_labels)
 
         losses = {}
+        losses['loss_s_ce'] = loss_s_ce
+
         if 'img_crop_features' in kwargs and self.kd_model_loss:
             img_crop_features = kwargs.get('img_crop_features', None)
             proposal_features = kwargs.get('proposal_features', None)
@@ -135,15 +137,14 @@ class PromptHead(BaseModule):
                 raise NotImplementedError
 
         try:
-            # acc = cal_metrics(f'{self.data_root}/VAW', cls_scores, gt_labels, is_logit=True).float()
-            acc = cal_metrics(f'{self.data_root}/VAW', kd_logits, gt_labels, is_logit=True).float()
+            acc = cal_metrics(f'{self.data_root}/VAW', cls_scores, gt_labels, is_logit=True).float()
+            # acc = cal_metrics(f'{self.data_root}/VAW', kd_logits, gt_labels, is_logit=True).float()
         except Exception as e:
             print(e)
             acc = torch.tensor(0., dtype=torch.float32)
-        acc = acc.to(kd_logits.device)
-        # acc = acc.to(loss_s_ce.device)
+        # acc = acc.to(kd_logits.device)
+        acc = acc.to(loss_s_ce.device)
 
-        # losses['loss_s_ce'] = loss_s_ce
         losses['acc'] = acc
         return losses
 
