@@ -101,7 +101,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=100,
+    samples_per_gpu=128,
     workers_per_gpu=8,
     persistent_workers=True,
     train=dict(
@@ -112,7 +112,7 @@ data = dict(
         open_category=False,
         pipeline=train_pipeline),
     val=dict(
-        samples_per_gpu=100,
+        samples_per_gpu=128,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
@@ -120,7 +120,7 @@ data = dict(
         open_category=False,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=100,
+        samples_per_gpu=128,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
@@ -136,7 +136,7 @@ optimizer = dict(
     # sub_model='prompt_learner',
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
-    sub_model={'prompt_learner': {}, 'text_encoder': {'lr_mult': 0.1},
+    sub_model={'prompt_learner': {}, 'text_encoder': {'lr_mult': 0.01},
                'image_encoder': {'lr_mult': 0.1},
                'bbox_head': {}, 'logit_scale': {}
                },
@@ -165,7 +165,7 @@ lr_config = dict(
     warmup_iters=2000,
     warmup_ratio=0.1,
     # gamma=0.5,
-    step=[60, 75, 90]
+    step=[80, 120]
 )
 
 # lr_config = dict(
@@ -178,7 +178,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=100)
+runner = dict(type='EpochBasedRunner', max_epochs=150)
 evaluation = dict(interval=10, metric='mAP')
 
 load_from = None
