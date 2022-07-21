@@ -126,7 +126,7 @@ class PromptHead(BaseModule):
                 loss_kd = F.binary_cross_entropy(proposal_features, img_crop_features, reduction='mean')
             elif self.kd_model_loss == 't_ce+ts_ce':
                 loss_t_ce = self.get_classify_loss(kd_logits, gt_labels)
-                loss_ts_ce = F.cross_entropy(cls_scores, kd_logits.detach())
+                loss_ts_ce = F.cross_entropy(cls_scores, kd_logits.detach().softmax())
 
                 losses['loss_t_ce'] = loss_t_ce
                 losses['loss_ts_ce'] = loss_ts_ce
