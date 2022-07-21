@@ -114,7 +114,7 @@ model = dict(
         balance_unk=0.15,
         balance_kd=1e5,
         # kd_model_loss='smooth-l1',
-        kd_model_loss='t_ce+ts_ce',
+        kd_model_loss='t_ce',
         # balance_kd=1e2,
         # kd_model_loss='ce'
     )
