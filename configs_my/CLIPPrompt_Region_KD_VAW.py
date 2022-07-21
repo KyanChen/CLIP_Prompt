@@ -111,7 +111,7 @@ model = dict(
         re_weight_gamma=2,
         re_weight_beta=0.995,
         balance_unk=0.15,
-        balance_kd=1e5,
+        balance_kd=0.5,
         # kd_model_loss='smooth-l1',
         kd_model_loss='t_ce+ts_ce',
         # balance_kd=1e2,
@@ -260,7 +260,7 @@ lr_config = dict(
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=150)
-evaluation = dict(interval=1, metric='mAP')
+evaluation = dict(interval=10, metric='mAP')
 
 load_from = None
 # resume_from = 'results/EXP20220707_1/latest.pth'
