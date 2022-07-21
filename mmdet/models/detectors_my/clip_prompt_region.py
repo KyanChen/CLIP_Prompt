@@ -42,6 +42,8 @@ class CLIP_Prompter_Region(BaseModule):
         if kd_model:
             kd_model = build_backbone(kd_model).model
             self.kd_model = kd_model.visual.eval()
+            self.kd_logit_scale = nn.Parameter(kd_model.logit_scale.data)
+            self.kd_img_align = nn.Linear(1024, 1024)
 
         clip_model = build_backbone(backbone).model
         self.image_encoder = clip_model.visual
@@ -207,8 +209,12 @@ class CLIP_Prompter_Region(BaseModule):
             img_crops = torch.cat(img_crops, dim=0)
             with torch.no_grad():
                 img_crop_features, _, _ = self.kd_model(img_crops)
+            img_crop_features = self.kd_img_align(img_crop_features)
             img_crop_features = img_crop_features / img_crop_features.norm(dim=-1, keepdim=True)
             extra_info['img_crop_features'] = img_crop_features
+            kd_logit_scale = self.kd_logit_scale.exp()
+            kd_logits = kd_logit_scale * img_crop_features @ text_features.t()  # 2x620
+            extra_info['kd_logits'] = kd_logits
 
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 

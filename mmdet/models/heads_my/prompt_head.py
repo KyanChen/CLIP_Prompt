@@ -55,7 +55,6 @@ class PromptHead(BaseModule):
         # pdb.set_trace()
         return total_rew
 
-
     def get_classify_loss(self, cls_scores, gt_labels):
         # cls_scores: BxN
         # gt_labels: BxN
@@ -102,12 +101,13 @@ class PromptHead(BaseModule):
 
         # tmp_output = cls_scores.view(-1)
         # tmp_label = gt_labels.view(-1)
-        loss_ce = self.get_classify_loss(cls_scores, gt_labels)
+        loss_s_ce = self.get_classify_loss(cls_scores, gt_labels)
 
         losses = {}
         if 'img_crop_features' in kwargs and self.kd_model_loss:
             img_crop_features = kwargs.get('img_crop_features', None)
             proposal_features = kwargs.get('proposal_features', None)
+            kd_logits = kwargs.get('kd_logits', None)
 
             # img_crop_sigmoid = torch.sigmoid(img_crop_features)
             # proposal_sigmoid = torch.sigmoid(proposal_features)
@@ -124,23 +124,23 @@ class PromptHead(BaseModule):
                 proposal_features = torch.sigmoid(self.balance_kd * proposal_features)
                 img_crop_features = torch.sigmoid(self.balance_kd * img_crop_features)
                 loss_kd = F.binary_cross_entropy(proposal_features, img_crop_features, reduction='mean')
+            elif self.kd_model_loss == 'label_ce':
+                loss_t_ce = self.get_classify_loss(kd_logits, gt_labels)
+                loss_ts_ce = F.cross_entropy(cls_scores, kd_logits.detach())
+
+                losses['loss_t_ce'] = loss_t_ce
+                losses['loss_ts_ce'] = loss_ts_ce
             else:
                 raise NotImplementedError
-            losses['loss_kd'] = loss_kd
 
-        # tmp_mask = (tmp_label >= 0)
-        # loss = loss * tmp_mask
-        # loss = loss.sum() / tmp_mask.sum()
-        # import pdb
-        # pdb.set_trace()
         try:
             acc = cal_metrics(f'{self.data_root}/VAW', cls_scores, gt_labels, is_logit=True).float()
         except Exception as e:
             print(e)
             acc = torch.tensor(0., dtype=torch.float32)
-        acc = acc.to(loss_ce.device)
+        acc = acc.to(loss_s_ce.device)
 
-        losses['loss_ce'] = loss_ce
+        losses['loss_s_ce'] = loss_s_ce
         losses['acc'] = acc
         return losses
 
