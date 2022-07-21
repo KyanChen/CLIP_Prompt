@@ -172,7 +172,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=84,
+    samples_per_gpu=48,
     workers_per_gpu=4,
     # samples_per_gpu=4,
     # workers_per_gpu=0,
@@ -186,14 +186,14 @@ data = dict(
         kd_pipeline=kd_pipeline
     ),
     val=dict(
-        samples_per_gpu=84,
+        samples_per_gpu=48,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
         test_mode=True,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=84,
+        samples_per_gpu=48,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
