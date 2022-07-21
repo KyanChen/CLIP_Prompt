@@ -34,10 +34,9 @@ model = dict(
     need_train_names=[
         # 'image_encoder',
         # 'text_encoder'
-        # 'prompt_learner', 'neck', 'roi_head',
-        'kd_model', 'kd_logit_scale', 'kd_img_align',
-        'text_encoder', 'prompt_learner'
-        # 'bbox_head', 'logit_scale'
+        'prompt_learner', 'neck', 'roi_head',
+        'kd_logit_scale', 'kd_img_align',
+        'bbox_head', 'logit_scale'
     ],
     backbone=dict(
         type='CLIPModel',
@@ -114,7 +113,7 @@ model = dict(
         balance_unk=0.15,
         balance_kd=1e5,
         # kd_model_loss='smooth-l1',
-        kd_model_loss='t_ce',
+        kd_model_loss='t_ce+ts_ce',
         # balance_kd=1e2,
         # kd_model_loss='ce'
     )
@@ -173,7 +172,7 @@ test_pipeline = [
 
 
 data = dict(
-    samples_per_gpu=42,
+    samples_per_gpu=100,
     workers_per_gpu=4,
     # samples_per_gpu=4,
     # workers_per_gpu=0,
@@ -187,14 +186,14 @@ data = dict(
         kd_pipeline=kd_pipeline
     ),
     val=dict(
-        samples_per_gpu=42,
+        samples_per_gpu=100,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
         test_mode=True,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=42,
+        samples_per_gpu=100,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
@@ -204,41 +203,42 @@ data = dict(
 )
 # #
 # optimizer
-optimizer = dict(
-    constructor='SubModelConstructor',
-    sub_model={
-        # 'prompt_learner': {},
-        # # 'text_encoder': {'lr_mult': 0.01},
-        # # 'image_encoder': {'lr_mult': 0.01},
-        # 'neck': {}, 'roi_head': {},
-        # 'kd_logit_scale': {}, 'kd_img_align': {},
-        # 'bbox_head': {}, 'logit_scale': {},
-        'text_encoder': {'lr_mult': 0.01},
-        'kd_model': {'lr_mult': 0.1},
-        'kd_logit_scale': {}, 'kd_img_align': {},
-        'prompt_learner': {},
-    },
-    type='SGD',
-    lr=0.01,
-    momentum=0.9,
-    weight_decay=0.0005
-)
-
-# # optimizer
 # optimizer = dict(
 #     constructor='SubModelConstructor',
 #     sub_model={
 #         'prompt_learner': {},
-#         # 'text_encoder': {'lr_mult': 0.1},
-#         # 'image_encoder': {'lr_mult': 0.1},
+#         # 'text_encoder': {'lr_mult': 0.01},
+#         # 'image_encoder': {'lr_mult': 0.01},
 #         'neck': {}, 'roi_head': {},
-#         'bbox_head': {}, 'logit_scale': {}
-#         }
-#     ,
-#     type='AdamW',
-#     lr=5e-4,
-#     weight_decay=1e-3
+#         'kd_logit_scale': {}, 'kd_img_align': {},
+#         'bbox_head': {}, 'logit_scale': {},
+#         # 'text_encoder': {'lr_mult': 0.01},
+#         # 'kd_model': {'lr_mult': 0.1},
+#         # 'kd_logit_scale': {}, 'kd_img_align': {},
+#         # 'prompt_learner': {},
+#     },
+#     type='SGD',
+#     lr=0.01,
+#     momentum=0.9,
+#     weight_decay=0.0005
 # )
+
+# # optimizer
+optimizer = dict(
+    constructor='SubModelConstructor',
+    sub_model={
+        'prompt_learner': {},
+        # 'text_encoder': {'lr_mult': 0.1},
+        # 'image_encoder': {'lr_mult': 0.1},
+        'kd_logit_scale': {}, 'kd_img_align': {},
+        'neck': {}, 'roi_head': {},
+        'bbox_head': {}, 'logit_scale': {}
+        }
+    ,
+    type='AdamW',
+    lr=5e-4,
+    weight_decay=1e-3
+)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
 # # learning policy
@@ -247,7 +247,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=2000,
     warmup_ratio=0.1,
-    step=[60, 80])
+    step=[80, 130])
 
 # lr_config = dict(
 #     policy='CosineAnnealing',
@@ -259,8 +259,8 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=100)
-evaluation = dict(interval=10, metric='mAP')
+runner = dict(type='EpochBasedRunner', max_epochs=150)
+evaluation = dict(interval=1, metric='mAP')
 
 load_from = None
 # resume_from = 'results/EXP20220707_1/latest.pth'
