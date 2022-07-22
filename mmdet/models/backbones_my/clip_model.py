@@ -5,6 +5,8 @@ from ..builder import BACKBONES
 
 from .clip import _MODELS, _download, build_model
 
+from collections import OrderedDict
+
 
 @BACKBONES.register_module()
 class CLIPModel(BaseModule):
@@ -32,7 +34,12 @@ class CLIPModel(BaseModule):
             model = torch.jit.load(load_ckpt_from, map_location="cpu").eval()
             state_dict = model.state_dict()
         except RuntimeError:
-            state_dict = torch.load(load_ckpt_from, map_location="cpu")
+            state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
+            new_dict = OrderedDict()
+            for k, v in state_dict.items():
+                k = k.replace('image_encoder', 'visual')
+                k = k.replace('text_encoder.', '')
+                new_dict[k] = v
 
         self.model = build_model(state_dict, with_attn, out_indices=out_indices)
 
