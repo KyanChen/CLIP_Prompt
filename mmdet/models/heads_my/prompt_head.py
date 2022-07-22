@@ -129,13 +129,17 @@ class PromptHead(BaseModule):
                 loss_kd = F.binary_cross_entropy(proposal_features, img_crop_features, reduction='mean')
             elif self.kd_model_loss == 't_ce+ts_ce':
 
-                gt_labels = gt_labels.view(-1)
-                kd_logits = kd_logits.view(-1)
-                cls_scores = cls_scores.view(-1)
+                BS = gt_labels.size()
+                gt_labels_flatten = gt_labels.view(-1)
+                kd_logits_flatten = kd_logits.view(-1)
+                cls_scores_flatten = cls_scores.view(-1)
                 unk_mask = gt_labels == 2
 
+                # total_rew = self.reweight_att_frac.to(gt_labels.device)
+                # total_rew = repeat(total_rew, 'N -> (B N)', B=BS)
+
                 loss_t_ce = self.get_classify_loss(kd_logits, gt_labels)
-                loss_ts_ce = F.cross_entropy(cls_scores[unk_mask], (kd_logits.detach()[unk_mask]/0.1).softmax(dim=-1))
+                loss_ts_ce = F.cross_entropy(cls_scores_flatten[unk_mask], (kd_logits_flatten.detach()[unk_mask]/0.1).softmax(dim=-1))
 
                 losses['loss_t_ce'] = self.balance_kd * 0.2 * loss_t_ce
                 losses['loss_ts_ce'] = self.balance_kd * loss_ts_ce
