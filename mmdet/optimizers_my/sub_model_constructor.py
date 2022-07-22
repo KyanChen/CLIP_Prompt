@@ -28,6 +28,8 @@ class SubModelConstructor(DefaultOptimizerConstructor):
                 if isinstance(sub_model_, torch.nn.Parameter):
                     sub_models[sub_model_name]['params'] = sub_model_
                 else:
+                    import pdb
+                    pdb.set_trace()
                     sub_models[sub_model_name]['params'] = sub_model_.parameters()
 
                 lr_mult = value.pop('lr_mult', 1.)
