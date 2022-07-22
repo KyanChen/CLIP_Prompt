@@ -128,10 +128,16 @@ class PromptHead(BaseModule):
                 img_crop_features = torch.sigmoid(self.balance_kd * img_crop_features)
                 loss_kd = F.binary_cross_entropy(proposal_features, img_crop_features, reduction='mean')
             elif self.kd_model_loss == 't_ce+ts_ce':
-                loss_t_ce = self.get_classify_loss(kd_logits, gt_labels)
-                loss_ts_ce = F.cross_entropy(cls_scores, (kd_logits.detach()/0.1).softmax(dim=-1))
 
-                losses['loss_t_ce'] = self.balance_kd * 0.5 * loss_t_ce
+                gt_labels = gt_labels.view(-1)
+                kd_logits = kd_logits.view(-1)
+                cls_scores = cls_scores.view(-1)
+                unk_mask = gt_labels == 2
+
+                loss_t_ce = self.get_classify_loss(kd_logits, gt_labels)
+                loss_ts_ce = F.cross_entropy(cls_scores[unk_mask], (kd_logits.detach()[unk_mask]/0.1).softmax(dim=-1))
+
+                losses['loss_t_ce'] = self.balance_kd * 0.2 * loss_t_ce
                 losses['loss_ts_ce'] = self.balance_kd * loss_ts_ce
             elif self.kd_model_loss == 't_ce':
                 loss_t_ce = self.get_classify_loss(kd_logits, gt_labels)
