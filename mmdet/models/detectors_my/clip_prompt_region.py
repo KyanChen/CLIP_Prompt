@@ -21,6 +21,7 @@ class CLIP_Prompter_Region(BaseModule):
                  prompt_learner,
                  need_train_names,
                  prompt_learner_weights='',
+                 text_header=None,
                  kd_model=None,
                  neck=None,
                  roi_head=None,
@@ -44,6 +45,9 @@ class CLIP_Prompter_Region(BaseModule):
             self.kd_model = kd_model.visual.eval()
             self.kd_logit_scale = nn.Parameter(kd_model.logit_scale.data)
             self.kd_img_align = nn.Linear(1024, 1024)
+
+        if text_header:
+            self.text_header = build_head(text_header)
 
         clip_model = build_backbone(backbone).model
         self.image_encoder = clip_model.visual
@@ -200,6 +204,9 @@ class CLIP_Prompter_Region(BaseModule):
 
         text_features = self.text_encoder(prompts, tokenized_prompts)  # torch.Size([620, 1024])
 
+        if hasattr(self, 'text_header'):
+            text_features = self.text_header(text_features)
+
         proposal_features = proposal_features / proposal_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
@@ -271,6 +278,8 @@ class CLIP_Prompter_Region(BaseModule):
         tokenized_prompts = self.tokenized_prompts
 
         text_features = self.text_encoder(prompts, tokenized_prompts)  # torch.Size([620, 1024])
+        if hasattr(self, 'text_header'):
+            text_features = self.text_header(text_features)
 
         proposal_features = proposal_features / proposal_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)

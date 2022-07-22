@@ -11,6 +11,9 @@ from ..builder import HEADS, build_loss
 from mmcv.runner import BaseModule
 from mmdet.datasets_my.evaluate_tools import cal_metrics
 import torch.nn.functional as F
+from torch import nn
+from torch.nn import TransformerEncoder, TransformerEncoderLayer, LayerNorm
+
 
 @HEADS.register_module()
 class PromptHead(BaseModule):
@@ -159,4 +162,70 @@ class PromptHead(BaseModule):
 
     def forward(self, feats):
         return feats
+
+
+@HEADS.register_module()
+class TransformerEncoderHead(BaseModule):
+    def __init__(self,
+                 in_dim=1024,
+                 embed_dim=256,
+                 use_abs_pos_embed=False,
+                 drop_rate=0.1,
+                 class_token=False,
+                 num_encoder_layers=3,
+                 global_pool=False,
+                 train_cfg=None,
+                 test_cfg=None,
+                 init_cfg=None,
+                 ):
+        super(TransformerEncoderHead, self).__init__(init_cfg)
+        self.in_dim = in_dim
+        self.embed_dim = embed_dim
+        self.use_abs_pos_embed = use_abs_pos_embed
+        self.class_token = class_token
+        self.global_pool = global_pool
+
+        if self.class_token:
+            self.cls_token = nn.Parameter(torch.zeros(1, 1, self.embed_dim))
+
+        if self.use_abs_pos_embed:
+            self.absolute_pos_embed = nn.Parameter(torch.randn(1, self.num_patches, self.in_channel) * .02)
+
+            self.drop_after_pos = nn.Dropout(p=drop_rate)
+
+        self.proj1 = nn.Linear(in_dim, embed_dim)
+        self.transformer_decoder = self.build_transformer_decoder(
+            num_encoder_layers=num_encoder_layers,
+            dim_feedforward=self.embed_dim * 2,
+            drop_rate=drop_rate
+        )
+        self.proj2 = nn.Linear(embed_dim, in_dim)
+
+    def build_transformer_decoder(
+            self, num_encoder_layers=3, dim_feedforward=2048, drop_rate=0.1
+    ):
+        encoder_layer = TransformerEncoderLayer(
+            d_model=self.embed_dim,
+            nhead=8,
+            dim_feedforward=dim_feedforward,
+            dropout=drop_rate,
+            activation='gelu',
+            batch_first=True
+        )
+        encoder_norm = LayerNorm(self.embed_dim)
+        encoder = TransformerEncoder(encoder_layer, num_encoder_layers, encoder_norm)
+
+        return encoder
+
+    def forward(self, x):
+        x = self.proj1(x)
+        len_x_shape = len(x.shape)
+        if len_x_shape == 2:
+            x = x.unsquezee(0)
+        B, N, C = x.shape
+        x = self.transformer_decoder(x)
+        if len_x_shape == 2:
+            x = x.squezee(0)
+        x = self.proj2(x)
+        return x
 
