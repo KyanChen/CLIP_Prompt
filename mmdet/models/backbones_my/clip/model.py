@@ -473,6 +473,8 @@ def build_model(state_dict: dict, with_attn=True, out_indices=(1, 2, 3, 4)):
         for key in visual_attnpool_key:
             del state_dict[key]
     convert_weights(model)
+    import pdb
+    pdb.set_trace()
     model.load_state_dict(state_dict)
     print('load clip model')
     return model.eval()
