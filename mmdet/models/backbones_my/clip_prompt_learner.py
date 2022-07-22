@@ -18,7 +18,8 @@ class PromptLearner(BaseModule):
                  n_ctx=16,
                  ctx_init='',
                  c_specific=False,
-                 class_token_position='end'
+                 class_token_position='end',
+                 load_ckpt_from=None
                  ):
         super().__init__()
         n_cls = len(classnames)
@@ -71,6 +72,10 @@ class PromptLearner(BaseModule):
         self.tokenized_prompts = tokenized_prompts  # torch.Tensor
         self.name_lens = name_lens
         self.class_token_position = class_token_position
+        if load_ckpt_from is not None:
+            import pdb
+            pdb.set_trace()
+            state_dict = torch.load(load_ckpt_from, map_location="cpu")
 
     def forward(self):
         ctx = self.ctx  # 4x512

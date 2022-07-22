@@ -102,7 +102,8 @@ model = dict(
         n_ctx=16,
         ctx_init='',
         c_specific=False,
-        class_token_position='middle'
+        class_token_position='middle',
+        load_ckpt_from='../pretrain/t_model.pth'
     ),
     bbox_head=dict(
         type='PromptHead',
