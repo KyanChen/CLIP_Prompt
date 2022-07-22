@@ -71,7 +71,7 @@ model = dict(
             roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
             out_channels=256,
             featmap_strides=[4, 8, 16, 32, 64],
-            finest_scale=32
+            finest_scale=28
             # featmap_strides=[32]
             # out_channels=1024,
             # featmap_strides=[32]
@@ -93,7 +93,7 @@ model = dict(
             use_abs_pos_embed=True,
             drop_rate=0.1,
             class_token=True,
-            num_encoder_layers=3,
+            num_encoder_layers=4,
             global_pool=False,
         )
     ),
