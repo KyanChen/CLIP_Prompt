@@ -133,7 +133,7 @@ class PromptHead(BaseModule):
                 gt_labels_flatten = gt_labels.view(-1)
                 kd_logits_flatten = kd_logits.view(-1)
                 cls_scores_flatten = cls_scores.view(-1)
-                unk_mask = gt_labels == 2
+                unk_mask = gt_labels_flatten == 2
 
                 # total_rew = self.reweight_att_frac.to(gt_labels.device)
                 # total_rew = repeat(total_rew, 'N -> (B N)', B=BS)
