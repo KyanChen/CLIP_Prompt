@@ -221,11 +221,11 @@ class TransformerEncoderHead(BaseModule):
         x = self.proj1(x)
         len_x_shape = len(x.shape)
         if len_x_shape == 2:
-            x = x.unsquezee(0)
+            x = x.unsqueeze(0)
         B, N, C = x.shape
         x = self.transformer_decoder(x)
         if len_x_shape == 2:
-            x = x.squezee(0)
+            x = x.squeeze(0)
         x = self.proj2(x)
         return x
 
