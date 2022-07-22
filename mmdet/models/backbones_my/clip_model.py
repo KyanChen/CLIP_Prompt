@@ -29,10 +29,8 @@ class CLIPModel(BaseModule):
             load_ckpt_from = _download(url)
         try:
             # loading JIT archive
-            import pdb
-            pdb.set_trace()
             model = torch.jit.load(load_ckpt_from, map_location="cpu").eval()
-            state_dict = model.state_dict()
+            new_dict = model.state_dict()
         except RuntimeError:
             state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
             new_dict = OrderedDict()
@@ -40,8 +38,10 @@ class CLIPModel(BaseModule):
                 k = k.replace('image_encoder', 'visual')
                 k = k.replace('text_encoder.', '')
                 new_dict[k] = v
+            import pdb
+            pdb.set_trace()
 
-        self.model = build_model(state_dict, with_attn, out_indices=out_indices)
+        self.model = build_model(new_dict, with_attn, out_indices=out_indices)
 
         if precision == "fp32" or precision == "amp":
             # CLIP's default precision is fp16

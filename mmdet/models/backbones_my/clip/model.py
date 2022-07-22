@@ -447,7 +447,12 @@ def build_model(state_dict: dict, with_attn=True, out_indices=(1, 2, 3, 4)):
 
     embed_dim = state_dict["text_projection"].shape[1]
     context_length = state_dict["positional_embedding"].shape[0]
-    vocab_size = state_dict["token_embedding.weight"].shape[0]
+
+    if 'token_embedding.weight' in state_dict.keys():
+        vocab_size = state_dict["token_embedding.weight"].shape[0]
+    else:
+        vocab_size = 100
+
     transformer_width = state_dict["ln_final.weight"].shape[0]
     transformer_heads = transformer_width // 64
     transformer_layers = len(set(k.split(".")[2] for k in state_dict if k.startswith(f"transformer.resblocks")))
