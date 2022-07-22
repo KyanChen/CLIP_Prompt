@@ -74,11 +74,9 @@ class PromptLearner(BaseModule):
         self.name_lens = name_lens
         self.class_token_position = class_token_position
         if load_ckpt_from is not None:
-            import pdb
-            pdb.set_trace()
             state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
             ctx_data = state_dict['prompt_learner.ctx']
-            self.ctx.data.cpoy_(ctx_data)
+            self.ctx.data.copy_(ctx_data)
 
     def forward(self):
         ctx = self.ctx  # 4x512
