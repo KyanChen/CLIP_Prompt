@@ -1,4 +1,5 @@
 import warnings
+from collections import OrderedDict
 
 import torch
 import torch.nn as nn
@@ -75,7 +76,9 @@ class PromptLearner(BaseModule):
         if load_ckpt_from is not None:
             import pdb
             pdb.set_trace()
-            state_dict = torch.load(load_ckpt_from, map_location="cpu")
+            state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
+            ctx_data = state_dict['prompt_learner.ctx']
+            self.ctx.data.cpoy_(ctx_data)
 
     def forward(self):
         ctx = self.ctx  # 4x512
