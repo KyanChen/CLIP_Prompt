@@ -53,7 +53,7 @@ model = dict(
         with_attn=True,
         out_indices=[],
         # backbone_name='ViT-B/16',
-        load_ckpt_from=None,
+        load_ckpt_from='../pretrain/t_model.pth',
         precision='fp32',
     ),
     neck=dict(
@@ -91,7 +91,7 @@ model = dict(
             embed_dim=512,
             num_patches=14*14,
             use_abs_pos_embed=True,
-            drop_rate=0.,
+            drop_rate=0.1,
             class_token=True,
             num_encoder_layers=3,
             global_pool=False,

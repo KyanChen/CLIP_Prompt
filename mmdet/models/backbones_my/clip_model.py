@@ -27,6 +27,8 @@ class CLIPModel(BaseModule):
             load_ckpt_from = _download(url)
         try:
             # loading JIT archive
+            import pdb
+            pdb.set_trace()
             model = torch.jit.load(load_ckpt_from, map_location="cpu").eval()
             state_dict = model.state_dict()
         except RuntimeError:
