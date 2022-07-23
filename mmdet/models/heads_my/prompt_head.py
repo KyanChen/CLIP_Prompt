@@ -140,7 +140,7 @@ class PromptHead(BaseModule):
                 # total_rew = repeat(total_rew, 'N -> (B N)', B=BS)
 
                 loss_t_ce = self.get_classify_loss(kd_logits, gt_labels)
-                loss_ts_ce = F.cross_entropy(cls_scores, (kd_logits.detach()/0.1).softmax(dim=-1), weight=total_rew)
+                loss_ts_ce = F.cross_entropy(cls_scores, (kd_logits.detach()/0.5).softmax(dim=-1), weight=total_rew)
 
                 losses['loss_t_ce'] = self.balance_kd * 0.5 * loss_t_ce
                 losses['loss_ts_ce'] = self.balance_kd * loss_ts_ce
