@@ -37,7 +37,7 @@ model = dict(
         'prompt_learner', 'neck', 'roi_head',
         'kd_logit_scale', 'kd_img_align',
         'bbox_head', 'logit_scale',
-        'text_header'
+        # 'text_header'
     ],
     backbone=dict(
         type='CLIPModel',
@@ -94,7 +94,7 @@ model = dict(
             use_abs_pos_embed=True,
             drop_rate=0.1,
             class_token=True,
-            num_encoder_layers=4,
+            num_encoder_layers=3,
             global_pool=False,
         )
     ),
@@ -106,16 +106,16 @@ model = dict(
         class_token_position='middle',
         load_ckpt_from='../pretrain/t_model.pth'
     ),
-    text_header=dict(
-        type='TransformerEncoderHead',
-        in_dim=1024,
-        embed_dim=256,
-        use_abs_pos_embed=False,
-        drop_rate=0.05,
-        class_token=False,
-        num_encoder_layers=1,
-        global_pool=False,
-    ),
+    # text_header=dict(
+    #     type='TransformerEncoderHead',
+    #     in_dim=1024,
+    #     embed_dim=256,
+    #     use_abs_pos_embed=False,
+    #     drop_rate=0.05,
+    #     class_token=False,
+    #     num_encoder_layers=1,
+    #     global_pool=False,
+    # ),
     bbox_head=dict(
         type='PromptHead',
         data_root=data_root,
@@ -245,7 +245,7 @@ optimizer = dict(
         'kd_logit_scale': {}, 'kd_img_align': {},
         'neck': {}, 'roi_head': {},
         'bbox_head': {}, 'logit_scale': {},
-        'text_header': {}
+        # 'text_header': {}
         }
     ,
     type='AdamW',
