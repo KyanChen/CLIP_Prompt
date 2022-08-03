@@ -172,8 +172,7 @@ class CLIP_Prompter_Region(BaseModule):
                       **kwargs
                       ):
         # image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
-        import pdb
-        pdb.set_trace()
+
         img_f_maps = self.img_backbone(img)
         if self.with_neck:
             img_f_maps = self.img_neck(img_f_maps)
@@ -243,20 +242,17 @@ class CLIP_Prompter_Region(BaseModule):
                     img, img_metas, proposals,
                     rescale=False, **kwargs):
 
-        image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
-
+        # image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
+        img_f_maps = self.img_backbone(img)
         per_img_proposals = [len(x) for x in proposals]
-        img_f_maps = self.neck(img_f_maps)
-        proposal_features, bbox_feats = self.roi_head(
-            img_f_maps, proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
+        if self.with_neck:
+            img_f_maps = self.img_neck(img_f_maps)
+        proposal_features, bbox_feats = self.img_head(img_f_maps, proposals)
 
         prompts = self.prompt_learner()  # 620x77x512
         tokenized_prompts = self.tokenized_prompts
 
         text_features = self.text_encoder(prompts, tokenized_prompts)  # torch.Size([620, 1024])
-        if hasattr(self, 'text_header'):
-            text_features = self.text_header(text_features)
-
         proposal_features = proposal_features / proposal_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
