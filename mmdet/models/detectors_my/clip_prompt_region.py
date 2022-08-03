@@ -47,7 +47,11 @@ class CLIP_Prompter_Region(BaseModule):
         # if text_header:
         #     self.text_header = build_head(text_header)
         if 'CLIPModel' in [img_backbone['type'], text_encoder['type']]:
-            clip_model = build_backbone(img_backbone).model
+            if img_backbone['type'] == 'CLIPModel':
+                clip_config = img_backbone
+            else:
+                clip_config = text_encoder
+            clip_model = build_backbone(clip_config).model
 
         if img_backbone['type'] == 'CLIPModel':
             self.img_backbone = clip_model.visual.eval()
