@@ -45,7 +45,7 @@ model = dict(
         norm_eval=True,
         style='pytorch',
         # load_ckpt_from='../pretrain/t_model.pth'
-        init_cfg=dict(type='Pretrained',
+        init_cfg=dict(type='Pretrained', prefix='backbone.',
                       checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
     img_neck=dict(
