@@ -186,11 +186,11 @@ test_pipeline = [
 
 
 data = dict(
-    # samples_per_gpu=48,
-    # workers_per_gpu=4,
-    samples_per_gpu=4,
-    workers_per_gpu=0,
-    persistent_workers=False,
+    samples_per_gpu=48,
+    workers_per_gpu=4,
+    # samples_per_gpu=4,
+    # workers_per_gpu=0,
+    persistent_workers=True,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -272,7 +272,7 @@ lr_config = dict(
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=100)
-evaluation = dict(interval=10, metric='mAP')
+evaluation = dict(interval=1, metric='mAP')
 
 load_from = None
 # resume_from = 'results/EXP20220707_1/latest.pth'
