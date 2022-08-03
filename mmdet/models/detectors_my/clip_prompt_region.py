@@ -17,15 +17,14 @@ import torch.distributed as dist
 class CLIP_Prompter_Region(BaseModule):
     def __init__(self,
                  classname_path,
-                 backbone,
-                 prompt_learner,
                  need_train_names,
-                 prompt_learner_weights='',
-                 text_header=None,
+                 img_backbone,
+                 img_neck,
+                 img_head,
+                 prompt_learner,
+                 text_encoder,
+                 head,
                  kd_model=None,
-                 neck=None,
-                 roi_head=None,
-                 bbox_head=None,
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None,
@@ -35,50 +34,42 @@ class CLIP_Prompter_Region(BaseModule):
         if pretrained:
             warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
-            backbone.pretrained = pretrained
 
         classname_maps = json.load(open(classname_path))
         classnames = list(classname_maps.keys())
 
         if kd_model:
-            kd_model = build_backbone(kd_model).model
-            self.kd_model = kd_model.visual.eval()
-            self.kd_logit_scale = nn.Parameter(kd_model.logit_scale.data)
+            model_tmp = build_backbone(kd_model).model
+            self.kd_model = model_tmp.visual.eval()
+            self.kd_logit_scale = nn.Parameter(model_tmp.logit_scale.data)
             self.kd_img_align = nn.Linear(1024, 1024)
 
-        if text_header:
-            self.text_header = build_head(text_header)
+        # if text_header:
+        #     self.text_header = build_head(text_header)
+        if 'CLIPModel' in [img_backbone['type'], text_encoder['type']]:
+            clip_model = build_backbone(img_backbone).model
 
-        clip_model = build_backbone(backbone).model
-        self.image_encoder = clip_model.visual
-        # self.logit_scale = clip_model.logit_scale
-        # self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
-        self.logit_scale = nn.Parameter(clip_model.logit_scale.data)
+        if img_backbone['type'] == 'CLIPModel':
+            self.img_backbone = clip_model.visual.eval()
+        else:
+            self.img_backbone = build_backbone(img_backbone)
 
-        self.dtype = clip_model.dtype
-
-        self.text_encoder = build_backbone(
-            dict(
-                type='TextEncoder',
-                clip_model=clip_model
+        if text_encoder['type'] == 'CLIPModel':
+            self.text_encoder = build_backbone(
+                dict(type='TextEncoder', clip_model=clip_model)
             )
-        )
+            self.logit_scale = nn.Parameter(clip_model.logit_scale.data)
 
         prompt_learner.update(dict(classnames=classnames, clip_model=clip_model))
         self.prompt_learner = build_backbone(prompt_learner)
-
-        if prompt_learner_weights:
-            state_dict = torch.load(prompt_learner_weights, map_location="cpu")
-            self.prompt_learner.load_state_dict(state_dict)
-
         self.tokenized_prompts = self.prompt_learner.tokenized_prompts
 
-        if neck is not None:
-            self.neck = build_neck(neck)
-        if roi_head is not None:
-            self.roi_head = build_head(roi_head)
+        if img_neck is not None:
+            self.img_neck = build_neck(img_neck)
+        if img_head is not None:
+            self.img_head = build_head(img_head)
 
-        self.bbox_head = build_head(bbox_head)
+        self.head = build_head(head)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
@@ -119,17 +110,6 @@ class CLIP_Prompter_Region(BaseModule):
         return outputs
 
     def _parse_losses(self, losses):
-        """Parse the raw outputs (losses) of the network.
-
-        Args:
-            losses (dict): Raw output of the network, which usually contain
-                losses and other necessary information.
-
-        Returns:
-            tuple[Tensor, dict]: (loss, log_vars), loss is the loss tensor \
-                which may be a weighted sum of all losses, log_vars contains \
-                all the variables to be sent to the logger.
-        """
         log_vars = OrderedDict()
         for loss_name, loss_value in losses.items():
             if isinstance(loss_value, torch.Tensor):
@@ -172,6 +152,14 @@ class CLIP_Prompter_Region(BaseModule):
 
         return outputs
 
+    @property
+    def with_neck(self):
+        return hasattr(self, 'img_neck') and self.img_neck is not None
+
+    @property
+    def with_kd_model(self):
+        return hasattr(self, 'kd_model') and self.kd_model is not None
+
     def forward_train(self,
                       img,
                       img_metas,
@@ -179,39 +167,23 @@ class CLIP_Prompter_Region(BaseModule):
                       gt_labels,
                       **kwargs
                       ):
-        image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
-        # img_f_maps
-        # torch.Size([256, 64, 112, 112])
-        # torch.Size([256, 256, 56, 56])
-        # torch.Size([256, 512, 28, 28])
-        # torch.Size([256, 1024, 14, 14])
-        # torch.Size([256, 2048, 7, 7])
-
-        if hasattr(self, 'neck'):
-            img_f_maps = self.neck(img_f_maps)
-
-        # torch.Size([28, 256, 224, 224]),
-        # torch.Size([28, 256, 112, 112]),
-        # torch.Size([28, 256, 56, 56]),
-        # torch.Size([28, 256, 28, 28]),
-        # torch.Size([28, 256, 14, 14])
-        # if hasattr(self, 'roi_head'):
-            proposal_features, bbox_feats = self.roi_head(img_f_maps,
-                                                          proposals)  # proposal_features: torch.Size([256, 1024, 1, 1])
+        # image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
+        import pdb
+        pdb.set_trace()
+        img_f_maps = self.img_backbone(img)
+        if self.with_neck:
+            img_f_maps = self.img_neck(img_f_maps)
+        proposal_features, bbox_feats = self.img_head(img_f_maps, proposals)
 
         prompts = self.prompt_learner()  # 620x77x512
         tokenized_prompts = self.tokenized_prompts
-
-        text_features = self.text_encoder(prompts, tokenized_prompts)  # torch.Size([620, 1024])
-
-        if hasattr(self, 'text_header'):
-            text_features = self.text_header(text_features)
+        text_features = self.text_encoder(prompts, tokenized_prompts)
 
         proposal_features = proposal_features / proposal_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
         extra_info = {'proposal_features': proposal_features}
-        if "img_crops" in kwargs and hasattr(self, 'kd_model'):
+        if "img_crops" in kwargs and self.with_kd_model:
             img_crops = kwargs.get('img_crops', None)
             img_crops = torch.cat(img_crops, dim=0)
             with torch.no_grad():
@@ -227,7 +199,7 @@ class CLIP_Prompter_Region(BaseModule):
         logits = logit_scale * proposal_features @ text_features.t()  # 2x620
 
         gt_labels = torch.cat(gt_labels, dim=0)
-        losses = self.bbox_head.forward_train(logits, img_metas, gt_labels, **extra_info)
+        losses = self.head.forward_train(logits, img_metas, gt_labels, **extra_info)
 
         return losses
 

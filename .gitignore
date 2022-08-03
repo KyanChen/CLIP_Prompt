@@ -16,8 +16,10 @@ captions/COCO/captions_train2014.json
 captions/CC3M/captions_extracted.json
 *.tsv
 
+
 captions/caption_all
 attributes/attribute_all
+attributes/LSA
 objects/object_all
 pretrained
 
