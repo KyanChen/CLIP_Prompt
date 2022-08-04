@@ -160,7 +160,7 @@ img_norm_cfg = dict(
 img_size = (896, 896)
 # img_size = (1024, 1024)
 train_pipeline = [
-    dict(type='LoadImageFromFile', to_float32=True, rearrange=False, channel_order='rgb'),
+    dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=img_size, keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
@@ -184,7 +184,7 @@ kd_pipeline = [
 ]
 
 test_pipeline = [
-    dict(type='LoadImageFromFile', to_float32=True, rearrange=False, channel_order='rgb'),
+    dict(type='LoadImageFromFile', to_float32=True,  rearrange=True, channel_order='rgb'),
     dict(type='MultiScaleFlipAug',
          img_scale=img_size,
          flip=False,
