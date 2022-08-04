@@ -53,6 +53,7 @@ class CLIP_Prompter_Region(BaseModule):
                 clip_config = text_encoder
             clip_model = build_backbone(clip_config).model
 
+        self.with_clip_img_backbone = False
         if img_backbone['type'] == 'CLIPModel':
             self.img_backbone = clip_model.visual.eval()
             self.with_clip_img_backbone = True
