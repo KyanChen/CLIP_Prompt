@@ -204,11 +204,11 @@ test_pipeline = [
 
 
 data = dict(
-    # samples_per_gpu=48,
-    # workers_per_gpu=4,
-    samples_per_gpu=4,
-    workers_per_gpu=0,
-    persistent_workers=False,
+    samples_per_gpu=48,
+    workers_per_gpu=4,
+    # samples_per_gpu=4,
+    # workers_per_gpu=0,
+    persistent_workers=True,
     train=dict(
         type=dataset_type,
         data_root=data_root,
