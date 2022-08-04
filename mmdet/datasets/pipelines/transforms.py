@@ -311,7 +311,8 @@ class Resize:
                 if 'scale_factor' in results:
                     results.pop('scale_factor')
                 self._random_scale(results)
-
+        import pdb
+        pdb.set_trace()
         self._resize_img(results)
         self._resize_bboxes(results)
         self._resize_masks(results)
