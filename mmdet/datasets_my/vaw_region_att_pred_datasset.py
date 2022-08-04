@@ -7,7 +7,7 @@ import random
 import tempfile
 import warnings
 from collections import OrderedDict, defaultdict
-
+import imagesize
 import cv2
 import mmcv
 import numpy as np
@@ -47,6 +47,7 @@ class VAWRegionDataset(Dataset):
         self.data_root = data_root
         if pattern == 'train':
             self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
+            self._set_group_flag()
         elif pattern == 'val':
             self.instances, self.img_instances_pair = self.read_data(['val.json'])
         elif pattern == 'test':
@@ -109,6 +110,16 @@ class VAWRegionDataset(Dataset):
     def __len__(self):
         return len(self.img_instances_pair)
         # return 84
+
+    def _set_group_flag(self):
+        self.flag = np.zeros(len(self), dtype=np.uint8)
+        for i in range(len(self)):
+            img_id = self.img_ids[i]
+            # instances = self.img_instances_pair[img_id]
+            img_path = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{img_id}.jpg'
+            w, h = imagesize.get(img_path)
+            if w / h > 1:
+                self.flag[i] = 1
 
     def get_test_data(self, idx):
         results = self.instances[idx].copy()
