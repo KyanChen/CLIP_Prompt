@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=5)
+checkpoint_config = dict(interval=1)
 # yapf:disable
 log_config = dict(
     interval=50,
@@ -153,7 +153,7 @@ train_pipeline = [
     dict(type='LoadAnnotations', with_bbox=True),
     dict(
         type='Resize',
-        img_scale=[(1333, 640), (1333, 800)],
+        img_scale=[(1024, 640), (1024, 800)],
         multiscale_mode='range',
         keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
@@ -166,7 +166,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile', rearrange=True, channel_order='rgb'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1333, 800),
+        img_scale=(1024, 800),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -180,7 +180,7 @@ test_pipeline = [
 
 # Use RepeatDataset to speed up training
 data = dict(
-    samples_per_gpu=8,
+    samples_per_gpu=16,
     workers_per_gpu=2,
     train=dict(
         type='RepeatDataset',
