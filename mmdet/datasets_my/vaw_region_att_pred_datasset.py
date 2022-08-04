@@ -217,6 +217,8 @@ class VAWRegionDataset(Dataset):
         results = self.pipeline(results)
         # results['proposals'] = DataContainer(results['proposals'], stack=False)
         # results['proposals'] = results['proposals']
+        import pdb
+        pdb.set_trace()
         results['img'] = DataContainer(results['img'], padding_value=0, stack=True)
         return results
 
