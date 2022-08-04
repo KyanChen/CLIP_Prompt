@@ -162,13 +162,14 @@ img_norm_cfg = dict(
 img_size = (1024, 800)
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
-    dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=img_size, keep_ratio=True),
+    dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     # dict(type='Pad', size=img_size, center_pad=True),
     dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.2), crop_range=(0.85, 1), prob=0.6),
     dict(type='ImageToTensor', keys=['img']),
+    # dict(type='DefaultFormatBundle'),
     dict(type='ToTensor', keys=['proposals', 'gt_labels']),
     dict(type='Collect', keys=['img', 'proposals', 'gt_labels'])
 ]

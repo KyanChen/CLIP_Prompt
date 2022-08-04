@@ -170,6 +170,7 @@ class VAWRegionDataset(Dataset):
 
             results['proposals'] = DataContainer(results['proposals'], stack=False)
             results['gt_labels'] = DataContainer(results['gt_labels'], stack=False)
+            results['img'] = DataContainer(results['img'], padding_value=0, stack=True)
             if self.kd_pipeline:
                 results['img_crops'] = DataContainer(results['img_crops'], stack=False)
         except Exception as e:
@@ -204,6 +205,7 @@ class VAWRegionDataset(Dataset):
         results = self.pipeline(results)
         # results['proposals'] = DataContainer(results['proposals'], stack=False)
         # results['proposals'] = results['proposals']
+        results['img'] = DataContainer(results['img'], padding_value=0, stack=True)
         return results
 
     def __getitem__(self, idx):
