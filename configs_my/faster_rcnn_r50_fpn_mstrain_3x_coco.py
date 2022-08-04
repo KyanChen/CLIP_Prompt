@@ -180,7 +180,7 @@ test_pipeline = [
 
 # Use RepeatDataset to speed up training
 data = dict(
-    samples_per_gpu=24,
+    samples_per_gpu=16,
     workers_per_gpu=2,
     train=dict(
         type='RepeatDataset',
