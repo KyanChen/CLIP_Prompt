@@ -55,6 +55,7 @@ class CLIP_Prompter_Region(BaseModule):
 
         if img_backbone['type'] == 'CLIPModel':
             self.img_backbone = clip_model.visual.eval()
+            self.with_clip_img_backbone = True
         else:
             self.img_backbone = build_backbone(img_backbone)
 
@@ -171,9 +172,10 @@ class CLIP_Prompter_Region(BaseModule):
                       gt_labels,
                       **kwargs
                       ):
-        # image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
-
-        img_f_maps = self.img_backbone(img)
+        if self.with_clip_img_backbone:
+            image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
+        else:
+            img_f_maps = self.img_backbone(img)
         if self.with_neck:
             img_f_maps = self.img_neck(img_f_maps)
         proposal_features, bbox_feats = self.img_head(img_f_maps, proposals)
@@ -242,8 +244,10 @@ class CLIP_Prompter_Region(BaseModule):
                     img, img_metas, proposals,
                     rescale=False, **kwargs):
 
-        # image_features, final_map, img_f_maps = self.image_encoder(img.type(self.dtype))  # 2x1024
-        img_f_maps = self.img_backbone(img)
+        if self.with_clip_img_backbone:
+            image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
+        else:
+            img_f_maps = self.img_backbone(img)
         per_img_proposals = [len(x) for x in proposals]
         if self.with_neck:
             img_f_maps = self.img_neck(img_f_maps)
