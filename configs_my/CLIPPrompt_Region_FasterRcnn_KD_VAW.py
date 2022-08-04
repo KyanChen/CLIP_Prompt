@@ -35,28 +35,28 @@ model = dict(
         'logit_scale', 'head',
         'kd_img_align', 'kd_logit_scale',
     ],
-    # img_backbone=dict(
-    #     type='ResNet',
-    #     depth=50,
-    #     num_stages=4,
-    #     out_indices=(0, 1, 2, 3),
-    #     frozen_stages=1,
-    #     norm_cfg=dict(type='BN', requires_grad=True),
-    #     norm_eval=True,
-    #     style='pytorch',
-    #     # load_ckpt_from='../pretrain/t_model.pth'
-    #     init_cfg=dict(type='Pretrained', prefix='backbone.',
-    #                   checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
-    # ),
     img_backbone=dict(
-        type='CLIPModel',
-        backbone_name='RN50',
-        with_attn=False,
-        out_indices=[1, 2, 3, 4],
-        # backbone_name='ViT-B/16',
-        load_ckpt_from=None,
-        precision='fp32',
+        type='ResNet',
+        depth=50,
+        num_stages=4,
+        out_indices=(0, 1, 2, 3),
+        frozen_stages=1,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        norm_eval=True,
+        style='pytorch',
+        # load_ckpt_from='../pretrain/t_model.pth'
+        init_cfg=dict(type='Pretrained', prefix='backbone.',
+                      checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
+    # img_backbone=dict(
+    #     type='CLIPModel',
+    #     backbone_name='RN50',
+    #     with_attn=False,
+    #     out_indices=[1, 2, 3, 4],
+    #     # backbone_name='ViT-B/16',
+    #     load_ckpt_from=None,
+    #     precision='fp32',
+    # ),
     img_neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
