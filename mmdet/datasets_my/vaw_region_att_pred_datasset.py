@@ -47,7 +47,6 @@ class VAWRegionDataset(Dataset):
         self.data_root = data_root
         if pattern == 'train':
             self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
-            self._set_group_flag()
         elif pattern == 'val':
             self.instances, self.img_instances_pair = self.read_data(['val.json'])
         elif pattern == 'test':
@@ -57,6 +56,8 @@ class VAWRegionDataset(Dataset):
         print('data len: ', len(self.instances))
         self.error_list = set({18531, 36440})
         self.img_ids = list(self.img_instances_pair.keys())
+        if pattern == 'train':
+            self._set_group_flag()
 
         # self.instances = self.get_instances()
         # self.instances = self.instances[-100:]
