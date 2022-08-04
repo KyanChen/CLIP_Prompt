@@ -9,7 +9,7 @@ from fairseq import metrics, utils
 from fairseq.criterions import FairseqCriterion, register_criterion
 from fairseq.dataclass import FairseqDataclass
 from omegaconf import II
-from ..builder import LOSSES
+from mmdet.models.builder import LOSSES
 import torch.nn as nn
 
 
