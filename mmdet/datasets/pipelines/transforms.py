@@ -316,6 +316,8 @@ class Resize:
         self._resize_bboxes(results)
         self._resize_masks(results)
         self._resize_seg(results)
+        import pdb
+        pdb.set_trace()
         return results
 
     def __repr__(self):
