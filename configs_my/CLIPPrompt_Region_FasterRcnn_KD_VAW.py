@@ -62,8 +62,8 @@ model = dict(
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
         num_outs=5,
-        # init_cfg=dict(type='Pretrained', prefix='neck.',
-        #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
+        init_cfg=dict(type='Pretrained', prefix='neck.',
+                      checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
     img_head=dict(
         type='ProposalEncoder',
