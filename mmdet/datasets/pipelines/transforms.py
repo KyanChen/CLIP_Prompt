@@ -311,14 +311,10 @@ class Resize:
                 if 'scale_factor' in results:
                     results.pop('scale_factor')
                 self._random_scale(results)
-        import pdb
-        pdb.set_trace()
         self._resize_img(results)
         self._resize_bboxes(results)
         self._resize_masks(results)
         self._resize_seg(results)
-        import pdb
-        pdb.set_trace()
         return results
 
     def __repr__(self):
@@ -683,8 +679,6 @@ class Pad:
         Returns:
             dict: Updated result dict.
         """
-        import pdb
-        pdb.set_trace()
         self._pad_img(results)
         self._pad_masks(results)
         self._pad_seg(results)
