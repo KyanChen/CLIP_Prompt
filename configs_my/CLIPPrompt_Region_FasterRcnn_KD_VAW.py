@@ -46,8 +46,8 @@ model = dict(
         norm_eval=True,
         style='pytorch',
         # load_ckpt_from='../pretrain/t_model.pth'
-        init_cfg=dict(type='Pretrained', prefix='backbone.',
-                      checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
+        # init_cfg=dict(type='Pretrained', prefix='backbone.',
+        #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
     # img_backbone=dict(
     #     type='CLIPModel',
@@ -63,8 +63,8 @@ model = dict(
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
         num_outs=5,
-        init_cfg=dict(type='Pretrained', prefix='neck.',
-                      checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
+        # init_cfg=dict(type='Pretrained', prefix='neck.',
+        #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
     img_head=dict(
         type='ProposalEncoder',
@@ -203,7 +203,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 16
+samples_per_gpu = 18
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
