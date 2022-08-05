@@ -30,33 +30,33 @@ model = dict(
     type='CLIP_Prompter_Region',
     classname_path=data_root+'/VAW/attribute_index.json',
     need_train_names=[
-        'img_neck', 'img_head',
+        'img_backbone', 'img_neck', 'img_head',
         'prompt_learner',
         'logit_scale', 'head',
         'kd_img_align', 'kd_logit_scale',
     ],
-    # img_backbone=dict(
-    #     type='ResNet',
-    #     depth=50,
-    #     num_stages=4,
-    #     out_indices=(0, 1, 2, 3),
-    #     frozen_stages=1,
-    #     norm_cfg=dict(type='BN', requires_grad=True),
-    #     norm_eval=True,
-    #     style='pytorch',
-    #     # load_ckpt_from='../pretrain/t_model.pth'
-    #     init_cfg=dict(type='Pretrained', prefix='backbone.',
-    #                   checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
-    # ),
     img_backbone=dict(
-        type='CLIPModel',
-        backbone_name='RN50',
-        with_attn=False,
-        out_indices=[1, 2, 3, 4],
-        # backbone_name='ViT-B/16',
-        load_ckpt_from=None,
-        precision='fp32',
+        type='ResNet',
+        depth=50,
+        num_stages=4,
+        out_indices=(0, 1, 2, 3),
+        frozen_stages=1,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        norm_eval=True,
+        style='pytorch',
+        # load_ckpt_from='../pretrain/t_model.pth'
+        init_cfg=dict(type='Pretrained', prefix='backbone.',
+                      checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
+    # img_backbone=dict(
+    #     type='CLIPModel',
+    #     backbone_name='RN50',
+    #     with_attn=False,
+    #     out_indices=[1, 2, 3, 4],
+    #     # backbone_name='ViT-B/16',
+    #     load_ckpt_from=None,
+    #     precision='fp32',
+    # ),
     img_neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -202,9 +202,9 @@ test_pipeline = [
     )
 ]
 
-
+samples_per_gpu = 28
 data = dict(
-    samples_per_gpu=46,
+    samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
     # samples_per_gpu=4,
     # workers_per_gpu=0,
@@ -218,14 +218,14 @@ data = dict(
         kd_pipeline=kd_pipeline
     ),
     val=dict(
-        samples_per_gpu=48,
+        samples_per_gpu=samples_per_gpu,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
         test_mode=True,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=48,
+        samples_per_gpu=samples_per_gpu,
         type=dataset_type,
         data_root=data_root,
         pattern='test',
@@ -259,7 +259,7 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        'img_neck': {}, 'img_head': {},
+        'img_backbone': {}, 'img_neck': {}, 'img_head': {},
         'prompt_learner': {},
         'logit_scale': {}, 'head': {},
         'kd_img_align': {}, 'kd_logit_scale': {}
