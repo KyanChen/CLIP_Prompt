@@ -206,7 +206,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 46
+samples_per_gpu = 40
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
