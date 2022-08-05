@@ -31,7 +31,7 @@ model = dict(
     type='CLIP_Prompter_Region',
     classname_path=data_root+'/VAW/attribute_index.json',
     need_train_names=[
-        'img_neck', 'img_head',
+        'img_head',
         'prompt_learner',
         'logit_scale', 'head',
         'kd_img_align', 'kd_logit_scale',
@@ -263,7 +263,7 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        'img_neck': {}, 'img_head': {},
+        'img_head': {},
         'prompt_learner': {},
         'logit_scale': {}, 'head': {},
         'kd_img_align': {}, 'kd_logit_scale': {}
