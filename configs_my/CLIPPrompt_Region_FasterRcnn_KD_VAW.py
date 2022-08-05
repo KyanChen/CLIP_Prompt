@@ -24,7 +24,7 @@ mp_start_method = 'fork'
 #       or not by default.
 #   - `base_batch_size` = (8 GPUs) x (2 samples per GPU).
 auto_scale_lr = dict(enable=False, base_batch_size=16)
-find_unused_parameters = True
+# find_unused_parameters = True
 
 data_root = '/data/kyanchen/prompt/data'
 model = dict(
@@ -45,10 +45,10 @@ model = dict(
         norm_cfg=dict(type='BN', requires_grad=True),
         norm_eval=True,
         style='pytorch',
-        # init_cfg=dict(type='Pretrained', prefix='backbone.',
-        #               checkpoint='../pretrain/faster_rcnn_epoch_12.pth')
         init_cfg=dict(type='Pretrained', prefix='backbone.',
-                      checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
+                      checkpoint='../pretrain/faster_rcnn_epoch_12.pth')
+        # init_cfg=dict(type='Pretrained', prefix='backbone.',
+        #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
     # img_backbone=dict(
     #     type='CLIPModel',
@@ -64,10 +64,10 @@ model = dict(
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
         num_outs=5,
-        # init_cfg=dict(type='Pretrained', prefix='neck.',
-        #               checkpoint='../pretrain/faster_rcnn_epoch_12.pth')
         init_cfg=dict(type='Pretrained', prefix='neck.',
-                      checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
+                      checkpoint='../pretrain/faster_rcnn_epoch_12.pth')
+        # init_cfg=dict(type='Pretrained', prefix='neck.',
+        #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
     img_head=dict(
         type='ProposalEncoder',
@@ -206,7 +206,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 40
+samples_per_gpu = 46
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
