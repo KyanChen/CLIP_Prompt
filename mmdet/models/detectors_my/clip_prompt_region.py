@@ -67,7 +67,7 @@ class CLIP_Prompter_Region(BaseModule):
                     k = k.replace('backbone.', '')
                     new_dict[k] = v
 
-                missing_keys, unexpected_keys = self.img_backbone.load_state_dict(state_dict, strict=False)
+                missing_keys, unexpected_keys = self.img_backbone.load_state_dict(new_dict, strict=False)
                 print('load img_backbone: ')
                 print('missing_keys: ', missing_keys)
                 print('unexpected_keys: ', unexpected_keys)
@@ -93,7 +93,7 @@ class CLIP_Prompter_Region(BaseModule):
                     k = k.replace('neck.', '')
                     new_dict[k] = v
 
-                missing_keys, unexpected_keys = self.img_neck.load_state_dict(state_dict, strict=False)
+                missing_keys, unexpected_keys = self.img_neck.load_state_dict(new_dict, strict=False)
                 print('load img_neck: ')
                 print('missing_keys: ', missing_keys)
                 print('unexpected_keys: ', unexpected_keys)
