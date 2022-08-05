@@ -58,7 +58,20 @@ class CLIP_Prompter_Region(BaseModule):
             self.img_backbone = clip_model.visual.eval()
             self.with_clip_img_backbone = True
         else:
+            load_ckpt_from = img_backbone.pop('load_ckpt_from', None)
             self.img_backbone = build_backbone(img_backbone)
+            if load_ckpt_from is not None:
+                state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
+                new_dict = OrderedDict()
+                for k, v in state_dict.items():
+                    k = k.replace('backbone.', '')
+                    new_dict[k] = v
+
+                missing_keys, unexpected_keys = self.img_backbone.load_state_dict(state_dict, strict=False)
+                print('load img_backbone: ')
+                print('missing_keys: ', missing_keys)
+                print('unexpected_keys: ', unexpected_keys)
+                print()
 
         if text_encoder['type'] == 'CLIPModel':
             self.text_encoder = build_backbone(
@@ -71,7 +84,21 @@ class CLIP_Prompter_Region(BaseModule):
         self.tokenized_prompts = self.prompt_learner.tokenized_prompts
 
         if img_neck is not None:
+            load_ckpt_from = img_neck.pop('load_ckpt_from', None)
             self.img_neck = build_neck(img_neck)
+            if load_ckpt_from is not None:
+                state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
+                new_dict = OrderedDict()
+                for k, v in state_dict.items():
+                    k = k.replace('neck.', '')
+                    new_dict[k] = v
+
+                missing_keys, unexpected_keys = self.img_neck.load_state_dict(state_dict, strict=False)
+                print('load img_backbone: ')
+                print('missing_keys: ', missing_keys)
+                print('unexpected_keys: ', unexpected_keys)
+                print()
+
         if img_head is not None:
             self.img_head = build_head(img_head)
 
