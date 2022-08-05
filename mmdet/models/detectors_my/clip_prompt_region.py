@@ -94,7 +94,7 @@ class CLIP_Prompter_Region(BaseModule):
                     new_dict[k] = v
 
                 missing_keys, unexpected_keys = self.img_neck.load_state_dict(state_dict, strict=False)
-                print('load img_backbone: ')
+                print('load img_neck: ')
                 print('missing_keys: ', missing_keys)
                 print('unexpected_keys: ', unexpected_keys)
                 print()
