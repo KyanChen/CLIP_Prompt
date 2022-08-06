@@ -45,9 +45,9 @@ model = dict(
         norm_cfg=dict(type='BN', requires_grad=True),
         norm_eval=True,
         style='pytorch',
-        load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
-        # init_cfg=dict(type='Pretrained', prefix='backbone.',
-        #               checkpoint='../pretrain/faster_rcnn_epoch_12.pth')
+        # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
+        init_cfg=dict(type='Pretrained', prefix='backbone.',
+                      checkpoint='../pretrain/faster_rcnn_epoch_12.pth')
         # init_cfg=dict(type='Pretrained', prefix='backbone.',
         #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
@@ -65,7 +65,9 @@ model = dict(
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
         num_outs=5,
-        load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
+        # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
+        init_cfg=dict(type='Pretrained', prefix='neck.',
+                      checkpoint='../pretrain/faster_rcnn_epoch_12.pth'),
         # init_cfg=dict(type='Pretrained', prefix='neck.',
         #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
