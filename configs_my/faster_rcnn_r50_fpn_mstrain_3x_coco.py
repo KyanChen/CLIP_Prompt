@@ -137,19 +137,20 @@ model = dict(
 
 dataset_type = 'CocoDataset'
 data_root = '/data/kyanchen/Data/coco'
-# img_norm_cfg = dict(
-#     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
-
 img_norm_cfg = dict(
-    mean=[0.48145466, 0.4578275, 0.40821073],
-    std=[0.26862954, 0.26130258, 0.27577711],
-    to_rgb=False
-)
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=False)
+
+# img_norm_cfg = dict(
+#     mean=[0.48145466, 0.4578275, 0.40821073],
+#     std=[0.26862954, 0.26130258, 0.27577711],
+#     to_rgb=False
+# )
 
 # In mstrain 3x config, img_scale=[(1333, 640), (1333, 800)],
 # multiscale_mode='range'
 train_pipeline = [
-    dict(type='LoadImageFromFile', rearrange=True, channel_order='rgb'),
+    # dict(type='LoadImageFromFile', rearrange=True, channel_order='rgb'),
+    dict(type='LoadImageFromFile', channel_order='rgb'),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(
         type='Resize',
@@ -163,7 +164,8 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile', rearrange=True, channel_order='rgb'),
+    dict(type='LoadImageFromFile', channel_order='rgb'),
+    # dict(type='LoadImageFromFile', rearrange=True, channel_order='rgb'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1333, 800),
