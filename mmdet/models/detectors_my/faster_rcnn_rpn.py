@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from ..builder import DETECTORS
 from ..detectors.two_stage import TwoStageDetector
 import warnings
@@ -17,6 +19,7 @@ class FasterRCNNRPN(TwoStageDetector):
                  rpn_head=None,
                  train_cfg=None,
                  test_cfg=None,
+                 pretrained_model=None,
                  pretrained=None,
                  init_cfg=None):
         super(TwoStageDetector, self).__init__(init_cfg)
@@ -37,7 +40,33 @@ class FasterRCNNRPN(TwoStageDetector):
 
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
+        self.pretrained_model = pretrained_model
 
+    def init_weights(self):
+        if self.pretrained_model is not None:
+            print(f'load resnet from {self.pretrained_model}')
+            state_dict = torch.load(self.pretrained_model, map_location="cpu")
+            import pdb
+            pdb.set_trace()
+            new_dict = OrderedDict()
+            for k, v in state_dict.items():
+                k = k.replace('image_encoder', 'visual')
+                k = k.replace('text_encoder.', '')
+                new_dict[k] = v
+            for key in ["input_resolution", "context_length", "vocab_size"]:
+                if key in state_dict:
+                    del state_dict[key]
+
+            # if not with_attn:
+            #     visual_attnpool_key = [x for x in state_dict.keys() if 'visual.attnpool' in x]
+            #     print('delete visual attnpool key: ', visual_attnpool_key)
+            #     for key in visual_attnpool_key:
+            #         del state_dict[key]
+            # convert_weights(model)
+            # missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
+            # print('load clip model: ')
+            # print('missing_keys: ', missing_keys)
+            # print('unexpected_keys: ', unexpected_keys)
     @property
     def with_rpn(self):
         """bool: whether the detector has RPN"""
