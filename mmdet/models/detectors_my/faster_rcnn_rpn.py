@@ -15,6 +15,7 @@ class FasterRCNNRPN(TwoStageDetector):
     # ONLY RPN Network
     def __init__(self,
                  backbone,
+                 need_train_names,
                  neck=None,
                  rpn_head=None,
                  train_cfg=None,
@@ -27,7 +28,12 @@ class FasterRCNNRPN(TwoStageDetector):
             warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
             backbone.pretrained = pretrained
-        self.backbone = build_backbone(backbone)
+        if backbone['type'] == 'CLIPModel':
+            self.with_clip_backbone = True
+            self.backbone = build_backbone(backbone).model.visual.eval()
+        else:
+            self.with_clip_backbone = False
+            self.backbone = build_backbone(backbone)
 
         if neck is not None:
             self.neck = build_neck(neck)
@@ -40,23 +46,28 @@ class FasterRCNNRPN(TwoStageDetector):
 
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
-        self.pretrained_model = pretrained_model
 
-    def init_weights(self):
-        if self.pretrained_model is not None:
-            print(f'load resnet from {self.pretrained_model}')
-            state_dict = torch.jit.load(self.pretrained_model, map_location="cpu").state_dict()
-            import pdb
-            pdb.set_trace()
-            new_dict = OrderedDict()
-            for k, v in state_dict.items():
-                if 'visual.' in k:
-                    k = k.replace('visual.', '')
-                    new_dict[k] = v
-            missing_keys, unexpected_keys = self.backbone.load_state_dict(new_dict, strict=False)
-            print('missing_keys: ', missing_keys)
-            print('unexpected_keys: ', unexpected_keys)
-            print()
+        self.need_train_names = need_train_names
+        print("Turning off gradients in both the image and the text encoder")
+        for name, param in self.named_parameters():
+            flag = False
+            for need_train_name in self.need_train_names:
+                if need_train_name in name:
+                    flag = True
+            param.requires_grad_(flag)
+
+    def train(self, mode=True):
+        self.training = mode
+        for name, module in self.named_children():
+            flag = False
+            for need_train_name in self.need_train_names:
+                if need_train_name in name:
+                    flag = True
+            if flag:
+                module.train(mode)
+            else:
+                module.eval()
+        return self
 
     @property
     def with_rpn(self):
@@ -70,7 +81,11 @@ class FasterRCNNRPN(TwoStageDetector):
 
     def extract_feat(self, img):
         """Directly extract features from the backbone+neck."""
-        x = self.backbone(img)
+        if self.with_clip_img_backbone:
+            image_features, final_map, x = self.backbone(img)
+        else:
+            x = self.backbone(img)
+
         if self.with_neck:
             x = self.neck(x)
         return x

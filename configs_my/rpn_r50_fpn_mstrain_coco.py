@@ -26,17 +26,28 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 model = dict(
     type='FasterRCNNRPN',
-    pretrained_model='/data1/kyanchen/.cache/clip/RN50.pt',
+    need_train_names=[
+        'neck', 'rpn_head'
+    ],
+    # backbone=dict(
+    #     type='ResNet',
+    #     depth=50,
+    #     num_stages=4,
+    #     out_indices=(0, 1, 2, 3),
+    #     frozen_stages=1,
+    #     norm_cfg=dict(type='BN', requires_grad=True),
+    #     norm_eval=True,
+    #     style='pytorch',
+    #     init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
     backbone=dict(
-        type='ResNet',
-        depth=50,
-        num_stages=4,
-        out_indices=(0, 1, 2, 3),
-        frozen_stages=1,
-        norm_cfg=dict(type='BN', requires_grad=True),
-        norm_eval=True,
-        style='pytorch',
-        init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
+        type='CLIPModel',
+        backbone_name='RN50',
+        with_attn=False,
+        out_indices=[1, 2, 3, 4],
+        # backbone_name='ViT-B/16',
+        load_ckpt_from=None,
+        precision='fp32',
+    ),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -164,10 +175,10 @@ data_root = '/data1/kyanchen/DetFramework/data/COCO/'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
-samples_per_gpu = 20
+samples_per_gpu = 32
 data = dict(
     samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=2,
+    workers_per_gpu=4,
     train=dict(
         type=dataset_type,
         data_root=data_root+'/train2017',
@@ -194,8 +205,18 @@ data = dict(
 )
 evaluation = dict(interval=5, metric='proposal_fast')
 
-# optimizer
-optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(
+    constructor='SubModelConstructor',
+    sub_model={
+        'neck': {}, 'rpn_head': {}
+        },
+    type='SGD',
+    momentum=0.9,
+    lr=0.05,
+    weight_decay=1e-3
+)
+
+# optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 
 # learning policy
