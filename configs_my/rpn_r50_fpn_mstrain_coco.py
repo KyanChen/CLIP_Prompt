@@ -175,7 +175,7 @@ data_root = '/data1/kyanchen/DetFramework/data/COCO/'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
-samples_per_gpu = 32
+samples_per_gpu = 40
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
@@ -208,8 +208,7 @@ evaluation = dict(interval=3, metric='proposal_fast')
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        'neck': {}, 'rpn_head': {}
-        },
+        'neck': {}, 'rpn_head': {} },
     type='SGD',
     momentum=0.9,
     lr=0.05,
@@ -226,7 +225,8 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[40, 50])
+    step=[40, 50]
+)
 runner = dict(type='EpochBasedRunner', max_epochs=60)
 load_from = None
 resume_from = None
