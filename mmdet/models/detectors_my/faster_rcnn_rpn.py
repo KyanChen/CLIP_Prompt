@@ -45,7 +45,7 @@ class FasterRCNNRPN(TwoStageDetector):
     def init_weights(self):
         if self.pretrained_model is not None:
             print(f'load resnet from {self.pretrained_model}')
-            state_dict = torch.load(self.pretrained_model, map_location="cpu")
+            state_dict = torch.jit.load(self.pretrained_model, map_location="cpu").state_dict()
             import pdb
             pdb.set_trace()
             new_dict = OrderedDict()
