@@ -44,7 +44,7 @@ model = dict(
     rpn_head=dict(
         type='RPNHead',
         in_channels=256,
-        num_convs=3,
+        num_convs=1,
         feat_channels=256,
         anchor_generator=dict(
             type='AnchorGenerator',
@@ -158,7 +158,8 @@ test_pipeline = [
 ]
 
 dataset_type = 'CocoRPNDataset'
-data_root = '/data/kyanchen/Data/coco'
+# data_root = '/data/kyanchen/Data/coco'
+data_root = '/data1/kyanchen/DetFramework/data/COCO/'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
