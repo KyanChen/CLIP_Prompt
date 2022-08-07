@@ -50,23 +50,14 @@ class FasterRCNNRPN(TwoStageDetector):
             pdb.set_trace()
             new_dict = OrderedDict()
             for k, v in state_dict.items():
-                k = k.replace('image_encoder', 'visual')
-                k = k.replace('text_encoder.', '')
-                new_dict[k] = v
-            for key in ["input_resolution", "context_length", "vocab_size"]:
-                if key in state_dict:
-                    del state_dict[key]
+                if 'visual.' in k:
+                    k = k.replace('visual.', '')
+                    new_dict[k] = v
+            missing_keys, unexpected_keys = self.backbone.load_state_dict(new_dict, strict=False)
+            print('missing_keys: ', missing_keys)
+            print('unexpected_keys: ', unexpected_keys)
+            print()
 
-            # if not with_attn:
-            #     visual_attnpool_key = [x for x in state_dict.keys() if 'visual.attnpool' in x]
-            #     print('delete visual attnpool key: ', visual_attnpool_key)
-            #     for key in visual_attnpool_key:
-            #         del state_dict[key]
-            # convert_weights(model)
-            # missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
-            # print('load clip model: ')
-            # print('missing_keys: ', missing_keys)
-            # print('unexpected_keys: ', unexpected_keys)
     @property
     def with_rpn(self):
         """bool: whether the detector has RPN"""
