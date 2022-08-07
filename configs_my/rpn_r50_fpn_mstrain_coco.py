@@ -167,21 +167,21 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        ann_file=data_root+'/annotations/train2017.json',
+        ann_file=data_root+'/annotations/instances_train2017.json',
         pipeline=train_pipeline,
         test_mode=False
     ),
     val=dict(
         samples_per_gpu=samples_per_gpu,
         type=dataset_type,
-        ann_file=data_root + '/annotations/val2017.json',
+        ann_file=data_root + '/annotations/instances_val2017.json',
         pipeline=test_pipeline,
         test_mode=True
     ),
     test=dict(
         samples_per_gpu=samples_per_gpu,
         type=dataset_type,
-        ann_file=data_root + '/annotations/val2017.json',
+        ann_file=data_root + '/annotations/instances_val2017.json',
         pipeline=test_pipeline,
         test_mode=True
     )
