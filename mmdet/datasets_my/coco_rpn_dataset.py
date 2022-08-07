@@ -1,19 +1,3 @@
-import contextlib
-import io
-import itertools
-import logging
-import os.path as osp
-import tempfile
-import warnings
-from collections import OrderedDict
-
-import mmcv
-import numpy as np
-from mmcv.utils import print_log
-from terminaltables import AsciiTable
-
-from mmdet.core import eval_recalls
-from mmdet.utils.api_wrappers import COCO, COCOeval
 from ..datasets.builder import DATASETS
 from ..datasets import CocoDataset
 
