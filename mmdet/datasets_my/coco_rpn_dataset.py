@@ -19,7 +19,7 @@ from ..datasets import CocoDataset
 
 
 @DATASETS.register_module()
-class CocoDataset(CocoDataset):
+class CocoRPNDataset(CocoDataset):
     def prepare_train_img(self, idx):
         img_info = self.data_infos[idx]
         ann_info = self.get_ann_info(idx)

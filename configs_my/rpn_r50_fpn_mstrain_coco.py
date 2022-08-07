@@ -44,6 +44,7 @@ model = dict(
     rpn_head=dict(
         type='RPNHead',
         in_channels=256,
+        num_convs=3,
         feat_channels=256,
         anchor_generator=dict(
             type='AnchorGenerator',
@@ -156,7 +157,7 @@ test_pipeline = [
         ])
 ]
 
-dataset_type = 'CocoDataset'
+dataset_type = 'CocoRPNDataset'
 data_root = '/data/kyanchen/Data/coco'
 
 # dataset_type = 'VAWODDataset'
@@ -167,6 +168,7 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
+        data_root=data_root,
         ann_file=data_root+'/annotations/instances_train2017.json',
         pipeline=train_pipeline,
         test_mode=False
@@ -174,6 +176,7 @@ data = dict(
     val=dict(
         samples_per_gpu=samples_per_gpu,
         type=dataset_type,
+        data_root=data_root,
         ann_file=data_root + '/annotations/instances_val2017.json',
         pipeline=test_pipeline,
         test_mode=True
@@ -181,6 +184,7 @@ data = dict(
     test=dict(
         samples_per_gpu=samples_per_gpu,
         type=dataset_type,
+        data_root=data_root,
         ann_file=data_root + '/annotations/instances_val2017.json',
         pipeline=test_pipeline,
         test_mode=True
