@@ -117,8 +117,6 @@ class FasterRCNNRPN(TwoStageDetector):
                       gt_masks=None,
                       proposals=None,
                       **kwargs):
-        import pdb
-        pdb.set_trace()
         x = self.extract_feat(img)
 
         losses = dict()
