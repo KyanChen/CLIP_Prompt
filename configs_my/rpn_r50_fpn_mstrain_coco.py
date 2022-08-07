@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=5)
+checkpoint_config = dict(interval=10)
 # yapf:disable
 log_config = dict(
     interval=50,
@@ -203,7 +203,7 @@ data = dict(
         test_mode=True
     )
 )
-evaluation = dict(interval=5, metric='proposal_fast')
+evaluation = dict(interval=3, metric='proposal_fast')
 
 optimizer = dict(
     constructor='SubModelConstructor',

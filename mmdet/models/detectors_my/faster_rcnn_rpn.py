@@ -29,10 +29,10 @@ class FasterRCNNRPN(TwoStageDetector):
                           'please use "init_cfg" instead')
             backbone.pretrained = pretrained
         if backbone['type'] == 'CLIPModel':
-            self.with_clip_backbone = True
+            self.with_clip_img_backbone = True
             self.backbone = build_backbone(backbone).model.visual.eval()
         else:
-            self.with_clip_backbone = False
+            self.with_clip_img_backbone = False
             self.backbone = build_backbone(backbone)
 
         if neck is not None:
