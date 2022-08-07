@@ -26,7 +26,7 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 model = dict(
     type='FasterRCNNRPN',
-    pretrain='/data1/kyanchen/.cache/clip/RN50.pt',
+    pretrained_model='/data1/kyanchen/.cache/clip/RN50.pt',
     backbone=dict(
         type='ResNet',
         depth=50,
