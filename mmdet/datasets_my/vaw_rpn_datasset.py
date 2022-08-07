@@ -28,11 +28,11 @@ from mmdet.utils.api_wrappers import COCO, COCOeval
 from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
 from ..datasets.pipelines import Compose
-from .evaluate_tools import cal_metrics
 
 
+# 得到VAW的instance，使用RPN计算VAW的召回指标
 @DATASETS.register_module()
-class VAWODDataset(Dataset):
+class VAWRPNDataset(Dataset):
 
     CLASSES = None
 
@@ -232,19 +232,19 @@ class VAWODDataset(Dataset):
                 bboxes = np.zeros((0, 4))
             gt_bboxes.append(bboxes)
 
-        for i in np.random.choice(range(len(self.img_ids)), 100):
-        # for i in range(len(self.img_ids)):
-            img_id = self.img_ids[i]
-            filename = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{img_id}.jpg'
-            img = cv2.imread(filename, cv2.IMREAD_COLOR)
-            for box in gt_bboxes[i]:
-                x1, y1, x2, y2 = box.astype(np.int)
-                img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
-            for box in results[i]:
-                x1, y1, x2, y2, _ = box.astype(np.int)
-                img = cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), thickness=1)
-            os.makedirs('results/tmp', exist_ok=True)
-            cv2.imwrite('results/tmp' + f'/{img_id}.jpg', img)
+        # for i in np.random.choice(range(len(self.img_ids)), 100):
+        # # for i in range(len(self.img_ids)):
+        #     img_id = self.img_ids[i]
+        #     filename = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{img_id}.jpg'
+        #     img = cv2.imread(filename, cv2.IMREAD_COLOR)
+        #     for box in gt_bboxes[i]:
+        #         x1, y1, x2, y2 = box.astype(np.int)
+        #         img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
+        #     for box in results[i]:
+        #         x1, y1, x2, y2, _ = box.astype(np.int)
+        #         img = cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), thickness=1)
+        #     os.makedirs('results/tmp', exist_ok=True)
+        #     cv2.imwrite('results/tmp' + f'/{img_id}.jpg', img)
 
         recalls = eval_recalls(
             gt_bboxes, results, proposal_nums, iou_thrs, logger=logger)
@@ -254,16 +254,13 @@ class VAWODDataset(Dataset):
     def evaluate_det_segm(self,
                           results,
                           result_files,
-                          result_files_gt,
+                          coco_gt,
                           metrics,
                           logger=None,
                           classwise=False,
-                          metric_items=None,
-                          # my settings
-                          maxDets=(100, 300, 1000),
-                          iouThrs=None,
-                          areaRng=None,
-                          val_or_test='val'
+                          proposal_nums=(100, 300, 1000),
+                          iou_thrs=None,
+                          metric_items=None
                           ):
         """Instance segmentation and object detection evaluation in COCO
         protocol.
@@ -296,20 +293,9 @@ class VAWODDataset(Dataset):
         Returns:
             dict[str, float]: COCO style evaluation metric.
         """
-        # specific settings
-        if iouThrs is None:
-            iouThrs = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
-
-        if areaRng is None:
-            areaRng = [0, 32, 96]
-        assert len(areaRng) == 3
-        areaRng = [
-            [0 ** 2, 1e5 ** 2], [areaRng[0] ** 2, areaRng[1] ** 2], [areaRng[1] ** 2, areaRng[2] ** 2],
-            [areaRng[2] ** 2, 1e5 ** 2]
-        ]
-        if maxDets is None:
-            maxDets = [100, 300, 1000]
-
+        if iou_thrs is None:
+            iou_thrs = np.linspace(
+                .5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
         if metric_items is not None:
             if not isinstance(metric_items, list):
                 metric_items = [metric_items]
@@ -326,9 +312,9 @@ class VAWODDataset(Dataset):
                     raise KeyError('proposal_fast is not supported for '
                                    'instance segmentation result.')
                 ar = self.fast_eval_recall(
-                    results, maxDets, iouThrs, logger='silent')
+                    results, proposal_nums, iou_thrs, logger='silent')
                 log_msg = []
-                for i, num in enumerate(maxDets):
+                for i, num in enumerate(proposal_nums):
                     eval_results[f'AR@{num}'] = ar[i]
                     log_msg.append(f'\nAR@{num}\t{ar[i]:.4f}')
                 log_msg = ''.join(log_msg)
@@ -366,10 +352,10 @@ class VAWODDataset(Dataset):
             cocoEval = COCOeval(coco_gt, coco_det, iou_type)
             cocoEval.params.catIds = self.cat_ids
             cocoEval.params.imgIds = self.img_ids
-            assert len(maxDets) == 3
-            cocoEval.params.maxDets = list(maxDets)
-            cocoEval.params.iouThrs = iouThrs
-            cocoEval.params.areaRng = areaRng
+            assert len(proposal_nums) == 3
+            cocoEval.params.maxDets = list(proposal_nums)
+            cocoEval.params.iouThrs = iou_thrs
+            # cocoEval.params.areaRng = areaRng
 
             # mapping of cocoEval.stats
             # my settings
@@ -380,12 +366,12 @@ class VAWODDataset(Dataset):
                 'mAP_s': 3,
                 'mAP_m': 4,
                 'mAP_l': 5,
-                f'AR_{maxDets[0]}': 6,
-                f'AR_{maxDets[1]}': 7,
-                f'AR_{maxDets[2]}': 8,
-                f'AR_s_{maxDets[2]}': 9,
-                f'AR_m_{maxDets[2]}': 10,
-                f'AR_l_{maxDets[2]}': 11,
+                f'AR_{proposal_nums[0]}': 6,
+                f'AR_{proposal_nums[1]}': 7,
+                f'AR_{proposal_nums[2]}': 8,
+                f'AR_s_{proposal_nums[2]}': 9,
+                f'AR_m_{proposal_nums[2]}': 10,
+                f'AR_l_{proposal_nums[2]}': 11,
                 f'AP_50_s': 12,
                 f'AP_50_m': 13,
                 f'AR_50_s': 14,
@@ -493,20 +479,14 @@ class VAWODDataset(Dataset):
 
     def evaluate(self,
                  results,
-                 metric='proposal_fast',
+                 metric='bbox',
                  logger=None,
                  jsonfile_prefix=None,
                  classwise=False,
-                 metric_items=None,
-
-                 maxDets=(50, 100, 200),
-                 iouThrs=None,
-                 # specific param
-                 areaRng=None,
-                 val_or_test='val'
+                 proposal_nums=(100, 300, 1000),
+                 iou_thrs=None,
+                 metric_items=None
                  ):
-        # import pdb
-        # pdb.set_trace()
         results = [x.cpu().numpy() for x in results]
 
         metrics = metric if isinstance(metric, list) else [metric]
@@ -517,17 +497,15 @@ class VAWODDataset(Dataset):
 
         # coco_gt = self.coco
         # self.cat_ids = coco_gt.get_cat_ids(cat_names=self.CLASSES)
-        jsonfile_prefix = 'results/EXP20220628_0/FasterRCNN_R50_OpenImages'
+        jsonfile_prefix = 'results/EXP20220804_4/fasterrcnn_coco'
         os.makedirs(jsonfile_prefix, exist_ok=True)
         result_files, tmp_dir = self.format_results(results, jsonfile_prefix)
-        result_files_gt, tmp_dir_gt = self.format_gt()
-
-        eval_results = self.evaluate_det_segm(results, result_files, result_files_gt,
-                                              metrics, logger, classwise, metric_items,
-                                              maxDets, iouThrs, areaRng, val_or_test)
+        coco_gt = None
+        eval_results = self.evaluate_det_segm(results, result_files, coco_gt,
+                                              metrics, logger, classwise,
+                                              proposal_nums, iou_thrs,
+                                              metric_items)
 
         if tmp_dir is not None:
             tmp_dir.cleanup()
-        if tmp_dir_gt is not None:
-            tmp_dir_gt.cleanup()
         return eval_results

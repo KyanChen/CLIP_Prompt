@@ -2,6 +2,7 @@ from ..datasets.builder import DATASETS
 from ..datasets import CocoDataset
 
 
+# 训练并测试RPN在COCO上的性能
 @DATASETS.register_module()
 class CocoRPNDataset(CocoDataset):
     def prepare_train_img(self, idx):
