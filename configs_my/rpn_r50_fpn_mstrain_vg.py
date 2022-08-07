@@ -100,23 +100,37 @@ model = dict(
     test_cfg=dict(
         rpn=dict(
             nms_pre=1000,
-            max_per_img=200,
-            nms=dict(type='nms', iou_threshold=0.45),
-            min_bbox_size=16),
+            max_per_img=1000,
+            nms=dict(type='nms', iou_threshold=0.7),
+            min_bbox_size=0),
         rcnn=dict(
-            score_thr=0.01,
+            score_thr=0.05,
             nms=dict(type='nms', iou_threshold=0.5),
             max_per_img=100)
         # soft-nms is also supported for rcnn testing
         # e.g., nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.05)
     ))
 
+# img_norm_cfg = dict(
+#     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=False)
+
 img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+    mean=[0.48145466, 0.4578275, 0.40821073],
+    std=[0.26862954, 0.26130258, 0.27577711],
+    to_rgb=False
+)
+
+# In mstrain 3x config, img_scale=[(1333, 640), (1333, 800)],
+# multiscale_mode='range'
 train_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True, denorm_bbox=True),
-    dict(type='Resize', img_scale=(1024, 800), keep_ratio=True),
+    dict(type='LoadImageFromFile', rearrange=True, channel_order='rgb'),
+    # dict(type='LoadImageFromFile', channel_order='rgb'),
+    dict(type='LoadAnnotations', with_bbox=True),
+    dict(
+        type='Resize',
+        img_scale=[(1024, 640), (1024, 800)],
+        multiscale_mode='range',
+        keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
@@ -124,7 +138,8 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    # dict(type='LoadImageFromFile', channel_order='rgb'),
+    dict(type='LoadImageFromFile', rearrange=True, channel_order='rgb'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1024, 800),
@@ -136,58 +151,54 @@ test_pipeline = [
             dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img']),
-        ],
-    ),
+        ])
 ]
 
-# dataset settings
+# dataset_type = 'CocoDataset'
+# data_root = '/data/kyanchen/Data/coco'
+
 dataset_type = 'VAWODDataset'
 data_root = '/data/kyanchen/prompt/data'
 data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=0,
+    samples_per_gpu=16,
+    workers_per_gpu=2,
     train=dict(
         type=dataset_type,
         data_root=data_root,
         pipeline=train_pipeline,
         pattern='train',
-        test_mode=False,
-        ),
+        test_mode=False
+    ),
     val=dict(
+        samples_per_gpu=2,
         type=dataset_type,
-        ann_file=data_root +
-        'challenge2019/challenge-2019-validation-detection-bbox.txt',
-        img_prefix=data_root + 'OpenImages/',
-        label_file=data_root + 'challenge2019/cls-label-description.csv',
-        hierarchy_file=data_root + 'challenge2019/class_label_tree.np',
-        meta_file=data_root +
-        'challenge2019/challenge-2019-validation-metas.pkl',
-        image_level_ann_file=data_root +
-        'challenge2019/challenge-2019-validation-detection-'
-        'human-imagelabels.csv'),
+        data_root=data_root,
+        pipeline=test_pipeline,
+        pattern='test',
+        test_mode=True
+    ),
     test=dict(
         samples_per_gpu=2,
         type=dataset_type,
         data_root=data_root,
         pipeline=test_pipeline,
         pattern='test',
-        test_mode=True,
-    ))
+        test_mode=True)
+)
+evaluation = dict(interval=1, metric='bbox')
 
 # optimizer
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
+
 # learning policy
+# Experiments show that using step=[9, 11] has higher performance
 lr_config = dict(
     policy='step',
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[8, 11])
+    step=[9, 11])
 runner = dict(type='EpochBasedRunner', max_epochs=12)
-
-evaluation = dict(interval=1, metric='proposal_fast')
-
-# https://download.openmmlab.com/mmdetection/v2.0/openimages/faster_rcnn_r50_fpn_32x2_cas_1x_openimages_challenge/faster_rcnn_r50_fpn_32x2_cas_1x_openimages_challenge_20220221_192021-34c402d9.pth
 load_from = None
 resume_from = None
