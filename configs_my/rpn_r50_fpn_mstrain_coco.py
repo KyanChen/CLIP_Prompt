@@ -171,7 +171,8 @@ test_pipeline = [
 
 dataset_type = 'CocoRPNDataset'
 # data_root = '/data/kyanchen/Data/coco'
-data_root = '/data1/kyanchen/DetFramework/data/COCO/'
+# data_root = '/data1/kyanchen/DetFramework/data/COCO/'
+data_root = '/data/kyanchen/prompt/data/COCO'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
