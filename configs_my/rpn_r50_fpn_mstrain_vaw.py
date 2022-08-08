@@ -26,6 +26,9 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 model = dict(
     type='FasterRCNNRPN',
+    need_train_names=[
+        'neck', 'rpn_head'
+    ],
     # backbone=dict(
     #     type='ResNet',
     #     depth=50,
