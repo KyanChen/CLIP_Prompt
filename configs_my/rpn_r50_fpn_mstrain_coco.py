@@ -38,7 +38,7 @@ model = dict(
         norm_cfg=dict(type='BN', requires_grad=True),
         norm_eval=True,
         style='pytorch',
-        init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
+        init_cfg=dict(type='Pretrained', map_location='cpu', checkpoint='torchvision://resnet50')),
     # backbone=dict(
     #     type='CLIPModel',
     #     backbone_name='RN50',
@@ -176,7 +176,7 @@ data_root = '/data1/kyanchen/DetFramework/data/COCO/'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
-# find_unused_parameters = True
+find_unused_parameters = True
 samples_per_gpu = 24
 data = dict(
     samples_per_gpu=samples_per_gpu,
