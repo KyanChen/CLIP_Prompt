@@ -646,8 +646,6 @@ class ResNet(BaseModule):
         return tuple(outs)
 
     def train(self, mode=True):
-        import pdb
-        pdb.set_trace()
         """Convert the model into training mode while keep normalization layer
         freezed."""
         super(ResNet, self).train(mode)

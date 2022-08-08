@@ -49,8 +49,6 @@ class FasterRCNNRPN(TwoStageDetector):
 
         self.need_train_names = need_train_names
         print("Turning off gradients in both the image and the text encoder")
-        import pdb
-        pdb.set_trace()
         for name, param in self.named_parameters():
             flag = False
             for need_train_name in self.need_train_names:
@@ -60,8 +58,6 @@ class FasterRCNNRPN(TwoStageDetector):
 
     def train(self, mode=True):
         self.training = mode
-        import pdb
-        pdb.set_trace()
         for name, module in self.named_children():
             flag = False
             for need_train_name in self.need_train_names:
