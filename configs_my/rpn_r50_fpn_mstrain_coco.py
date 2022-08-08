@@ -205,13 +205,21 @@ data = dict(
 )
 evaluation = dict(interval=3, metric='proposal_fast')
 
+# optimizer = dict(
+#     constructor='SubModelConstructor',
+#     sub_model={
+#         'neck': {}, 'rpn_head': {} },
+#     type='SGD',
+#     momentum=0.9,
+#     lr=0.05,
+#     weight_decay=1e-3
+# )
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
         'neck': {}, 'rpn_head': {} },
-    type='SGD',
-    momentum=0.9,
-    lr=0.05,
+    type='AdamW',
+    lr=5e-4,
     weight_decay=1e-3
 )
 
