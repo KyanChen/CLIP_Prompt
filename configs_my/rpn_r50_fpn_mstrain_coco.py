@@ -176,7 +176,7 @@ data_root = '/data/kyanchen/prompt/data/COCO'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
-samples_per_gpu = 36
+samples_per_gpu = 32
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
