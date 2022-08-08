@@ -206,23 +206,23 @@ data = dict(
 )
 evaluation = dict(interval=3, metric='proposal_fast')
 
+# optimizer = dict(
+#     constructor='SubModelConstructor',
+#     sub_model={
+#         'backbone': {}, 'neck': {}, 'rpn_head': {} },
+#     type='SGD',
+#     momentum=0.9,
+#     lr=0.02,
+#     weight_decay=1e-3
+# )
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
         'backbone': {}, 'neck': {}, 'rpn_head': {} },
-    type='SGD',
-    momentum=0.9,
-    lr=0.02,
+    type='AdamW',
+    lr=5e-4,
     weight_decay=1e-3
 )
-# optimizer = dict(
-#     constructor='SubModelConstructor',
-#     sub_model={
-#         'neck': {}, 'rpn_head': {} },
-#     type='AdamW',
-#     lr=5e-4,
-#     weight_decay=1e-3
-# )
 
 # optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
@@ -234,8 +234,8 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[40, 50]
+    step=[30, 40]
 )
-runner = dict(type='EpochBasedRunner', max_epochs=60)
+runner = dict(type='EpochBasedRunner', max_epochs=50)
 load_from = None
 resume_from = None
