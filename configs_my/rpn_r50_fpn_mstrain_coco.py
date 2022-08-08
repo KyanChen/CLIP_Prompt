@@ -27,27 +27,27 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 model = dict(
     type='FasterRCNNRPN',
     need_train_names=[
-        'neck', 'rpn_head'
+        'backbone', 'neck', 'rpn_head'
     ],
-    # backbone=dict(
-    #     type='ResNet',
-    #     depth=50,
-    #     num_stages=4,
-    #     out_indices=(0, 1, 2, 3),
-    #     frozen_stages=1,
-    #     norm_cfg=dict(type='BN', requires_grad=True),
-    #     norm_eval=True,
-    #     style='pytorch',
-    #     init_cfg=dict(type='Pretrained', map_location='cpu', checkpoint='torchvision://resnet50')),
     backbone=dict(
-        type='CLIPModel',
-        backbone_name='RN50',
-        with_attn=False,
-        out_indices=[1, 2, 3, 4],
-        # backbone_name='ViT-B/16',
-        load_ckpt_from=None,
-        precision='fp32',
-    ),
+        type='ResNet',
+        depth=50,
+        num_stages=4,
+        out_indices=(0, 1, 2, 3),
+        frozen_stages=1,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        norm_eval=True,
+        style='pytorch',
+        init_cfg=dict(type='Pretrained', map_location='cpu', checkpoint='torchvision://resnet50')),
+    # backbone=dict(
+    #     type='CLIPModel',
+    #     backbone_name='RN50',
+    #     with_attn=False,
+    #     out_indices=[1, 2, 3, 4],
+    #     # backbone_name='ViT-B/16',
+    #     load_ckpt_from=None,
+    #     precision='fp32',
+    # ),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -170,14 +170,14 @@ test_pipeline = [
 ]
 
 dataset_type = 'CocoRPNDataset'
-# data_root = '/data/kyanchen/Data/coco'
+data_root = '/data/kyanchen/Data/coco'
 # data_root = '/data1/kyanchen/DetFramework/data/COCO/'
-data_root = '/data/kyanchen/prompt/data/COCO'
+# data_root = '/data/kyanchen/prompt/data/COCO'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
 # find_unused_parameters = True
-samples_per_gpu = 38
+samples_per_gpu = 24
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
@@ -220,7 +220,7 @@ evaluation = dict(interval=3, metric='proposal_fast')
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        'neck': {}, 'rpn_head': {} },
+        'backbone': {}, 'neck': {}, 'rpn_head': {} },
     type='AdamW',
     lr=5e-4,
     weight_decay=1e-3
