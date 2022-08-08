@@ -199,7 +199,7 @@ data = dict(
         type=dataset_type,
         data_root=data_root,
         pipeline=test_pipeline,
-        pattern='train',
+        pattern='test',
         test_mode=True
     )
 )
