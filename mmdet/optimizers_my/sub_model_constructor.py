@@ -40,13 +40,15 @@ class SubModelConstructor(DefaultOptimizerConstructor):
 
         _rank, _word_size = get_dist_info()
         if _rank == 0:
+            print()
             print('All sub models:')
             for name, module in model.named_children():
                 print(name, end=', ')
-            print('')
+            print()
             print('Needed train models:')
             for needed_train_sub_model in sub_models.keys():
                 print(needed_train_sub_model, end=', ')
+            print()
 
         # if no paramwise option is specified, just use the global setting
         if not self.paramwise_cfg:
