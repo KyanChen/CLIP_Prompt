@@ -177,7 +177,7 @@ data_root = '/data/kyanchen/Data'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
-# find_unused_parameters = True
+find_unused_parameters = True
 samples_per_gpu = 20
 data = dict(
     samples_per_gpu=samples_per_gpu,
