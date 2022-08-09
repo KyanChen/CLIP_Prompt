@@ -28,11 +28,11 @@ from mmdet.utils.api_wrappers import COCO, COCOeval
 from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
 from ..datasets.pipelines import Compose
-from .evaluate_tools import cal_metrics
 
 
+# 得到VG的instance，并训练RPN，同时使用训练好的RPN计算VG的召回指标
 @DATASETS.register_module()
-class VGODDataset(Dataset):
+class VGRPNDataset(Dataset):
 
     CLASSES = None
 
@@ -43,19 +43,15 @@ class VGODDataset(Dataset):
                  test_mode=False,
                  file_client_args=dict(backend='disk')
                  ):
+        super(VGRPNDataset, self).__init__()
         assert pattern in ['train', 'val', 'test']
         self.test_mode = test_mode
         self.pipeline = Compose(pipeline)
         self.data_root = data_root
-        if pattern == 'train':
-            self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
-        elif pattern == 'val':
-            self.instances, self.img_instances_pair = self.read_data(['val.json'])
-        elif pattern == 'test':
-            self.instances, self.img_instances_pair = self.read_data(['test.json'])
+        self.img_instances_pair = self.read_data(pattern)
 
         print('data len: ', len(self.img_instances_pair))
-        self.error_list = set()
+        # self.error_list = set()
         self.img_ids = list(self.img_instances_pair.keys())
 
     def xyxy2xywh(self, bbox):
@@ -88,33 +84,84 @@ class VGODDataset(Dataset):
         mmcv.dump(json_results, result_files)
         return json_results, result_files
 
-    def read_data(self, json_file_list):
-        json_data = [json.load(open(self.data_root + '/VAW/' + x)) for x in json_file_list]
-        instances = []
-        [instances.extend(x) for x in json_data]
+    def read_data(self, pattern):
+        json_data = json.load(open(self.data_root + '/VG/objects.json', 'r'))
+        img_ids_file = 'VG_train' if pattern == 'train' else pattern
+        img_ids = json.load(open(self.data_root + f'VAW/{img_ids_file}.json', 'r'))
+        img_instances_pair_all = {}
+        for data in json_data:
+            img_instances_pair_all[data['image_id']] = data['objects']
         img_instances_pair = {}
-        for instance in instances:
-            img_id = instance['image_id']
-            img_instances_pair[img_id] = img_instances_pair.get(img_id, []) + [instance]
-        # sub = {}
-        # sub_keys = list(img_instances_pair.keys())[:10]
-        # for k in sub_keys:
-        #     sub[k] = img_instances_pair[k]
-
-        return instances, img_instances_pair
-        # return instances, sub
+        for img_id in img_ids:
+            if len(img_instances_pair_all[img_id]) > 0:
+                img_instances_pair[img_id] = img_instances_pair_all[img_id]
+        return img_instances_pair
 
     def __len__(self):
         return len(self.img_instances_pair)
 
     def get_test_data(self, idx):
-        img_instances_pair = list(self.img_instances_pair.values())[idx]
-        assert list(self.img_instances_pair.keys())[idx] == img_instances_pair[0]['image_id']
+        img_id = self.img_ids[idx]
+        instances = self.img_instances_pair[img_id]
         results = {}
         results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
         results['img_info'] = {}
-        results['img_info']['filename'] = f'{img_instances_pair[0]["image_id"]}.jpg'
-        results = self.pipeline(results)
+        results['img_info']['filename'] = f'{img_id}.jpg'
+
+        bbox_list = []
+        attr_label_list = []
+        for instance in instances:
+            x, y, w, h = instance["instance_bbox"]
+            bbox_list.append([x, y, x + w, y + h])
+            positive_attributes = instance["positive_attributes"]
+            negative_attributes = instance["negative_attributes"]
+            labels = np.ones(len(self.classname_maps.keys())) * 2
+            for att in positive_attributes:
+                labels[self.classname_maps[att]] = 1
+            for att in negative_attributes:
+                labels[self.classname_maps[att]] = 0
+            attr_label_list.append(labels)
+
+        proposals = np.array(bbox_list, dtype=np.float32)
+        gt_labels = np.stack(attr_label_list, axis=0)
+        results['proposals'] = proposals
+        results['bbox_fields'] = ['proposals']
+        results['gt_labels'] = gt_labels.astype(np.int)
+        assert len(gt_labels) == len(proposals)
+
+        if self.kd_pipeline:
+            kd_results = results.copy()
+            kd_results.pop('gt_labels')
+            kd_results.pop('bbox_fields')
+        try:
+            results = self.pipeline(results)
+            if self.kd_pipeline:
+                kd_results = self.kd_pipeline(kd_results, 0)
+                img_crops = []
+                for proposal in kd_results['proposals']:
+                    kd_results_tmp = kd_results.copy()
+                    kd_results_tmp['crop_box'] = proposal
+                    kd_results_tmp = self.kd_pipeline(kd_results_tmp, (1, ':'))
+                    img_crops.append(kd_results_tmp['img'])
+                img_crops = torch.stack(img_crops, dim=0)
+                results['img_crops'] = img_crops
+
+            results['proposals'] = DataContainer(results['proposals'], stack=False)
+            results['gt_labels'] = DataContainer(results['gt_labels'], stack=False)
+            results['img'] = DataContainer(results['img'], padding_value=0, stack=True)
+            if self.kd_pipeline:
+                results['img_crops'] = DataContainer(results['img_crops'], stack=False)
+        except Exception as e:
+            print(e)
+            self.error_list.add(idx)
+            self.error_list.add(f'{img_id}.jpg')
+            print(self.error_list)
+            if len(self.error_list) > 20:
+                return None
+            if not self.test_mode:
+                results = self.__getitem__(np.random.randint(0, len(self)))
+
+        return results
         return results
 
     def __getitem__(self, idx):
@@ -232,19 +279,19 @@ class VGODDataset(Dataset):
                 bboxes = np.zeros((0, 4))
             gt_bboxes.append(bboxes)
 
-        for i in np.random.choice(range(len(self.img_ids)), 100):
-        # for i in range(len(self.img_ids)):
-            img_id = self.img_ids[i]
-            filename = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{img_id}.jpg'
-            img = cv2.imread(filename, cv2.IMREAD_COLOR)
-            for box in gt_bboxes[i]:
-                x1, y1, x2, y2 = box.astype(np.int)
-                img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
-            for box in results[i]:
-                x1, y1, x2, y2, _ = box.astype(np.int)
-                img = cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), thickness=1)
-            os.makedirs('results/tmp', exist_ok=True)
-            cv2.imwrite('results/tmp' + f'/{img_id}.jpg', img)
+        # for i in np.random.choice(range(len(self.img_ids)), 100):
+        # # for i in range(len(self.img_ids)):
+        #     img_id = self.img_ids[i]
+        #     filename = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{img_id}.jpg'
+        #     img = cv2.imread(filename, cv2.IMREAD_COLOR)
+        #     for box in gt_bboxes[i]:
+        #         x1, y1, x2, y2 = box.astype(np.int)
+        #         img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), thickness=1)
+        #     for box in results[i]:
+        #         x1, y1, x2, y2, _ = box.astype(np.int)
+        #         img = cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), thickness=1)
+        #     os.makedirs('results/tmp', exist_ok=True)
+        #     cv2.imwrite('results/tmp' + f'/{img_id}.jpg', img)
 
         recalls = eval_recalls(
             gt_bboxes, results, proposal_nums, iou_thrs, logger=logger)
@@ -254,16 +301,13 @@ class VGODDataset(Dataset):
     def evaluate_det_segm(self,
                           results,
                           result_files,
-                          result_files_gt,
+                          coco_gt,
                           metrics,
                           logger=None,
                           classwise=False,
-                          metric_items=None,
-                          # my settings
-                          maxDets=(100, 300, 1000),
-                          iouThrs=None,
-                          areaRng=None,
-                          val_or_test='val'
+                          proposal_nums=(100, 300, 1000),
+                          iou_thrs=None,
+                          metric_items=None
                           ):
         """Instance segmentation and object detection evaluation in COCO
         protocol.
@@ -296,20 +340,9 @@ class VGODDataset(Dataset):
         Returns:
             dict[str, float]: COCO style evaluation metric.
         """
-        # specific settings
-        if iouThrs is None:
-            iouThrs = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
-
-        if areaRng is None:
-            areaRng = [0, 32, 96]
-        assert len(areaRng) == 3
-        areaRng = [
-            [0 ** 2, 1e5 ** 2], [areaRng[0] ** 2, areaRng[1] ** 2], [areaRng[1] ** 2, areaRng[2] ** 2],
-            [areaRng[2] ** 2, 1e5 ** 2]
-        ]
-        if maxDets is None:
-            maxDets = [100, 300, 1000]
-
+        if iou_thrs is None:
+            iou_thrs = np.linspace(
+                .5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
         if metric_items is not None:
             if not isinstance(metric_items, list):
                 metric_items = [metric_items]
@@ -326,9 +359,9 @@ class VGODDataset(Dataset):
                     raise KeyError('proposal_fast is not supported for '
                                    'instance segmentation result.')
                 ar = self.fast_eval_recall(
-                    results, maxDets, iouThrs, logger='silent')
+                    results, proposal_nums, iou_thrs, logger='silent')
                 log_msg = []
-                for i, num in enumerate(maxDets):
+                for i, num in enumerate(proposal_nums):
                     eval_results[f'AR@{num}'] = ar[i]
                     log_msg.append(f'\nAR@{num}\t{ar[i]:.4f}')
                 log_msg = ''.join(log_msg)
@@ -366,10 +399,10 @@ class VGODDataset(Dataset):
             cocoEval = COCOeval(coco_gt, coco_det, iou_type)
             cocoEval.params.catIds = self.cat_ids
             cocoEval.params.imgIds = self.img_ids
-            assert len(maxDets) == 3
-            cocoEval.params.maxDets = list(maxDets)
-            cocoEval.params.iouThrs = iouThrs
-            cocoEval.params.areaRng = areaRng
+            assert len(proposal_nums) == 3
+            cocoEval.params.maxDets = list(proposal_nums)
+            cocoEval.params.iouThrs = iou_thrs
+            # cocoEval.params.areaRng = areaRng
 
             # mapping of cocoEval.stats
             # my settings
@@ -380,12 +413,12 @@ class VGODDataset(Dataset):
                 'mAP_s': 3,
                 'mAP_m': 4,
                 'mAP_l': 5,
-                f'AR_{maxDets[0]}': 6,
-                f'AR_{maxDets[1]}': 7,
-                f'AR_{maxDets[2]}': 8,
-                f'AR_s_{maxDets[2]}': 9,
-                f'AR_m_{maxDets[2]}': 10,
-                f'AR_l_{maxDets[2]}': 11,
+                f'AR_{proposal_nums[0]}': 6,
+                f'AR_{proposal_nums[1]}': 7,
+                f'AR_{proposal_nums[2]}': 8,
+                f'AR_s_{proposal_nums[2]}': 9,
+                f'AR_m_{proposal_nums[2]}': 10,
+                f'AR_l_{proposal_nums[2]}': 11,
                 f'AP_50_s': 12,
                 f'AP_50_m': 13,
                 f'AR_50_s': 14,
@@ -493,20 +526,14 @@ class VGODDataset(Dataset):
 
     def evaluate(self,
                  results,
-                 metric='proposal_fast',
+                 metric='bbox',
                  logger=None,
                  jsonfile_prefix=None,
                  classwise=False,
-                 metric_items=None,
-
-                 maxDets=(50, 100, 200),
-                 iouThrs=None,
-                 # specific param
-                 areaRng=None,
-                 val_or_test='val'
+                 proposal_nums=(100, 300, 1000),
+                 iou_thrs=None,
+                 metric_items=None
                  ):
-        # import pdb
-        # pdb.set_trace()
         results = [x.cpu().numpy() for x in results]
 
         metrics = metric if isinstance(metric, list) else [metric]
@@ -517,17 +544,15 @@ class VGODDataset(Dataset):
 
         # coco_gt = self.coco
         # self.cat_ids = coco_gt.get_cat_ids(cat_names=self.CLASSES)
-        jsonfile_prefix = 'results/EXP20220628_0/FasterRCNN_R50_OpenImages'
+        jsonfile_prefix = 'results/EXP20220804_4/fasterrcnn_coco'
         os.makedirs(jsonfile_prefix, exist_ok=True)
         result_files, tmp_dir = self.format_results(results, jsonfile_prefix)
-        result_files_gt, tmp_dir_gt = self.format_gt()
-
-        eval_results = self.evaluate_det_segm(results, result_files, result_files_gt,
-                                              metrics, logger, classwise, metric_items,
-                                              maxDets, iouThrs, areaRng, val_or_test)
+        coco_gt = None
+        eval_results = self.evaluate_det_segm(results, result_files, coco_gt,
+                                              metrics, logger, classwise,
+                                              proposal_nums, iou_thrs,
+                                              metric_items)
 
         if tmp_dir is not None:
             tmp_dir.cleanup()
-        if tmp_dir_gt is not None:
-            tmp_dir_gt.cleanup()
         return eval_results

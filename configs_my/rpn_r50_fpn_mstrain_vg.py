@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=5)
+checkpoint_config = dict(interval=10)
 # yapf:disable
 log_config = dict(
     interval=50,
@@ -7,7 +7,7 @@ log_config = dict(
         dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable
-custom_hooks = [dict(type='NumClassCheckHook')]
+custom_hooks = None
 
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
@@ -26,6 +26,9 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 model = dict(
     type='FasterRCNNRPN',
+    need_train_names=[
+        'backbone', 'neck', 'rpn_head'
+    ],
     backbone=dict(
         type='ResNet',
         depth=50,
@@ -35,7 +38,16 @@ model = dict(
         norm_cfg=dict(type='BN', requires_grad=True),
         norm_eval=True,
         style='pytorch',
-        init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
+        init_cfg=dict(type='Pretrained', map_location='cpu', checkpoint='torchvision://resnet50')),
+    # backbone=dict(
+    #     type='CLIPModel',
+    #     backbone_name='RN50',
+    #     with_attn=False,
+    #     out_indices=[1, 2, 3, 4],
+    #     # backbone_name='ViT-B/16',
+    #     load_ckpt_from=None,
+    #     precision='fp32',
+    # ),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -44,6 +56,7 @@ model = dict(
     rpn_head=dict(
         type='RPNHead',
         in_channels=256,
+        num_convs=3,
         feat_channels=256,
         anchor_generator=dict(
             type='AnchorGenerator',
@@ -81,32 +94,34 @@ model = dict(
             max_per_img=1000,
             nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=0),
-        rcnn=dict(
-            assigner=dict(
-                type='MaxIoUAssigner',
-                pos_iou_thr=0.5,
-                neg_iou_thr=0.5,
-                min_pos_iou=0.5,
-                match_low_quality=False,
-                ignore_iof_thr=-1),
-            sampler=dict(
-                type='RandomSampler',
-                num=512,
-                pos_fraction=0.25,
-                neg_pos_ub=-1,
-                add_gt_as_proposals=True),
-            pos_weight=-1,
-            debug=False)),
+        # rcnn=dict(
+        #     assigner=dict(
+        #         type='MaxIoUAssigner',
+        #         pos_iou_thr=0.5,
+        #         neg_iou_thr=0.5,
+        #         min_pos_iou=0.5,
+        #         match_low_quality=False,
+        #         ignore_iof_thr=-1),
+        #     sampler=dict(
+        #         type='RandomSampler',
+        #         num=512,
+        #         pos_fraction=0.25,
+        #         neg_pos_ub=-1,
+        #         add_gt_as_proposals=True),
+        #     pos_weight=-1,
+        #     debug=False)
+    ),
     test_cfg=dict(
         rpn=dict(
             nms_pre=1000,
             max_per_img=1000,
             nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=0),
-        rcnn=dict(
-            score_thr=0.05,
-            nms=dict(type='nms', iou_threshold=0.5),
-            max_per_img=100)
+        # rcnn=dict(
+        #     score_thr=0.05,
+        #     nms=dict(type='nms', iou_threshold=0.5),
+        #     max_per_img=100)
+
         # soft-nms is also supported for rcnn testing
         # e.g., nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.05)
     ))
@@ -154,41 +169,64 @@ test_pipeline = [
         ])
 ]
 
-# dataset_type = 'CocoDataset'
-# data_root = '/data/kyanchen/Data/coco'
+dataset_type = 'CocoRPNDataset'
+data_root = '/data/kyanchen/Data/coco'
+# data_root = '/data1/kyanchen/DetFramework/data/COCO/'
+# data_root = '/data/kyanchen/prompt/data/COCO'
 
-dataset_type = 'VAWODDataset'
-data_root = '/data/kyanchen/prompt/data'
+# dataset_type = 'VAWODDataset'
+# data_root = '/data/kyanchen/prompt/data'
+# find_unused_parameters = True
+samples_per_gpu = 24
 data = dict(
-    samples_per_gpu=16,
-    workers_per_gpu=2,
+    samples_per_gpu=samples_per_gpu,
+    workers_per_gpu=4,
+    persistent_workers=True,
     train=dict(
         type=dataset_type,
-        data_root=data_root,
+        data_root=data_root+'/train2017',
+        ann_file=data_root+'/annotations/instances_train2017.json',
         pipeline=train_pipeline,
-        pattern='train',
         test_mode=False
     ),
     val=dict(
-        samples_per_gpu=2,
+        samples_per_gpu=samples_per_gpu,
         type=dataset_type,
-        data_root=data_root,
+        data_root=data_root+'/val2017',
+        ann_file=data_root + '/annotations/instances_val2017.json',
         pipeline=test_pipeline,
-        pattern='test',
         test_mode=True
     ),
     test=dict(
-        samples_per_gpu=2,
+        samples_per_gpu=samples_per_gpu,
         type=dataset_type,
-        data_root=data_root,
+        data_root=data_root+'/val2017',
+        ann_file=data_root + '/annotations/instances_val2017.json',
         pipeline=test_pipeline,
-        pattern='test',
-        test_mode=True)
+        test_mode=True
+    )
 )
-evaluation = dict(interval=1, metric='bbox')
+evaluation = dict(interval=3, metric='proposal_fast')
 
-# optimizer
-optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+# optimizer = dict(
+#     constructor='SubModelConstructor',
+#     sub_model={
+#         'backbone': {}, 'neck': {}, 'rpn_head': {} },
+#     type='SGD',
+#     momentum=0.9,
+#     lr=0.02,
+#     weight_decay=1e-3
+# )
+optimizer = dict(
+    constructor='SubModelConstructor',
+    sub_model={
+        'backbone': {}, 'neck': {}, 'rpn_head': {} },
+    type='AdamW',
+    lr=5e-4,
+    weight_decay=1e-3
+)
+
+# optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 
 # learning policy
@@ -198,7 +236,8 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[9, 11])
-runner = dict(type='EpochBasedRunner', max_epochs=12)
+    step=[30, 40]
+)
+runner = dict(type='EpochBasedRunner', max_epochs=50)
 load_from = None
 resume_from = None

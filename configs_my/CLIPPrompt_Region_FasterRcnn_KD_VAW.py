@@ -24,7 +24,6 @@ mp_start_method = 'fork'
 #       or not by default.
 #   - `base_batch_size` = (8 GPUs) x (2 samples per GPU).
 auto_scale_lr = dict(enable=False, base_batch_size=16)
-# find_unused_parameters = True
 
 data_root = '/data/kyanchen/prompt/data'
 # data_root = '/data/kyanchen/Data'
@@ -33,7 +32,7 @@ model = dict(
     type='CLIP_Prompter_Region',
     classname_path=data_root+'/VAW/attribute_index.json',
     need_train_names=[
-        'img_head',
+        'img_neck', 'img_head',
         'prompt_learner',
         'logit_scale', 'head',
         'kd_img_align', 'kd_logit_scale',
@@ -210,7 +209,8 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 68
+# find_unused_parameters = True
+samples_per_gpu = 72
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
@@ -267,6 +267,7 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
+        'img_neck': {'lr_mult': 0.1},
         'img_head': {},
         'prompt_learner': {},
         'logit_scale': {}, 'head': {},
