@@ -32,35 +32,36 @@ model = dict(
     type='CLIP_Prompter_Region',
     classname_path=data_root+'/VAW/attribute_index.json',
     need_train_names=[
-        'img_neck', 'img_head',
+        # 'img_neck',
+        'img_head',
         'prompt_learner',
         'logit_scale', 'head',
         'kd_img_align', 'kd_logit_scale',
     ],
-    # img_backbone=dict(
-    #     type='ResNet',
-    #     depth=50,
-    #     num_stages=4,
-    #     out_indices=(0, 1, 2, 3),
-    #     frozen_stages=1,
-    #     norm_cfg=dict(type='BN', requires_grad=True),
-    #     norm_eval=True,
-    #     style='pytorch',
-    #     # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
-    #     init_cfg=dict(type='Pretrained', prefix='backbone.', map_location='cpu',
-    #                   checkpoint='results/EXP20220808_2/latest.pth')
-    #     # init_cfg=dict(type='Pretrained', prefix='backbone.',
-    #     #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
-    # ),
     img_backbone=dict(
-        type='CLIPModel',
-        backbone_name='RN50',
-        with_attn=False,
-        out_indices=[1, 2, 3, 4],
-        # backbone_name='ViT-B/16',
-        load_ckpt_from=None,
-        precision='fp32',
+        type='ResNet',
+        depth=50,
+        num_stages=4,
+        out_indices=(0, 1, 2, 3),
+        frozen_stages=1,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        norm_eval=True,
+        style='pytorch',
+        # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
+        init_cfg=dict(type='Pretrained', prefix='backbone.', map_location='cpu',
+                      checkpoint='results/EXP20220808_2/latest.pth')
+        # init_cfg=dict(type='Pretrained', prefix='backbone.',
+        #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
+    # img_backbone=dict(
+    #     type='CLIPModel',
+    #     backbone_name='RN50',
+    #     with_attn=False,
+    #     out_indices=[1, 2, 3, 4],
+    #     # backbone_name='ViT-B/16',
+    #     load_ckpt_from=None,
+    #     precision='fp32',
+    # ),
     img_neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -68,7 +69,7 @@ model = dict(
         num_outs=5,
         # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
         init_cfg=dict(type='Pretrained', prefix='neck.', map_location='cpu',
-                      checkpoint='results/EXP20220808_1/latest.pth'),
+                      checkpoint='results/EXP20220808_2/latest.pth'),
         # init_cfg=dict(type='Pretrained', prefix='neck.',
         #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
@@ -267,7 +268,7 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        'img_neck': {'lr_mult': 0.1},
+        # 'img_neck': {'lr_mult': 0.1},
         'img_head': {},
         'prompt_learner': {},
         'logit_scale': {}, 'head': {},
