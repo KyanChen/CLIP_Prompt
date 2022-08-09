@@ -47,6 +47,8 @@ class FasterRCNNRPN(TwoStageDetector):
 
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
+        self.need_train_names = need_train_names
+        self.noneed_train_names = noneed_train_names
         self._set_grad(need_train_names, noneed_train_names)
 
     def _set_grad(self, need_train_names: list, noneed_train_names: list):
