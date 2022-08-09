@@ -129,6 +129,7 @@ class VGRPNDataset(Dataset):
                 bbox_list.append([x, y, x + w, y + h])
 
         gt_bboxes = np.array(bbox_list, dtype=np.float32, ndmin=2)
+        assert len(gt_bboxes) > 0, 'gt_bboxes is None'
         results['gt_bboxes'] = gt_bboxes
         results['bbox_fields'] = ['gt_bboxes']
         try:
