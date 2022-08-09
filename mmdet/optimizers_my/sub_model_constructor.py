@@ -27,7 +27,7 @@ class SubModelConstructor(DefaultOptimizerConstructor):
                 sub_model_ = getattr(model, sub_model_name)
                 if isinstance(sub_model_, torch.nn.Parameter):
                     # filter(lambda p: p.requires_grad, model.parameters())
-                    sub_models[sub_model_name]['params'] = filter(lambda p: p.requires_grad, sub_model_)
+                    sub_models[sub_model_name]['params'] = filter(lambda p: p.requires_grad, [sub_model_])
                 else:
                     sub_models[sub_model_name]['params'] = filter(lambda p: p.requires_grad, sub_model_.parameters())
 
