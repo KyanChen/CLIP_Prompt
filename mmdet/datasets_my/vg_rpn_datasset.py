@@ -88,7 +88,7 @@ class VGRPNDataset(Dataset):
     def read_data(self, pattern):
         json_data = json.load(open(self.data_root + '/VG/objects.json', 'r'))
         img_ids_file = 'VG_train' if pattern == 'train' else pattern
-        img_ids = json.load(open(self.data_root + f'VAW/{img_ids_file}.json', 'r'))
+        img_ids = json.load(open(self.data_root + f'/VAW/{img_ids_file}.json', 'r'))
         img_instances_pair_all = {}
         for data in json_data:
             img_instances_pair_all[data['image_id']] = data['objects']
