@@ -8,8 +8,9 @@ from .vaw_proposal_datasset import VAWProposalDataset
 from .vaw_region_att_pred_datasset import VAWRegionDataset
 from .vaw_crop_img_datasset import VAWCropDataset
 
+from .vg_rpn_datasset import VGRPNDataset
 from .coco_rpn_dataset import CocoRPNDataset
 __all__ = [
     'VAWDataset', 'NWPUDataset', 'CocoCLIPDataset', 'CocoCLIPAnnDataset', 'VAWRPNDataset', 'VAWProposalDataset',
-    'VAWRegionDataset', 'VAWCropDataset', 'CocoRPNDataset'
+    'VAWRegionDataset', 'VAWCropDataset', 'CocoRPNDataset', 'VGRPNDataset'
 ]
