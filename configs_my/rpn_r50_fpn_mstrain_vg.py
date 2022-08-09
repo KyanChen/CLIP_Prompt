@@ -241,5 +241,5 @@ lr_config = dict(
     step=[30, 40]
 )
 runner = dict(type='EpochBasedRunner', max_epochs=50)
-load_from = None
+load_from = 'EXP20220807_0/latest.pth'
 resume_from = None
