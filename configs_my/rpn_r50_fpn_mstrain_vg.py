@@ -29,6 +29,9 @@ model = dict(
     need_train_names=[
         'backbone', 'neck', 'rpn_head'
     ],
+    noneed_train_names=[
+        'backbone.layer1', 'backbone.conv1', 'backbone.bn1'
+    ],
     backbone=dict(
         type='ResNet',
         depth=50,
@@ -177,8 +180,8 @@ data_root = '/data/kyanchen/Data'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
-find_unused_parameters = True
-samples_per_gpu = 18
+# find_unused_parameters = True
+samples_per_gpu = 20
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
