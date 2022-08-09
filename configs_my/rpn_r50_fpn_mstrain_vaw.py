@@ -173,8 +173,8 @@ test_pipeline = [
 dataset_type = 'VAWRPNDataset'
 
 # data_root = '/data1/kyanchen/DetFramework/data/COCO/'
-# data_root = '/data1/kyanchen/prompt/data'
-data_root = '/data/kyanchen/Data'
+data_root = '/data1/kyanchen/prompt/data'
+# data_root = '/data/kyanchen/Data'
 
 samples_per_gpu = 20
 data = dict(
