@@ -12,7 +12,7 @@ while True:
               # "../configs_my/rpn_r50_fpn_mstrain_coco.py "
               # "../configs_my/rpn_r50_fpn_mstrain_vaw.py "
               "../configs_my/CLIPPrompt_Region_FasterRcnn_KD_VAW.py "
-              "results/EXP20220808_3 "
+              "results/EXP20220809_0 "
               "8")
     time.sleep(60*2)
 

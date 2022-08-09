@@ -27,7 +27,8 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 # find_unused_parameters = True
 
 # data_root = '/data/kyanchen/prompt/data'
-data_root = '/data/kyanchen/Data'
+# data_root = '/data/kyanchen/Data'
+data_root = '/data1/kyanchen/prompt/data'
 model = dict(
     type='CLIP_Prompter_Region',
     classname_path=data_root+'/VAW/attribute_index.json',
@@ -48,7 +49,7 @@ model = dict(
         style='pytorch',
         # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
         init_cfg=dict(type='Pretrained', prefix='backbone.', map_location='cpu',
-                      checkpoint='results/EXP20220807_0/latest.pth')
+                      checkpoint='results/EXP20220808_2/latest.pth')
         # init_cfg=dict(type='Pretrained', prefix='backbone.',
         #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
@@ -68,7 +69,7 @@ model = dict(
         num_outs=5,
         # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
         init_cfg=dict(type='Pretrained', prefix='neck.', map_location='cpu',
-                      checkpoint='results/EXP20220807_0/latest.pth'),
+                      checkpoint='results/EXP20220808_2/latest.pth'),
         # init_cfg=dict(type='Pretrained', prefix='neck.',
         #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
@@ -90,7 +91,7 @@ model = dict(
             use_abs_pos_embed=True,
             drop_rate=0.1,
             class_token=True,
-            num_encoder_layers=5,
+            num_encoder_layers=6,
             global_pool=False,
         )
     ),
@@ -209,7 +210,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 40
+samples_per_gpu = 46
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
@@ -283,7 +284,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=2000,
     warmup_ratio=0.1,
-    step=[55, 70])
+    step=[50, 70])
 
 # lr_config = dict(
 #     policy='CosineAnnealing',
