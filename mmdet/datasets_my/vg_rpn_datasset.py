@@ -105,6 +105,8 @@ class VGRPNDataset(Dataset):
             img_instances_pair_all[data['image_id']] = data['objects']
         img_instances_pair = {}
         for img_id in img_ids:
+            import pdb
+            pdb.set_trace()
             if len(img_instances_pair_all[img_id]) > 0:
                 img_instances_pair[img_id] = img_instances_pair_all[img_id]
         return img_instances_pair
