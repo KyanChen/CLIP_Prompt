@@ -225,7 +225,7 @@ class VGRPNDataset(Dataset):
             # ann_ids = self.coco.get_ann_ids(img_ids=self.img_ids[i])
             # ann_info = self.coco.load_anns(ann_ids)
             img_id = self.img_ids[i]
-            bboxes_tmp = [instance['instance_bbox'] for instance in self.img_instances_pair[img_id]]
+            bboxes_tmp = [[instance["x"], instance["y"], instance["w"], instance["h"]] for instance in self.img_instances_pair[img_id]]
             if len(bboxes_tmp) == 0:
                 gt_bboxes.append(np.zeros((0, 4)))
                 continue

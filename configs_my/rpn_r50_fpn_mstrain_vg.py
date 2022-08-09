@@ -224,7 +224,7 @@ optimizer = dict(
     sub_model={
         'backbone': {}, 'neck': {}, 'rpn_head': {}},
     type='AdamW',
-    lr=5e-4,
+    lr=1e-4,
     weight_decay=1e-3
 )
 
