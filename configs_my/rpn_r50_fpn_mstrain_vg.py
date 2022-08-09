@@ -140,7 +140,7 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile', rearrange=True, channel_order='rgb'),
     # dict(type='LoadImageFromFile', channel_order='rgb'),
-    dict(type='LoadAnnotations', with_bbox=True),
+    # dict(type='LoadAnnotations', with_bbox=True),
     dict(
         type='Resize',
         img_scale=[(1024, 640), (1024, 800)],
@@ -150,8 +150,9 @@ train_pipeline = [
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
+    dict(type='Collect', keys=['img', 'gt_bboxes']),
 ]
+
 test_pipeline = [
     # dict(type='LoadImageFromFile', channel_order='rgb'),
     dict(type='LoadImageFromFile', rearrange=True, channel_order='rgb'),
@@ -169,8 +170,8 @@ test_pipeline = [
         ])
 ]
 
-dataset_type = 'CocoRPNDataset'
-data_root = '/data/kyanchen/Data/coco'
+dataset_type = 'VGRPNDataset'
+data_root = '/data/kyanchen/Data'
 # data_root = '/data1/kyanchen/DetFramework/data/COCO/'
 # data_root = '/data/kyanchen/prompt/data/COCO'
 
@@ -184,28 +185,29 @@ data = dict(
     persistent_workers=True,
     train=dict(
         type=dataset_type,
-        data_root=data_root+'/train2017',
-        ann_file=data_root+'/annotations/instances_train2017.json',
+        data_root=data_root,
         pipeline=train_pipeline,
-        test_mode=False
+        pattern='train',
+        test_mode=False,
     ),
     val=dict(
         samples_per_gpu=samples_per_gpu,
         type=dataset_type,
-        data_root=data_root+'/val2017',
-        ann_file=data_root + '/annotations/instances_val2017.json',
+        data_root=data_root,
         pipeline=test_pipeline,
-        test_mode=True
+        pattern='val',
+        test_mode=True,
     ),
     test=dict(
         samples_per_gpu=samples_per_gpu,
         type=dataset_type,
-        data_root=data_root+'/val2017',
-        ann_file=data_root + '/annotations/instances_val2017.json',
+        data_root=data_root,
         pipeline=test_pipeline,
-        test_mode=True
+        pattern='test',
+        test_mode=True,
     )
 )
+
 evaluation = dict(interval=3, metric='proposal_fast')
 
 # optimizer = dict(
@@ -220,7 +222,7 @@ evaluation = dict(interval=3, metric='proposal_fast')
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        'backbone': {}, 'neck': {}, 'rpn_head': {} },
+        'backbone': {}, 'neck': {}, 'rpn_head': {}},
     type='AdamW',
     lr=5e-4,
     weight_decay=1e-3

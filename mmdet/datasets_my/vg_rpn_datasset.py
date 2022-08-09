@@ -16,6 +16,7 @@ import warnings
 from collections import OrderedDict
 
 import cv2
+from mmcv.parallel import DataContainer
 from terminaltables import AsciiTable
 
 import mmcv
@@ -100,7 +101,7 @@ class VGRPNDataset(Dataset):
     def __len__(self):
         return len(self.img_instances_pair)
 
-    def get_test_data(self, idx):
+    def get_data(self, idx):
         img_id = self.img_ids[idx]
         instances = self.img_instances_pair[img_id]
         results = {}
@@ -109,48 +110,17 @@ class VGRPNDataset(Dataset):
         results['img_info']['filename'] = f'{img_id}.jpg'
 
         bbox_list = []
-        attr_label_list = []
         for instance in instances:
-            x, y, w, h = instance["instance_bbox"]
+            x, y, w, h = instance["x"], instance["y"], instance["w"], instance["h"]
             bbox_list.append([x, y, x + w, y + h])
-            positive_attributes = instance["positive_attributes"]
-            negative_attributes = instance["negative_attributes"]
-            labels = np.ones(len(self.classname_maps.keys())) * 2
-            for att in positive_attributes:
-                labels[self.classname_maps[att]] = 1
-            for att in negative_attributes:
-                labels[self.classname_maps[att]] = 0
-            attr_label_list.append(labels)
 
-        proposals = np.array(bbox_list, dtype=np.float32)
-        gt_labels = np.stack(attr_label_list, axis=0)
-        results['proposals'] = proposals
-        results['bbox_fields'] = ['proposals']
-        results['gt_labels'] = gt_labels.astype(np.int)
-        assert len(gt_labels) == len(proposals)
-
-        if self.kd_pipeline:
-            kd_results = results.copy()
-            kd_results.pop('gt_labels')
-            kd_results.pop('bbox_fields')
+        gt_bboxes = np.array(bbox_list, dtype=np.float32)
+        results['gt_bboxes'] = gt_bboxes
+        results['bbox_fields'] = ['gt_bboxes']
         try:
             results = self.pipeline(results)
-            if self.kd_pipeline:
-                kd_results = self.kd_pipeline(kd_results, 0)
-                img_crops = []
-                for proposal in kd_results['proposals']:
-                    kd_results_tmp = kd_results.copy()
-                    kd_results_tmp['crop_box'] = proposal
-                    kd_results_tmp = self.kd_pipeline(kd_results_tmp, (1, ':'))
-                    img_crops.append(kd_results_tmp['img'])
-                img_crops = torch.stack(img_crops, dim=0)
-                results['img_crops'] = img_crops
-
-            results['proposals'] = DataContainer(results['proposals'], stack=False)
-            results['gt_labels'] = DataContainer(results['gt_labels'], stack=False)
-            results['img'] = DataContainer(results['img'], padding_value=0, stack=True)
-            if self.kd_pipeline:
-                results['img_crops'] = DataContainer(results['img_crops'], stack=False)
+            # results['gt_bboxes'] = DataContainer(results['proposals'], stack=False)
+            # results['img'] = DataContainer(results['img'], padding_value=0, stack=True)
         except Exception as e:
             print(e)
             self.error_list.add(idx)
@@ -162,34 +132,9 @@ class VGRPNDataset(Dataset):
                 results = self.__getitem__(np.random.randint(0, len(self)))
 
         return results
-        return results
 
     def __getitem__(self, idx):
-        if self.test_mode:
-            results = self.get_test_data(idx)
-            return results
-        if idx in self.error_list and not self.test_mode:
-            idx = np.random.randint(0, len(self))
-        item = self.data[idx]
-        results = item.__dict__.copy()
-        results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
-        results['img_info'] = {}
-        results['img_info']['filename'] = f'{item.image_id}.jpg'
-        results['gt_bboxes'] = item.instance_bbox
-        results['gt_labels'] = item.label.astype(np.int)
-        if self.test_mode:
-            results = self.pipeline(results)
-        else:
-            try:
-                # print(results)
-                results = self.pipeline(results)
-            except Exception as e:
-                print(e)
-                self.error_list.add(idx)
-                self.error_list.add(results['img_info']['filename'])
-                print(self.error_list)
-                if not self.test_mode:
-                    results = self.__getitem__(np.random.randint(0, len(self)))
+        results = self.get_data(idx)
         return results
 
     def format_results(self, results, jsonfile_prefix=None, **kwargs):
