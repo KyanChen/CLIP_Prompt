@@ -26,9 +26,10 @@ class SubModelConstructor(DefaultOptimizerConstructor):
             if hasattr(model, sub_model_name):
                 sub_model_ = getattr(model, sub_model_name)
                 if isinstance(sub_model_, torch.nn.Parameter):
-                    sub_models[sub_model_name]['params'] = sub_model_
+                    # filter(lambda p: p.requires_grad, model.parameters())
+                    sub_models[sub_model_name]['params'] = filter(lambda p: p.requires_grad, sub_model_)
                 else:
-                    sub_models[sub_model_name]['params'] = sub_model_.parameters()
+                    sub_models[sub_model_name]['params'] = filter(lambda p: p.requires_grad, sub_model_.parameters())
 
                 lr_mult = value.pop('lr_mult', 1.)
                 sub_models[sub_model_name]['lr'] = self.base_lr * lr_mult

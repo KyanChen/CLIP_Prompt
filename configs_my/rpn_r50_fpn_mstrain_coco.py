@@ -176,8 +176,8 @@ data_root = '/data1/kyanchen/DetFramework/data/COCO/'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
-find_unused_parameters = True
-samples_per_gpu = 20
+# find_unused_parameters = True
+samples_per_gpu = 24
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
