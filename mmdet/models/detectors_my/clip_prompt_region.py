@@ -9,7 +9,7 @@ from einops import rearrange
 from ..builder import DETECTORS, build_backbone, build_head, build_neck
 from ..detectors.base import BaseDetector
 import warnings
-from mmcv.runner import BaseModule
+from mmcv.runner import BaseModule, get_dist_info
 import torch.distributed as dist
 
 
@@ -18,6 +18,7 @@ class CLIP_Prompter_Region(BaseModule):
     def __init__(self,
                  classname_path,
                  need_train_names,
+                 noneed_train_names,
                  img_backbone,
                  img_neck,
                  img_head,
@@ -30,7 +31,6 @@ class CLIP_Prompter_Region(BaseModule):
                  pretrained=None,
                  init_cfg=None):
         super(CLIP_Prompter_Region, self).__init__(init_cfg)
-        self.need_train_names = need_train_names
         if pretrained:
             warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
@@ -106,13 +106,35 @@ class CLIP_Prompter_Region(BaseModule):
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
-        print("Turning off gradients in both the image and the text encoder")
+        self.need_train_names = need_train_names
+        self.noneed_train_names = noneed_train_names
+        self._set_grad(need_train_names, noneed_train_names)
+
+    def _set_grad(self, need_train_names: list, noneed_train_names: list):
         for name, param in self.named_parameters():
             flag = False
-            for need_train_name in self.need_train_names:
+            for need_train_name in need_train_names:
                 if need_train_name in name:
                     flag = True
+            for noneed_train_name in noneed_train_names:
+                if noneed_train_name in name:
+                    flag = False
             param.requires_grad_(flag)
+
+        not_specific_names = []
+        for name, param in self.named_parameters():
+            flag_find = False
+            for specific_name in need_train_names + noneed_train_names:
+                if specific_name in name:
+                    flag_find = True
+            if not flag_find:
+                not_specific_names.append(name)
+
+        _rank, _word_size = get_dist_info()
+        if _rank == 0:
+            print(f"Turning off gradients for names: {noneed_train_names}")
+            print(f"Turning on gradients for names: {need_train_names}")
+            print(f"Turning off gradients for not specific names: {not_specific_names}")
 
     def train(self, mode=True):
         self.training = mode

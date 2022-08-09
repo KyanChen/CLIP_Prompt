@@ -32,12 +32,13 @@ model = dict(
     type='CLIP_Prompter_Region',
     classname_path=data_root+'/VAW/attribute_index.json',
     need_train_names=[
-        # 'img_neck',
+        'img_neck',
         'img_head',
         'prompt_learner',
         'logit_scale', 'head',
         'kd_img_align', 'kd_logit_scale',
     ],
+    noneed_train_names=[],
     img_backbone=dict(
         type='ResNet',
         depth=50,
@@ -49,7 +50,7 @@ model = dict(
         style='pytorch',
         # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
         init_cfg=dict(type='Pretrained', prefix='backbone.', map_location='cpu',
-                      checkpoint='results/EXP20220808_2/latest.pth')
+                      checkpoint='results/EXP20220807_0/latest.pth')
         # init_cfg=dict(type='Pretrained', prefix='backbone.',
         #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
@@ -69,7 +70,7 @@ model = dict(
         num_outs=5,
         # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
         init_cfg=dict(type='Pretrained', prefix='neck.', map_location='cpu',
-                      checkpoint='results/EXP20220808_2/latest.pth'),
+                      checkpoint='results/EXP20220807_0/latest.pth'),
         # init_cfg=dict(type='Pretrained', prefix='neck.',
         #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
@@ -211,7 +212,7 @@ test_pipeline = [
 ]
 
 # find_unused_parameters = True
-samples_per_gpu = 48
+samples_per_gpu = 44
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
@@ -268,7 +269,7 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        # 'img_neck': {'lr_mult': 0.1},
+        'img_neck': {'lr_mult': 0.1},
         'img_head': {},
         'prompt_learner': {},
         'logit_scale': {}, 'head': {},
