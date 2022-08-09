@@ -170,14 +170,14 @@ test_pipeline = [
 ]
 
 dataset_type = 'CocoRPNDataset'
-data_root = '/data/kyanchen/Data/coco'
-# data_root = '/data1/kyanchen/DetFramework/data/COCO/'
+# data_root = '/data/kyanchen/Data/coco'
+data_root = '/data1/kyanchen/DetFramework/data/COCO/'
 # data_root = '/data/kyanchen/prompt/data/COCO'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
 # find_unused_parameters = True
-samples_per_gpu = 24
+samples_per_gpu = 20
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
@@ -206,7 +206,7 @@ data = dict(
         test_mode=True
     )
 )
-evaluation = dict(interval=3, metric='proposal_fast')
+evaluation = dict(interval=5, metric='proposal_fast')
 
 # optimizer = dict(
 #     constructor='SubModelConstructor',
@@ -220,7 +220,7 @@ evaluation = dict(interval=3, metric='proposal_fast')
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        'backbone': {}, 'neck': {}, 'rpn_head': {} },
+        'backbone': {}, 'neck': {}, 'rpn_head': {}},
     type='AdamW',
     lr=5e-4,
     weight_decay=1e-3

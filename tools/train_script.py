@@ -9,11 +9,11 @@ while True:
               # "../configs_my/CLIPPrompt_Region_VAW.py "
               # "../configs_my/MAEPrompt_Crop_Img_VAW.py "
               # "../configs_my/faster_rcnn_r50_fpn_mstrain_3x_coco.py "
-              # "../configs_my/rpn_r50_fpn_mstrain_coco.py "
+              "../configs_my/rpn_r50_fpn_mstrain_coco.py "
               # "../configs_my/rpn_r50_fpn_mstrain_vaw.py "
-              "../configs_my/rpn_r50_fpn_mstrain_vg.py "
+              # "../configs_my/rpn_r50_fpn_mstrain_vg.py "
               # "../configs_my/CLIPPrompt_Region_FasterRcnn_KD_VAW.py "
-              "results/EXP20220809_3 "
+              "results/EXP20220809_4 "
               "8")
     time.sleep(60*2)
 
