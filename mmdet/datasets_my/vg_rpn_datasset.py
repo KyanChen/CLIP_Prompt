@@ -131,7 +131,6 @@ class VGRPNDataset(Dataset):
         gt_bboxes = np.array(bbox_list, dtype=np.float32)
         results['gt_bboxes'] = gt_bboxes
         results['bbox_fields'] = ['gt_bboxes']
-        results['gt_labels'] = 1
         try:
             results = self.pipeline(results)
             # results['gt_bboxes'] = DataContainer(results['proposals'], stack=False)

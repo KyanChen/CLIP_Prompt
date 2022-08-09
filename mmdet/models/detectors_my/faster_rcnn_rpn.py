@@ -112,7 +112,7 @@ class FasterRCNNRPN(TwoStageDetector):
                       img,
                       img_metas,
                       gt_bboxes,
-                      gt_labels,
+                      gt_labels=None,
                       gt_bboxes_ignore=None,
                       gt_masks=None,
                       proposals=None,
