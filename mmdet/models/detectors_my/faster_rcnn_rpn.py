@@ -80,7 +80,8 @@ class FasterRCNNRPN(TwoStageDetector):
         return hasattr(self, 'roi_head') and self.roi_head is not None
 
     def extract_feat(self, img):
-        """Directly extract features from the backbone+neck."""
+        import pdb
+        pdb.set_trace()
         if self.with_clip_img_backbone:
             image_features, final_map, x = self.backbone(img)
         else:

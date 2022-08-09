@@ -25,6 +25,8 @@ class SubModelConstructor(DefaultOptimizerConstructor):
         for sub_model_name, value in sub_models.items():
             if hasattr(model, sub_model_name):
                 sub_model_ = getattr(model, sub_model_name)
+                import pdb
+                pdb.set_trace()
                 if isinstance(sub_model_, torch.nn.Parameter):
                     # filter(lambda p: p.requires_grad, model.parameters())
                     sub_models[sub_model_name]['params'] = filter(lambda p: p.requires_grad, sub_model_)
