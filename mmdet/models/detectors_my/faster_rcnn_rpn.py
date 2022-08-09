@@ -3,7 +3,7 @@ from collections import OrderedDict
 from ..builder import DETECTORS
 from ..detectors.two_stage import TwoStageDetector
 import warnings
-
+from mmcv.runner import get_dist_info
 import torch
 from mmdet.core import bbox2result
 from ..builder import DETECTORS, build_backbone, build_head, build_neck
@@ -16,6 +16,7 @@ class FasterRCNNRPN(TwoStageDetector):
     def __init__(self,
                  backbone,
                  need_train_names,
+                 noneed_train_names,
                  neck=None,
                  rpn_head=None,
                  train_cfg=None,
@@ -46,15 +47,33 @@ class FasterRCNNRPN(TwoStageDetector):
 
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
+        self._set_grad(need_train_names, noneed_train_names)
 
-        self.need_train_names = need_train_names
-        print("Turning off gradients in both the image and the text encoder")
+    def _set_grad(self, need_train_names: list, noneed_train_names: list):
         for name, param in self.named_parameters():
             flag = False
-            for need_train_name in self.need_train_names:
+            for need_train_name in need_train_names:
                 if need_train_name in name:
                     flag = True
+            for noneed_train_name in noneed_train_names:
+                if noneed_train_name in name:
+                    flag = False
             param.requires_grad_(flag)
+
+        not_specific_names = []
+        for name, param in self.named_parameters():
+            flag_find = False
+            for specific_name in need_train_names + noneed_train_names:
+                if specific_name in name:
+                    flag_find = True
+            if not flag_find:
+                not_specific_names.append(name)
+
+        _rank, _word_size = get_dist_info()
+        if _rank == 0:
+            print(f"Turning off gradients for names: {noneed_train_names}")
+            print(f"Turning on gradients for names: {need_train_names}")
+            print(f"Turning off gradients for not specific names: {not_specific_names}")
 
     def train(self, mode=True):
         self.training = mode
@@ -80,8 +99,6 @@ class FasterRCNNRPN(TwoStageDetector):
         return hasattr(self, 'roi_head') and self.roi_head is not None
 
     def extract_feat(self, img):
-        import pdb
-        pdb.set_trace()
         if self.with_clip_img_backbone:
             image_features, final_map, x = self.backbone(img)
         else:

@@ -29,6 +29,9 @@ model = dict(
     need_train_names=[
         'backbone', 'neck', 'rpn_head'
     ],
+    noneed_train_names=[
+        'backbone.layer1', 'backbone.conv1', 'backbone.bn1'
+    ],
     backbone=dict(
         type='ResNet',
         depth=50,
