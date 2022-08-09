@@ -128,8 +128,8 @@ class VGRPNDataset(Dataset):
                 y = 0 if y < 0 else y
                 bbox_list.append([x, y, x + w, y + h])
 
-        gt_bboxes = np.array(bbox_list, dtype=np.float32, ndmin=2)
-        assert len(gt_bboxes) > 0, 'gt_bboxes is None'
+        gt_bboxes = np.array(bbox_list, dtype=np.float32).reshape((-1, 4))
+        assert len(gt_bboxes) > 0, f'w:{w}, h:{h} gt_bboxes is None'
         results['gt_bboxes'] = gt_bboxes
         results['bbox_fields'] = ['gt_bboxes']
         try:
