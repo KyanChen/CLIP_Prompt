@@ -128,10 +128,9 @@ class VGRPNDataset(Dataset):
         bbox_list = []
         for instance in instances:
             x, y, w, h = instance["x"], instance["y"], instance["w"], instance["h"]
-            if w * h > 0:
-                x = 0 if x < 0 else x
-                y = 0 if y < 0 else y
-                bbox_list.append([x, y, x + w, y + h])
+            x = 0 if x < 0 else x
+            y = 0 if y < 0 else y
+            bbox_list.append([x, y, x + w, y + h])
 
         gt_bboxes = np.array(bbox_list, dtype=np.float32).reshape((-1, 4))
         assert len(gt_bboxes) > 0, f'w:{w}, h:{h} gt_bboxes is None'

@@ -208,7 +208,7 @@ data = dict(
     )
 )
 
-evaluation = dict(interval=3, metric='proposal_fast')
+evaluation = dict(interval=5, metric='proposal_fast')
 
 # optimizer = dict(
 #     constructor='SubModelConstructor',
