@@ -29,25 +29,25 @@ model = dict(
     need_train_names=[
         'neck', 'rpn_head'
     ],
-    backbone=dict(
-        type='ResNet',
-        depth=50,
-        num_stages=4,
-        out_indices=(0, 1, 2, 3),
-        frozen_stages=1,
-        norm_cfg=dict(type='BN', requires_grad=True),
-        norm_eval=True,
-        style='pytorch',
-        init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
     # backbone=dict(
-    #     type='CLIPModel',
-    #     backbone_name='RN50',
-    #     with_attn=False,
-    #     out_indices=[1, 2, 3, 4],
-    #     # backbone_name='ViT-B/16',
-    #     load_ckpt_from=None,
-    #     precision='fp32',
-    # ),
+    #     type='ResNet',
+    #     depth=50,
+    #     num_stages=4,
+    #     out_indices=(0, 1, 2, 3),
+    #     frozen_stages=1,
+    #     norm_cfg=dict(type='BN', requires_grad=True),
+    #     norm_eval=True,
+    #     style='pytorch',
+    #     init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
+    backbone=dict(
+        type='CLIPModel',
+        backbone_name='RN50',
+        with_attn=False,
+        out_indices=[1, 2, 3, 4],
+        # backbone_name='ViT-B/16',
+        load_ckpt_from=None,
+        precision='fp32',
+    ),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -173,9 +173,9 @@ test_pipeline = [
 dataset_type = 'VAWRPNDataset'
 
 # data_root = '/data1/kyanchen/DetFramework/data/COCO/'
-data_root = '/data1/kyanchen/prompt/data'
+# data_root = '/data1/kyanchen/prompt/data'
 # data_root = '/data/kyanchen/Data'
-# data_root = '/data/kyanchen/prompt/data'
+data_root = '/data/kyanchen/prompt/data'
 
 samples_per_gpu = 20
 data = dict(
