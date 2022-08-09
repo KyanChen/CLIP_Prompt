@@ -128,7 +128,7 @@ class VGRPNDataset(Dataset):
                 y = 0 if y < 0 else y
                 bbox_list.append([x, y, x + w, y + h])
 
-        gt_bboxes = np.array(bbox_list, dtype=np.float32)
+        gt_bboxes = np.array(bbox_list, dtype=np.float32, ndmin=2)
         results['gt_bboxes'] = gt_bboxes
         results['bbox_fields'] = ['gt_bboxes']
         try:
