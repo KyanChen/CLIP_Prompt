@@ -16,6 +16,7 @@ import warnings
 from collections import OrderedDict
 
 import cv2
+import imagesize
 from mmcv.parallel import DataContainer
 from terminaltables import AsciiTable
 
@@ -54,6 +55,8 @@ class VGRPNDataset(Dataset):
         print('data len: ', len(self.img_instances_pair))
         # self.error_list = set()
         self.img_ids = list(self.img_instances_pair.keys())
+        if pattern == "train":
+            self._set_group_flag()
 
     def xyxy2xywh(self, bbox):
         _bbox = bbox.tolist()
@@ -84,6 +87,14 @@ class VGRPNDataset(Dataset):
 
         mmcv.dump(json_results, result_files)
         return json_results, result_files
+
+    def _set_group_flag(self):
+        self.flag = np.zeros(len(self), dtype=np.uint8)
+        for i, img_id in enumerate(self.img_ids):
+            img_path = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{img_id}.jpg'
+            w, h = imagesize.get(img_path)
+            if w / h > 1:
+                self.flag[i] = 1
 
     def read_data(self, pattern):
         json_data = json.load(open(self.data_root + '/VG/objects.json', 'r'))
