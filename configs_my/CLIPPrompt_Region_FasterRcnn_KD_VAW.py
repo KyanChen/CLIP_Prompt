@@ -50,7 +50,7 @@ model = dict(
         style='pytorch',
         # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
         init_cfg=dict(type='Pretrained', prefix='backbone.', map_location='cpu',
-                      checkpoint='results/EXP20220809_4/latest.pth')
+                      checkpoint='results/EXP20220809_4/epoch_30.pth')
         # init_cfg=dict(type='Pretrained', prefix='backbone.',
         #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
@@ -70,7 +70,7 @@ model = dict(
         num_outs=5,
         # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
         init_cfg=dict(type='Pretrained', prefix='neck.', map_location='cpu',
-                      checkpoint='results/EXP20220809_4/latest.pth'),
+                      checkpoint='results/EXP20220809_4/epoch_30.pth'),
         # init_cfg=dict(type='Pretrained', prefix='neck.',
         #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
