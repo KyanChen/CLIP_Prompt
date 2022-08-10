@@ -101,6 +101,7 @@ class VGRPNDataset(Dataset):
                 if w / h > 1:
                     self.flag[i] = 1
             json.dump(self.flag, open(flags_path, 'w'))
+        self.flag = np.array(self.flag, dtype=np.uint8)
 
     def read_data(self, pattern):
         json_data = json.load(open(self.data_root + '/VG/objects.json', 'r'))
