@@ -52,11 +52,11 @@ class VGRPNDataset(Dataset):
         self.data_root = data_root
         self.img_instances_pair = self.read_data(pattern)
 
-        print('data len: ', len(self.img_instances_pair))
         # self.error_list = set()
         self.img_ids = list(self.img_instances_pair.keys())
         if pattern == "train":
             self._set_group_flag()
+        print('data len: ', len(self.img_instances_pair))
 
     def xyxy2xywh(self, bbox):
         _bbox = bbox.tolist()
