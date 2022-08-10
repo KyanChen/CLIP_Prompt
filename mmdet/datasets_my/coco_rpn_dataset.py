@@ -33,7 +33,6 @@ class CocoRPNDataset(CocoDataset):
                  iou_thrs=None,
                  metric_items=None):
         results = [x.cpu().numpy() for x in results]
-
         metrics = metric if isinstance(metric, list) else [metric]
         allowed_metrics = ['bbox', 'segm', 'proposal', 'proposal_fast']
         for metric in metrics:
