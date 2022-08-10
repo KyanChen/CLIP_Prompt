@@ -174,14 +174,15 @@ test_pipeline = [
 ]
 
 dataset_type = 'VGRPNDataset'
-data_root = '/data/kyanchen/Data'
+data_root = '/data1/kyanchen/prompt/data'
+# data_root = '/data/kyanchen/Data'
 # data_root = '/data1/kyanchen/DetFramework/data/COCO/'
 # data_root = '/data/kyanchen/prompt/data/COCO'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
 # find_unused_parameters = True
-samples_per_gpu = 18
+samples_per_gpu = 24
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
@@ -226,9 +227,13 @@ optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
         'backbone': {}, 'neck': {}, 'rpn_head': {}},
-    type='AdamW',
-    lr=1e-4,
-    weight_decay=1e-3
+    type='SGD',
+    momentum=0.9,
+    lr=5e-3,
+    weight_decay=1e-3,
+    # type='AdamW',
+    # lr=1e-4,
+    # weight_decay=1e-3
 )
 
 # optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
@@ -244,5 +249,5 @@ lr_config = dict(
     step=[30, 40]
 )
 runner = dict(type='EpochBasedRunner', max_epochs=50)
-load_from = 'results/EXP20220807_0/latest.pth'
+load_from = 'EXP20220809_4/latest.pth'
 resume_from = None
