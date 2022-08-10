@@ -25,14 +25,14 @@ mp_start_method = 'fork'
 #   - `base_batch_size` = (8 GPUs) x (2 samples per GPU).
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
-data_root = '/data/kyanchen/prompt/data'
+# data_root = '/data/kyanchen/prompt/data'
 # data_root = '/data/kyanchen/Data'
-# data_root = '/data1/kyanchen/prompt/data'
+data_root = '/data1/kyanchen/prompt/data'
 model = dict(
     type='CLIP_Prompter_Region',
     classname_path=data_root+'/VAW/attribute_index.json',
     need_train_names=[
-        'img_neck',
+        # 'img_neck',
         'img_head',
         'prompt_learner',
         'logit_scale', 'head',
@@ -50,7 +50,7 @@ model = dict(
         style='pytorch',
         # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
         init_cfg=dict(type='Pretrained', prefix='backbone.', map_location='cpu',
-                      checkpoint='results/EXP20220807_0/latest.pth')
+                      checkpoint='results/EXP20220809_4/latest.pth')
         # init_cfg=dict(type='Pretrained', prefix='backbone.',
         #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
@@ -70,7 +70,7 @@ model = dict(
         num_outs=5,
         # load_ckpt_from='../pretrain/faster_rcnn_epoch_12.pth'
         init_cfg=dict(type='Pretrained', prefix='neck.', map_location='cpu',
-                      checkpoint='results/EXP20220807_0/latest.pth'),
+                      checkpoint='results/EXP20220809_4/latest.pth'),
         # init_cfg=dict(type='Pretrained', prefix='neck.',
         #               checkpoint='../pretrain/faster_rcnn_r50_fpn_mstrain_3x_coco_20210524_110822-e10bd31c.pth')
     ),
@@ -269,7 +269,7 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        'img_neck': {'lr_mult': 0.1},
+        # 'img_neck': {'lr_mult': 0.1},
         'img_head': {},
         'prompt_learner': {},
         'logit_scale': {}, 'head': {},
