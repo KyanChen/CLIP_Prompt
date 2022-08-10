@@ -187,8 +187,8 @@ class FasterRCNNRPN(TwoStageDetector):
         """Test without augmentation."""
         x = self.extract_feat(img)
         proposal_list = self.rpn_head.simple_test_rpn(x, img_metas, rescale=rescale, class_agnostic=False)
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         proposal_list = [x.cpu() for x in proposal_list]
         return proposal_list
 
