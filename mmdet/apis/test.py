@@ -161,8 +161,6 @@ def collect_results_cpu(result_part, size, tmpdir=None):
         return None
     else:
         # load results of all parts from tmp dir
-        import pdb
-        pdb.set_trace()
         part_list = []
         for i in range(world_size):
             part_file = osp.join(tmpdir, f'part_{i}.pkl')
