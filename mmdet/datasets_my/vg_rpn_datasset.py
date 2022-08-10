@@ -89,12 +89,18 @@ class VGRPNDataset(Dataset):
         return json_results, result_files
 
     def _set_group_flag(self):
-        self.flag = np.zeros(len(self), dtype=np.uint8)
-        for i, img_id in enumerate(self.img_ids):
-            img_path = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{img_id}.jpg'
-            w, h = imagesize.get(img_path)
-            if w / h > 1:
-                self.flag[i] = 1
+        self.flag = []
+        flags_path = os.path.abspath(self.data_root) + '/VG/img_read_flags.json'
+        if os.path.exists(flags_path):
+            self.flag = json.load(open(flags_path, 'r'))
+        if len(self.flag) != len(self.img_ids):
+            self.flag = [0]*len(self)
+            for i, img_id in enumerate(self.img_ids):
+                img_path = os.path.abspath(self.data_root) + '/VG/VG_100K' + f'/{img_id}.jpg'
+                w, h = imagesize.get(img_path)
+                if w / h > 1:
+                    self.flag[i] = 1
+            json.dump(self.flag, open(flags_path, 'w'))
 
     def read_data(self, pattern):
         json_data = json.load(open(self.data_root + '/VG/objects.json', 'r'))
