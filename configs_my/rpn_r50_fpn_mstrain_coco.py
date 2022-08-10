@@ -174,8 +174,8 @@ test_pipeline = [
 
 dataset_type = 'CocoRPNDataset'
 # data_root = '/data/kyanchen/Data/coco'
-data_root = '/data1/kyanchen/DetFramework/data/COCO/'
-# data_root = '/data/kyanchen/prompt/data/COCO'
+# data_root = '/data1/kyanchen/DetFramework/data/COCO/'
+data_root = '/data/kyanchen/prompt/data/COCO'
 
 # dataset_type = 'VAWODDataset'
 # data_root = '/data/kyanchen/prompt/data'
@@ -209,7 +209,7 @@ data = dict(
         test_mode=True
     )
 )
-evaluation = dict(interval=5, metric='proposal_fast')
+evaluation = dict(interval=1, metric='proposal_fast')
 
 # optimizer = dict(
 #     constructor='SubModelConstructor',
@@ -224,9 +224,13 @@ optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
         'backbone': {}, 'neck': {}, 'rpn_head': {}},
-    type='AdamW',
-    lr=5e-4,
-    weight_decay=1e-3
+    type='SGD',
+    momentum=0.9,
+    lr=0.01,
+    weight_decay=1e-3,
+    # type='AdamW',
+    # lr=5e-4,
+    # weight_decay=1e-3
 )
 
 # optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
