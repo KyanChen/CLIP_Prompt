@@ -209,7 +209,7 @@ data = dict(
         test_mode=True
     )
 )
-evaluation = dict(interval=1, metric='proposal_fast')
+evaluation = dict(interval=5, metric='proposal_fast')
 
 # optimizer = dict(
 #     constructor='SubModelConstructor',
