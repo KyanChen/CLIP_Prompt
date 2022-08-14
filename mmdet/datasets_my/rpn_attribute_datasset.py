@@ -122,7 +122,7 @@ class RPNAttributeDataset(Dataset):
             id2images[img_id] = img_info
         return id2images, id2instances
 
-    def _filter_imgs(self, min_wh_size=32, min_box_size=16):
+    def _filter_imgs(self, min_wh_size=32, min_box_wh_size=4):
         valid_img_ids = []
         for img_id, img_info in self.id2images.items():
             if min(img_info['width'], img_info['height']) < min_wh_size:
@@ -132,7 +132,7 @@ class RPNAttributeDataset(Dataset):
             for instance in instances:
                 key = 'bbox' if img_id.split('_')[0] == 'coco' else 'instance_bbox'
                 x, y, w, h = instance[key]
-                if w * h < min_box_size:
+                if w < min_box_wh_size or h < min_box_wh_size:
                     continue
                 instances_tmp.append(instance)
             self.id2instances[img_id] = instances_tmp
