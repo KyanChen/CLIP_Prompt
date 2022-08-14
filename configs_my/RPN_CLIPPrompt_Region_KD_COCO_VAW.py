@@ -258,13 +258,13 @@ test_pipeline = [
 ]
 
 # find_unused_parameters = True
-samples_per_gpu = 36
+samples_per_gpu = 32
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
     # samples_per_gpu=4,
     # workers_per_gpu=0,
-    persistent_workers=False,
+    persistent_workers=True,
     train=dict(
         type=dataset_type,
         data_root=data_root,
