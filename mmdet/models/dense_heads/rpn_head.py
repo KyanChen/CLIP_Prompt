@@ -1,4 +1,3 @@
-# Copyright (c) OpenMMLab. All rights reserved.
 import copy
 
 import torch
@@ -14,7 +13,6 @@ from .anchor_head import AnchorHead
 @HEADS.register_module()
 class RPNHead(AnchorHead):
     """RPN head.
-
     Args:
         in_channels (int): Number of channels in the input feature map.
         init_cfg (dict or list[dict], optional): Initialization config dict.

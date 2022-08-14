@@ -109,7 +109,7 @@ class PromptHead(BaseModule):
 
         if 'img_crop_features' in kwargs and self.kd_model_loss:
             img_crop_features = kwargs.get('img_crop_features', None)
-            proposal_features = kwargs.get('proposal_features', None)
+            proposal_features = kwargs.get('boxes_feats', None)
             kd_logits = kwargs.get('kd_logits', None)
 
             # img_crop_sigmoid = torch.sigmoid(img_crop_features)
