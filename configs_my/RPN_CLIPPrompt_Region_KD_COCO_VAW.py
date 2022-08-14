@@ -26,8 +26,8 @@ mp_start_method = 'fork'
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 # data_root = '/data/kyanchen/prompt/data'
-data_root = '/data/kyanchen/Data'
-# data_root = '/data1/kyanchen/prompt/data'
+# data_root = '/data/kyanchen/Data'
+data_root = '/data1/kyanchen/prompt/data'
 model = dict(
     type='RPN_CLIP_Prompter_Region',
     att2id_file=data_root+'/VAW/attribute_index.json',
