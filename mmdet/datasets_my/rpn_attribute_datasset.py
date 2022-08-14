@@ -289,7 +289,7 @@ class RPNAttributeDataset(Dataset):
             x, y, w, h = instance[key]
             bbox_list.append([x, y, x + w, y + h])
 
-        gt_bboxes = np.array(bbox_list, dtype=np.float32)
+        gt_bboxes = np.array(bbox_list, dtype=np.float32).reshape(-1, 4)
         results['gt_bboxes'] = gt_bboxes
         results['bbox_fields'] = ['gt_bboxes']
         results = self.pipeline(results)

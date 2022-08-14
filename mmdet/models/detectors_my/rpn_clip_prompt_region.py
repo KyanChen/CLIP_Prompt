@@ -343,8 +343,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             return self.aug_test(imgs, img_metas, **kwargs)
 
     def simple_test(self, img, img_metas, gt_bboxes, rescale=False, **kwargs):
-        import pdb
-        pdb.set_trace()
+        gt_bboxes = gt_bboxes[0]
         if self.with_clip_img_backbone:
             image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
         else:
