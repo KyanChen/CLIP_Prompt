@@ -252,8 +252,6 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                                                      proposal_cfg=None,
                                                      **kwargs)
         else:
-            import pdb
-            pdb.set_trace()
             if torch.any(~dataset_type):
                 img_rpn = [x[~dataset_type, ...] for x in img_f_maps]
                 boxes_rpn = [x for idx, x in enumerate(gt_bboxes) if not dataset_type[idx]]
