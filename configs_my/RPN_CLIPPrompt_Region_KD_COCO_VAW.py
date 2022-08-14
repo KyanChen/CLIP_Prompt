@@ -258,7 +258,7 @@ test_pipeline = [
 ]
 
 # find_unused_parameters = True
-samples_per_gpu = 32
+samples_per_gpu = 28
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
@@ -348,7 +348,7 @@ lr_config = dict(
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=60)
-evaluation = dict(interval=5, metric='mAP')
+evaluation = dict(interval=1, metric='mAP')
 
 load_from = None
 # resume_from = 'results/EXP20220707_1/latest.pth'
