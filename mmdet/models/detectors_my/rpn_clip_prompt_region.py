@@ -103,7 +103,10 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             self.att_head = build_head(att_head)
 
         if rpn_head is not None:
-            self.rpn_head = build_head(rpn_head)
+            rpn_train_cfg = train_cfg.rpn if train_cfg is not None else None
+            rpn_head_ = rpn_head.copy()
+            rpn_head_.update(train_cfg=rpn_train_cfg, test_cfg=test_cfg.rpn)
+            self.rpn_head = build_head(rpn_head_)
 
         self.head = build_head(head)
         self.train_cfg = train_cfg
