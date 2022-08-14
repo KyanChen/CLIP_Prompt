@@ -191,7 +191,7 @@ class RPNAttributeDataset(Dataset):
         bbox_list = []
         attr_label_list = []
         for instance in instances:
-            key = 'bbox' if data_set == 'coco' else 'instance_box'
+            key = 'bbox' if data_set == 'coco' else 'instance_bbox'
             x, y, w, h = instance[key]
             bbox_list.append([x, y, x + w, y + h])
             positive_attributes = instance.get("positive_attributes", [])
