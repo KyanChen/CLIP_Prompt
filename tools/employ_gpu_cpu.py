@@ -4,17 +4,23 @@ import tqdm
 
 resneXt = torch.hub.load('NVIDIA/DeepLearningExamples:torchhub', 'nvidia_resneXt', pretrained=False)
 
-device = torch.device("cuda:0")
 # device = torch.device("cpu")
 net = torch.nn.DataParallel(resneXt, device_ids=[0, 1, 2, 3, 4, 5, 6, 7])
 # net = resneXt
-net.to(device)
 torch.backends.cudnn.enabled = True
 
 print("Start Running...")
 while True:
+    device = torch.device("cuda:0")
     imgs = torch.rand((80, 3, 512, 512)).contiguous()
     imgs = imgs.to(device)
+    net.to(device)
+    outputs = net(imgs)
+
+    device = 'cpu'
+    imgs = torch.rand((80, 3, 512, 512)).contiguous()
+    imgs = imgs.to(device)
+    net.to(device)
     outputs = net(imgs)
 
 # t0 = time.time()
