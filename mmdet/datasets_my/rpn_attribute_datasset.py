@@ -64,7 +64,12 @@ class RPNAttributeDataset(Dataset):
         attribute_index_file = os.path.join(self.data_root, "VAW/attribute_index.json")
         self.att2id = json.load(open(attribute_index_file, 'r'))
 
+        img_ids_per_dataset = {}
+        for x in self.img_ids:
+            img_ids_per_dataset[x.split('_')[0]] = img_ids_per_dataset.get(x.split('_')[0], []) + [x]
         print()
+        for k, v in img_ids_per_dataset.items():
+            print(k, ': ', len(v))
         print('data len: ', len(self))
         self.error_list = set()
 

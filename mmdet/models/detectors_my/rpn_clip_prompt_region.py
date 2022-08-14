@@ -235,6 +235,8 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         img_f_maps = self.img_neck(img_f_maps)
 
         dataset_type = dataset_type == 1
+        dataset_type = dataset_type.view(-1)
+        assert len(dataset_type) == len(img)
         losses = dict()
 
         if self.rpn_all:
@@ -251,7 +253,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             pdb.set_trace()
             if torch.any(~dataset_type):
                 img_rpn = [x[~dataset_type, ...] for x in img_f_maps]
-                boxes_rpn = gt_bboxes[~dataset_type, ...]
+                boxes_rpn = [x for idx, x in enumerate(gt_bboxes) if not dataset_type[idx]]
                 img_metas_rpn = [x for idx, x in enumerate(img_metas) if not dataset_type[idx]]
                 rpn_losses = self.rpn_head.forward_train(img_rpn,
                                                          img_metas_rpn,
@@ -266,8 +268,8 @@ class RPN_CLIP_Prompter_Region(BaseModule):
 
         if torch.any(dataset_type):
             img_att = [x[dataset_type, ...] for x in img_f_maps]
-            boxes_att = gt_bboxes[dataset_type, ...]
-            labels_att = gt_labels[dataset_type, ...]
+            boxes_att = [x for idx, x in enumerate(gt_bboxes) if dataset_type[idx]]
+            labels_att = [x for idx, x in enumerate(gt_labels) if dataset_type[idx]]
             img_metas_att = [x for idx, x in enumerate(img_metas) if dataset_type[idx]]
 
             boxes_feats, bbox_feat_maps = self.att_head(img_att, boxes_att)
