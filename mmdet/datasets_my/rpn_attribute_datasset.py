@@ -108,9 +108,7 @@ class RPNAttributeDataset(Dataset):
             instances = self.id2instances.get(img_id, [])
             instances_tmp = []
             for instance in instances:
-                import pdb
-                pdb.set_trace()
-                key = 'bbox' if img_id.split('_')[0] == 'coco' else 'instance_box'
+                key = 'bbox' if img_id.split('_')[0] == 'coco' else 'instance_bbox'
                 x, y, w, h = instance[key]
                 if w * h < min_box_size:
                     continue
