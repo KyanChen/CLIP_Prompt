@@ -335,7 +335,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=2000,
     warmup_ratio=0.1,
-    step=[50, 70])
+    step=[35, 50])
 
 # lr_config = dict(
 #     policy='CosineAnnealing',
@@ -347,7 +347,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=80)
+runner = dict(type='EpochBasedRunner', max_epochs=60)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None
