@@ -250,9 +250,9 @@ test_pipeline = [
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
             # dict(type='Pad', size=img_size,  center_pad=True),
-            dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.2), crop_range=(0.9, 1)),
+            # dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.2), crop_range=(0.9, 1)),
             dict(type='ImageToTensor', keys=['img']),
-            dict(type='Collect', keys=['img', 'proposals'])
+            dict(type='Collect', keys=['img', 'gt_bboxes'])
         ]
     )
 ]
@@ -271,7 +271,8 @@ data = dict(
         pattern='train',
         test_mode=False,
         pipeline=train_pipeline,
-        kd_pipeline=kd_pipeline
+        kd_pipeline=kd_pipeline,
+        dataset_balance=True
     ),
     val=dict(
         samples_per_gpu=samples_per_gpu,

@@ -342,41 +342,26 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             assert 'proposals' not in kwargs
             return self.aug_test(imgs, img_metas, **kwargs)
 
-    def simple_test(self,
-                    img, img_metas, proposals,
-                    rescale=False, **kwargs):
-
+    def simple_test(self, img, img_metas, gt_bboxes, rescale=False, **kwargs):
         if self.with_clip_img_backbone:
             image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
         else:
             img_f_maps = self.img_backbone(img)
-        per_img_proposals = [len(x) for x in proposals]
-        if self.with_neck:
-            img_f_maps = self.img_neck(img_f_maps)
-        proposal_features, bbox_feats = self.img_head(img_f_maps, proposals)
+        img_f_maps = self.img_neck(img_f_maps)
+        per_img_boxes = [len(x) for x in gt_bboxes]
+
+        boxes_feats, bbox_feat_maps = self.att_head(img_f_maps, gt_bboxes)
 
         prompts = self.prompt_learner()  # 620x77x512
         tokenized_prompts = self.tokenized_prompts
+        text_features = self.text_encoder(prompts, tokenized_prompts)
 
-        text_features = self.text_encoder(prompts, tokenized_prompts)  # torch.Size([620, 1024])
-        proposal_features = proposal_features / proposal_features.norm(dim=-1, keepdim=True)
+        boxes_feats = boxes_feats / boxes_feats.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
-        # extra_info = {'proposal_features': proposal_features}
-        # if "img_crops" in kwargs and hasattr(self, 'kd_model'):
-        #     img_crops = kwargs.get('img_crops', None)
-        #     img_crops = torch.cat(img_crops, dim=0)
-        #     # with torch.no_grad():
-        #     img_crop_features, _, _ = self.kd_model(img_crops)
-        #     img_crop_features = self.kd_img_align(img_crop_features)
-        #     img_crop_features = img_crop_features / img_crop_features.norm(dim=-1, keepdim=True)
-        #     extra_info['img_crop_features'] = img_crop_features
-        #     kd_logit_scale = self.kd_logit_scale.exp()
-        #     kd_logits = kd_logit_scale * img_crop_features @ text_features.t()  # 2x620
-
         logit_scale = self.logit_scale.exp()
-        logits = logit_scale * proposal_features @ text_features.t()  # 2x620
-        logits = torch.split(logits, per_img_proposals, dim=0)
+        logits = logit_scale * boxes_feats @ text_features.t()  # 2x620
 
+        logits = torch.split(logits, per_img_boxes, dim=0)
         pred = [x.detach().cpu().numpy() for x in logits]
         return pred

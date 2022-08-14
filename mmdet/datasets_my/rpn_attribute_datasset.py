@@ -31,6 +31,7 @@ class RPNAttributeDataset(Dataset):
                  data_root,
                  pipeline,
                  pattern,
+                 dataset_balance=False,
                  kd_pipeline=None,
                  test_mode=False,
                  file_client_args=dict(backend='disk')
@@ -47,17 +48,23 @@ class RPNAttributeDataset(Dataset):
             self.kd_pipeline = kd_pipeline
 
         self.data_root = data_root
-        id2images_coco, id2instances_coco = self.read_data_coco(pattern)
-        id2images_vaw, id2instances_vaw = self.read_data_vaw(pattern)
-        self.id2images = {}
-        self.id2images.update(id2images_coco)
-        self.id2images.update(id2images_vaw)
+        if test_mode:
+            id2images_vaw, id2instances_vaw = self.read_data_vaw(pattern)
+            self.id2images = id2images_vaw
+            self.id2instances = id2instances_vaw
+            self.img_ids = list(self.id2images.keys())
+        else:
+            id2images_coco, id2instances_coco = self.read_data_coco(pattern)
+            id2images_vaw, id2instances_vaw = self.read_data_vaw(pattern)
+            self.id2images = {}
+            self.id2images.update(id2images_coco)
+            self.id2images.update(id2images_vaw)
 
-        self.id2instances = {}
-        self.id2instances.update(id2instances_coco)
-        self.id2instances.update(id2instances_vaw)
-        # filter images too small and containing no annotations
-        if not test_mode:
+            self.id2instances = {}
+            self.id2instances.update(id2instances_coco)
+            self.id2instances.update(id2instances_vaw)
+
+            # filter images too small and containing no annotations
             self.img_ids = self._filter_imgs()
             self._set_group_flag()
 
@@ -67,9 +74,19 @@ class RPNAttributeDataset(Dataset):
         img_ids_per_dataset = {}
         for x in self.img_ids:
             img_ids_per_dataset[x.split('_')[0]] = img_ids_per_dataset.get(x.split('_')[0], []) + [x]
+
         print()
         for k, v in img_ids_per_dataset.items():
             print(k, ': ', len(v))
+        if dataset_balance and not test_mode:
+            self.img_ids = img_ids_per_dataset['coco'] + 2*img_ids_per_dataset['vaw']
+            print('dataset_balance: ', True)
+            print()
+            for k, v in img_ids_per_dataset.items():
+                if 'coco' == k:
+                    print(k, ': ', len(v))
+                else:
+                    print(k, ': ', 2*len(v))
         print('data len: ', len(self))
         self.error_list = set()
 
@@ -250,24 +267,32 @@ class RPNAttributeDataset(Dataset):
 
     def get_test_img_instances(self, idx):
         img_id = self.img_ids[idx]
-        instances = self.img_instances_pair[img_id]
+        img_info = self.id2images[img_id]
+        instances = self.id2instances[img_id]
 
+        data_set = img_id.split('_')[0]
+        if data_set == 'coco':
+            raise NameError
+        elif data_set == 'vaw':
+            prefix_path = f'/VG/VG_100K'
+            dataset_type = 1
+        else:
+            raise NameError
         results = {}
-        results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
+        results['img_prefix'] = os.path.abspath(self.data_root) + prefix_path
         results['img_info'] = {}
-        results['img_info']['filename'] = f'{img_id}.jpg'
+        results['img_info']['filename'] = img_info['file_name']
 
         bbox_list = []
         for instance in instances:
-            x, y, w, h = instance["instance_bbox"]
+            key = 'bbox' if data_set == 'coco' else 'instance_bbox'
+            x, y, w, h = instance[key]
             bbox_list.append([x, y, x + w, y + h])
 
-        proposals = np.array(bbox_list, dtype=np.float32)
-        results['proposals'] = proposals
-        results['bbox_fields'] = ['proposals']
+        gt_bboxes = np.array(bbox_list, dtype=np.float32)
+        results['gt_bboxes'] = gt_bboxes
+        results['bbox_fields'] = ['gt_bboxes']
         results = self.pipeline(results)
-        # results['proposals'] = DataContainer(results['proposals'], stack=False)
-        # results['proposals'] = results['proposals']
         return results
 
     def __getitem__(self, idx):
@@ -365,16 +390,19 @@ class RPNAttributeDataset(Dataset):
     def get_img_instance_labels(self):
         attr_label_list = []
         for img_id in self.img_ids:
-            instances = self.img_instances_pair[img_id]
+            instances = self.id2instances[img_id]
             for instance in instances:
                 x, y, w, h = instance["instance_bbox"]
-                positive_attributes = instance["positive_attributes"]
-                negative_attributes = instance["negative_attributes"]
-                labels = np.ones(len(self.classname_maps.keys())) * 2
+                positive_attributes = instance.get("positive_attributes", [])
+                negative_attributes = instance.get("negative_attributes", [])
+
+                labels = np.ones(len(self.att2id.keys())) * 2
+
                 for att in positive_attributes:
-                    labels[self.classname_maps[att]] = 1
+                    labels[self.att2id[att]] = 1
                 for att in negative_attributes:
-                    labels[self.classname_maps[att]] = 0
+                    labels[self.att2id[att]] = 0
+
                 attr_label_list.append(labels)
         gt_labels = np.stack(attr_label_list, axis=0)
         return gt_labels
@@ -452,24 +480,3 @@ class RPNAttributeDataset(Dataset):
 
         return results
 
-
-class DataItem:
-    def __init__(
-        self, image_id, instance_id, instance_bbox,
-        object_name, positive_attributes, negative_attributes,
-        label
-    ):
-        self.image_id = image_id
-        self.instance_id = instance_id
-        self.instance_bbox = instance_bbox
-        self.object_name = object_name
-        self.positive_attributes = positive_attributes
-        self.negative_attributes = negative_attributes
-        self.label = label
-
-    def set_label(self, classname_maps):
-        self.label = np.ones(len(classname_maps.keys())) * 2
-        for att in self.positive_attributes:
-            self.label[classname_maps[att]] = 1
-        for att in self.negative_attributes:
-            self.label[classname_maps[att]] = 0
