@@ -258,7 +258,7 @@ test_pipeline = [
     )
 ]
 
-# find_unused_parameters = True
+find_unused_parameters = True
 samples_per_gpu = 8
 data = dict(
     samples_per_gpu=samples_per_gpu,
