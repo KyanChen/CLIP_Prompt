@@ -34,6 +34,7 @@ model = dict(
     rpn_all=False,
     need_train_names=[
         'img_neck',
+        'rpn_head',
         'att_head',
         'prompt_learner',
         'logit_scale', 'head',
@@ -231,13 +232,13 @@ test_pipeline = [
 ]
 
 # find_unused_parameters = True
-samples_per_gpu = 38
+samples_per_gpu = 4
 data = dict(
     samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=4,
+    workers_per_gpu=0,
     # samples_per_gpu=4,
     # workers_per_gpu=0,
-    persistent_workers=True,
+    persistent_workers=False,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -288,8 +289,9 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        # 'img_neck': {'lr_mult': 0.1},
-        'img_head': {},
+        'img_neck': {},
+        'rpn_head': {},
+        'att_head': {},
         'prompt_learner': {},
         'logit_scale': {}, 'head': {},
         'kd_img_align': {}, 'kd_logit_scale': {}
