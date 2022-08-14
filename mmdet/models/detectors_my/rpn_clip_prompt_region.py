@@ -135,6 +135,8 @@ class RPN_CLIP_Prompter_Region(BaseModule):
 
         _rank, _word_size = get_dist_info()
         if _rank == 0:
+            noneed_train_names = [x.split('.')[0] for x in noneed_train_names]
+            noneed_train_names = set(noneed_train_names)
             print(f"Turning off gradients for names: {noneed_train_names}")
             print(f"Turning on gradients for names: {need_train_names}")
             print(f"Turning off gradients for not specific names: {not_specific_names}")
