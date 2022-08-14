@@ -418,10 +418,10 @@ class RPNAttributeDataset(Dataset):
             results = np.concatenate(results, axis=0)
         else:
             results = np.array(results)
-        assert len(results) == len(self.instances)
         preds = torch.from_numpy(results)
         gts = self.get_img_instance_labels()
         gts = torch.from_numpy(gts)
+        assert len(preds) == len(gts)
 
         output = cal_metrics(self.data_root + '/VAW',
                              preds, gts,
