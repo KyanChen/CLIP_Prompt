@@ -145,7 +145,6 @@ class RPNAttributeDataset(Dataset):
                 instance = self.img_instances_pair[img_id][box_ind]
                 instance['instance_bbox'] = box[0].tolist()
                 instances.append(instance)
-
         return instances
 
     def __len__(self):
