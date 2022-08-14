@@ -326,7 +326,7 @@ optimizer = dict(
         'kd_img_align': {}, 'kd_logit_scale': {}
         },
     type='AdamW',
-    lr=5e-4,
+    lr=1e-4,
     weight_decay=1e-3
 )
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
