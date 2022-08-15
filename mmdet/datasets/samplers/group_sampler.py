@@ -50,9 +50,6 @@ class GroupSampler(Sampler):
                 while len(indice_rearrange) < len(indice):
                     end_0 = start_0+num_split_0
                     end_1 = start_1+num_split_1
-                    if rank == 0:
-                        import pdb
-                        pdb.set_trace()
                     if end_0 > len(dataset_type_dict[0]):
                         if rank == 0:
                             import pdb
