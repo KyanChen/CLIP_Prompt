@@ -35,7 +35,7 @@ class GroupSampler(Sampler):
             indice = np.concatenate(
                 [indice, np.random.choice(indice, num_extra)])
             if hasattr(self, 'flag_dataset'):
-                rank, world_size = get_dist_info()
+                # rank, world_size = get_dist_info()
                 flag_dataset_tmp = self.flag_dataset[indice]
                 ratio = sum(flag_dataset_tmp == 0) / len(flag_dataset_tmp)
                 num_split_0 = int(ratio * self.samples_per_gpu)
@@ -61,9 +61,9 @@ class GroupSampler(Sampler):
                     indice_0 = dataset_type_dict[0][start_0: end_0]
                     indice_1 = dataset_type_dict[1][start_1: end_1]
                     if len(indice_0) == 0:
-                        indice_1[-2:] = dataset_type_dict[0][-2:]
+                        indice_1[-2:] = np.random.choice(dataset_type_dict[0], 2).tolist()
                     if len(indice_1) == 0:
-                        indice_0[-2:] = dataset_type_dict[1][-2:]
+                        indice_0[-2:] = np.random.choice(dataset_type_dict[1], 2).tolist()
                     start_0 = end_0
                     start_1 = end_1
                     assert len(indice_0+indice_1) == self.samples_per_gpu
@@ -125,6 +125,9 @@ class DistributedGroupSampler(Sampler):
         self.seed = seed if seed is not None else 0
 
         assert hasattr(self.dataset, 'flag')
+        if hasattr(dataset, 'flag_dataset'):
+            self.flag_dataset = dataset.flag_dataset.astype(np.int64)
+
         self.flag = self.dataset.flag
         self.group_sizes = np.bincount(self.flag)
 
@@ -159,6 +162,46 @@ class DistributedGroupSampler(Sampler):
                 for _ in range(extra // size):
                     indice.extend(tmp)
                 indice.extend(tmp[:extra % size])
+                if hasattr(self, 'flag_dataset'):
+                    rank, world_size = get_dist_info()
+                    if rank == 0:
+                        import pdb
+                        pdb.set_trace()
+                    indice = np.array(indice, dtype=np.int64)
+                    flag_dataset_tmp = self.flag_dataset[indice]
+                    ratio = sum(flag_dataset_tmp == 0) / len(flag_dataset_tmp)
+                    num_split_0 = int(ratio * self.samples_per_gpu)
+                    num_split_1 = self.samples_per_gpu - num_split_0
+
+                    dataset_type_dict = {0: [], 1: []}
+                    for idx, flg in enumerate(flag_dataset_tmp):
+                        dataset_type_dict[flg].append(indice[idx])
+                    indice_rearrange = []
+                    start_0 = 0
+                    start_1 = 0
+                    while len(indice_rearrange) < len(indice):
+                        end_0 = start_0 + num_split_0
+                        end_1 = start_1 + num_split_1
+                        if end_0 > len(dataset_type_dict[0]):
+                            end_0 = len(dataset_type_dict[0])
+                            end_1 = start_1 + self.samples_per_gpu - (end_0 - start_0)
+                        if end_1 > len(dataset_type_dict[1]):
+                            end_1 = len(dataset_type_dict[1])
+                            end_0 = start_0 + self.samples_per_gpu - (end_1 - start_1)
+                            assert end_0 <= len(dataset_type_dict[0])
+
+                        indice_0 = dataset_type_dict[0][start_0: end_0]
+                        indice_1 = dataset_type_dict[1][start_1: end_1]
+                        if len(indice_0) == 0:
+                            indice_1[-2:] = np.random.choice(dataset_type_dict[0], 2).tolist()
+                        if len(indice_1) == 0:
+                            indice_0[-2:] = np.random.choice(dataset_type_dict[1], 2).tolist()
+                        start_0 = end_0
+                        start_1 = end_1
+                        assert len(indice_0 + indice_1) == self.samples_per_gpu
+                        indice_rearrange = indice_rearrange + indice_0 + indice_1
+                    indice = indice_rearrange
+
                 indices.extend(indice)
 
         assert len(indices) == self.total_size
