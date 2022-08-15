@@ -7,7 +7,7 @@ import tqdm
 class Net(nn.Module):
     def __int__(self):
         super(Net, self).__int__()
-        self.conv2d = nn.Sequential(*[nn.Conv2d(3, 1024, 17)] * 5)
+        self.conv2d = nn.Sequential(*([nn.Conv2d(3, 1024, 17)] * 5))
 
     def forward(self, x):
         return self.conv2d(x)
