@@ -29,7 +29,7 @@ while True:
     imgs = torch.rand((20, 3, 512, 512)).contiguous()
     imgs = imgs.to(device)
     net.to(device)
-    outputs = net(imgs)
+    _ = net(imgs)
 
 # t0 = time.time()
 # imgs = torch.rand((1, 3, 1024, 1024))
