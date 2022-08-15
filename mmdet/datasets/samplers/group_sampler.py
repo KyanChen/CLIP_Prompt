@@ -42,6 +42,9 @@ class GroupSampler(Sampler):
                 dataset_type_dict = {}
                 for item in indice:
                     dataset_type_dict[self.flag_dataset[item]] = dataset_type_dict.get(self.flag_dataset[item], []) + [item]
+                if rank == 0:
+                    import pdb
+                    pdb.set_trace()
                 indice_rearrange = []
                 start_0 = 0
                 start_1 = 0
