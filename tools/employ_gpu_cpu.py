@@ -20,7 +20,7 @@ net2 = Net()
 print("Start Running...")
 while True:
     device = torch.device("cuda:0")
-    imgs = torch.rand((20, 3, 512, 512)).contiguous()
+    imgs = torch.rand((16, 3, 512, 512)).contiguous()
     imgs = imgs.to(device)
     net1.to(device)
     outputs = net1(imgs)
