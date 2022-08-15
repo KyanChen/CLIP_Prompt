@@ -54,11 +54,11 @@ class GroupSampler(Sampler):
                             pdb.set_trace()
                         end_0 = len(dataset_type_dict[0])
                         end_1 = start_1 + self.samples_per_gpu - (end_0 - start_0)
-                    if end_1 > len(dataset_type_dict[0]):
+                    if end_1 > len(dataset_type_dict[1]):
                         if rank == 0:
                             import pdb
                             pdb.set_trace()
-                        end_1 = len(dataset_type_dict[0])
+                        end_1 = len(dataset_type_dict[1])
                         end_0 = start_0 + self.samples_per_gpu - (end_1 - start_1)
                         assert end_0 <= len(dataset_type_dict[0])
 
