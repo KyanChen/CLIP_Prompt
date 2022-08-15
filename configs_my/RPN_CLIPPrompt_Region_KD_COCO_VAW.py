@@ -32,7 +32,7 @@ model = dict(
     att2id_file=data_root+'/VAW/attribute_index.json',
     rpn_all=False,
     need_train_names=[
-        # 'img_backbone',
+        'img_backbone',
         'img_neck',
         'rpn_head',
         'att_head',
@@ -258,7 +258,7 @@ test_pipeline = [
 ]
 
 # find_unused_parameters = True
-samples_per_gpu = 28
+samples_per_gpu = 10
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
@@ -316,7 +316,7 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        # 'img_backbone': {'lr_mult': 0.01},
+        'img_backbone': {'lr_mult': 0.01},
         'img_neck': {},
         'rpn_head': {},
         'att_head': {},
@@ -352,5 +352,5 @@ runner = dict(type='EpochBasedRunner', max_epochs=60)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None
-resume_from = 'results/EXP20220814_0/latest.pth'
+resume_from = 'results/EXP20220814_1/latest.pth'
 # resume_from = None
