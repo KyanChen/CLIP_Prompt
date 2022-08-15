@@ -71,6 +71,10 @@ class RPNAttributeDataset(Dataset):
         attribute_index_file = os.path.join(self.data_root, "VAW/attribute_index.json")
         self.att2id = json.load(open(attribute_index_file, 'r'))
 
+        flag_dataset = [x.split('_')[0] for x in self.img_ids]
+        dataset_types = {'coco': 0, 'vaw': 1}
+        flag_dataset = [dataset_types[x] for x in flag_dataset]
+        self.flag_dataset = np.array(flag_dataset, dtype=np.int)
         img_ids_per_dataset = {}
         for x in self.img_ids:
             img_ids_per_dataset[x.split('_')[0]] = img_ids_per_dataset.get(x.split('_')[0], []) + [x]

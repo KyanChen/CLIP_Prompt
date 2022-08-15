@@ -11,6 +11,8 @@ class GroupSampler(Sampler):
 
     def __init__(self, dataset, samples_per_gpu=1):
         assert hasattr(dataset, 'flag')
+        if hasattr(dataset, 'flag_dataset'):
+            self.flag_dataset = dataset.flag_dataset.astype(np.int64)
         self.dataset = dataset
         self.samples_per_gpu = samples_per_gpu
         self.flag = dataset.flag.astype(np.int64)
@@ -32,6 +34,28 @@ class GroupSampler(Sampler):
                             ) * self.samples_per_gpu - len(indice)
             indice = np.concatenate(
                 [indice, np.random.choice(indice, num_extra)])
+            if hasattr(self, 'flag_dataset'):
+                rank, world_size = get_dist_info()
+                if rank == 0:
+                    import pdb
+                    pdb.set_trace()
+                ratio = (sum(self.flag_dataset == 0)) / len(self.flag_dataset)
+                num_split_0 = int(ratio * self.samples_per_gpu)
+                num_split_1 = self.samples_per_gpu - num_split_0
+                dataset_type_dict = {}
+                for item in indice:
+                    dataset_type_dict[self.flag_dataset[item]] = dataset_type_dict.get(self.flag_dataset[item], []) + [item]
+                indice_rearrange = []
+                idx_0 = 0
+                idx_1 = 0
+                for _ in range(len(indice)):
+                    indice_0 = dataset_type_dict[0][idx_0: idx_0+num_split_0]
+                    indice_1 = dataset_type_dict[1][idx_1: idx_1+num_split_1]
+                    idx_0 += num_split_0
+                    idx_1 += num_split_1
+                    assert len(indice_0+indice_1) == self.samples_per_gpu
+                    indice_rearrange = indice_rearrange + indice_0 + indice_1
+                indice = np.array(indice_rearrange, dtype=np.int64)
             indices.append(indice)
         indices = np.concatenate(indices)
         indices = [
