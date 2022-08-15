@@ -51,21 +51,19 @@ class GroupSampler(Sampler):
                     end_0 = start_0+num_split_0
                     end_1 = start_1+num_split_1
                     if end_0 > len(dataset_type_dict[0]):
-                        if rank == 0:
-                            import pdb
-                            pdb.set_trace()
                         end_0 = len(dataset_type_dict[0])
                         end_1 = start_1 + self.samples_per_gpu - (end_0 - start_0)
                     if end_1 > len(dataset_type_dict[1]):
-                        if rank == 0:
-                            import pdb
-                            pdb.set_trace()
                         end_1 = len(dataset_type_dict[1])
                         end_0 = start_0 + self.samples_per_gpu - (end_1 - start_1)
                         assert end_0 <= len(dataset_type_dict[0])
 
                     indice_0 = dataset_type_dict[0][start_0: end_0]
                     indice_1 = dataset_type_dict[1][start_1: end_1]
+                    if len(indice_0) == 0:
+                        indice_1[-1] = dataset_type_dict[0][-1]
+                    if len(indice_1) == 0:
+                        indice_0[-1] = dataset_type_dict[1][-1]
                     start_0 = end_0
                     start_1 = end_1
                     assert len(indice_0+indice_1) == self.samples_per_gpu
