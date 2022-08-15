@@ -163,10 +163,7 @@ class DistributedGroupSampler(Sampler):
                     indice.extend(tmp)
                 indice.extend(tmp[:extra % size])
                 if hasattr(self, 'flag_dataset'):
-                    rank, world_size = get_dist_info()
-                    if rank == 0:
-                        import pdb
-                        pdb.set_trace()
+                    # rank, world_size = get_dist_info()
                     indice = np.array(indice, dtype=np.int64)
                     flag_dataset_tmp = self.flag_dataset[indice]
                     ratio = sum(flag_dataset_tmp == 0) / len(flag_dataset_tmp)
