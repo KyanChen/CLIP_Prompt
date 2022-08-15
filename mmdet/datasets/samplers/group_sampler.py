@@ -36,21 +36,23 @@ class GroupSampler(Sampler):
                 [indice, np.random.choice(indice, num_extra)])
             if hasattr(self, 'flag_dataset'):
                 rank, world_size = get_dist_info()
-                ratio = sum(self.flag_dataset == 0) / len(self.flag_dataset)
+                flag_dataset_tmp = self.flag_dataset[indice]
+                ratio = sum(flag_dataset_tmp == 0) / len(flag_dataset_tmp)
                 num_split_0 = int(ratio * self.samples_per_gpu)
                 num_split_1 = self.samples_per_gpu - num_split_0
-                dataset_type_dict = {}
-                for item in indice:
-                    dataset_type_dict[self.flag_dataset[item]] = dataset_type_dict.get(self.flag_dataset[item], []) + [item]
-                if rank == 0:
-                    import pdb
-                    pdb.set_trace()
+
+                dataset_type_dict = {0: [], 1: []}
+                for idx, flg in enumerate(flag_dataset_tmp):
+                    dataset_type_dict[flg].append(indice[idx])
                 indice_rearrange = []
                 start_0 = 0
                 start_1 = 0
                 while len(indice_rearrange) < len(indice):
                     end_0 = start_0+num_split_0
                     end_1 = start_1+num_split_1
+                    if rank == 0:
+                        import pdb
+                        pdb.set_trace()
                     if end_0 > len(dataset_type_dict[0]):
                         if rank == 0:
                             import pdb
