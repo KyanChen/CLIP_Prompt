@@ -45,14 +45,13 @@ class GroupSampler(Sampler):
                 indice_rearrange = []
                 start_0 = 0
                 start_1 = 0
-                for _ in range(len(indice)):
+                while len(indice_rearrange) < len(indice):
                     end_0 = start_0+num_split_0
                     end_1 = start_1+num_split_1
-                    if rank == 0:
-                        import pdb
-                        pdb.set_trace()
                     if end_0 > len(dataset_type_dict[0]):
-
+                        if rank == 0:
+                            import pdb
+                            pdb.set_trace()
                         end_0 = len(dataset_type_dict[0])
                         end_1 = start_1 + self.samples_per_gpu - (end_0 - start_0)
                     if end_1 > len(dataset_type_dict[0]):
