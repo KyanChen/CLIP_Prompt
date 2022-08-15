@@ -33,6 +33,7 @@ class RPNAttributeDataset(Dataset):
                  pattern,
                  dataset_balance=False,
                  kd_pipeline=None,
+                 test_rpn=False,
                  test_mode=False,
                  file_client_args=dict(backend='disk')
                  ):
@@ -87,13 +88,13 @@ class RPNAttributeDataset(Dataset):
                     print(k, ': ', len(v))
                 else:
                     print(k, ': ', 2*len(v))
+            flag_dataset = [x.split('_')[0] for x in self.img_ids]
+            dataset_types = {'coco': 0, 'vaw': 1}
+            flag_dataset = [dataset_types[x] for x in flag_dataset]
+            self.flag_dataset = np.array(flag_dataset, dtype=np.int)
+
         print('data len: ', len(self))
-
-        flag_dataset = [x.split('_')[0] for x in self.img_ids]
-        dataset_types = {'coco': 0, 'vaw': 1}
-        flag_dataset = [dataset_types[x] for x in flag_dataset]
-        self.flag_dataset = np.array(flag_dataset, dtype=np.int)
-
+        self.test_rpn = test_rpn
         self.error_list = set()
 
     def read_data_coco(self, pattern):
@@ -301,8 +302,28 @@ class RPNAttributeDataset(Dataset):
         results = self.pipeline(results)
         return results
 
+    def get_test_rpn_img_instances(self, idx):
+        img_id = self.img_ids[idx]
+        img_info = self.id2images[img_id]
+
+        data_set = img_id.split('_')[0]
+        if data_set == 'coco':
+            raise NameError
+        elif data_set == 'vaw':
+            prefix_path = f'/VG/VG_100K'
+        else:
+            raise NameError
+        results = {}
+        results['img_prefix'] = os.path.abspath(self.data_root) + prefix_path
+        results['img_info'] = {}
+        results['img_info']['filename'] = img_info['file_name']
+        results = self.pipeline(results)
+        return results
+
     def __getitem__(self, idx):
         if self.test_mode:
+            if self.test_rpn:
+                self.get_test_rpn_img_instances(idx)
             return self.get_test_img_instances(idx)
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
@@ -413,6 +434,33 @@ class RPNAttributeDataset(Dataset):
         gt_labels = np.stack(attr_label_list, axis=0)
         return gt_labels
 
+    def get_rpn_img_instance_labels(self):
+        gt_labels = []
+        for img_id in self.img_ids:
+            instances = self.id2instances[img_id]
+            gt_labels_tmp = []
+            for instance in instances:
+                x, y, w, h = instance["instance_bbox"]
+                positive_attributes = instance.get("positive_attributes", [])
+                negative_attributes = instance.get("negative_attributes", [])
+
+                labels = [2] * len(self.att2id.keys())
+
+                for att in positive_attributes:
+                    labels[self.att2id[att]] = 1
+                for att in negative_attributes:
+                    labels[self.att2id[att]] = 0
+
+                gt_labels_tmp.append([x, y, x+w, y+h]+ labels)
+            gt_labels_tmp = torch.tensor(gt_labels_tmp)
+            gt_labels.append(gt_labels_tmp)
+        return gt_labels
+
+    def evaluate_rpn(self, results):
+        # results List[Tensor] N, Nx(4+1+620)
+        # gt_labels List[Tensor] N, Nx(4+620)
+        gt_labels = self.get_rpn_img_instance_labels()
+
     def evaluate(self,
                  results,
                  logger=None,
@@ -420,6 +468,8 @@ class RPNAttributeDataset(Dataset):
                  per_class_out_file=None,
                  is_logit=True
                  ):
+        if self.test_rpn:
+            return self.evaluate_rpn(results)
         if isinstance(results[0], type(np.array(0))):
             results = np.concatenate(results, axis=0)
         else:

@@ -181,10 +181,10 @@ model = dict(
     ),
     test_cfg=dict(
         rpn=dict(
-            nms_pre=1000,
+            nms_pre=2000,
             max_per_img=1000,
-            nms=dict(type='nms', iou_threshold=0.7),
-            min_bbox_size=0)
+            nms=dict(type='nms', class_agnostic=False, iou_threshold=0.7),
+            min_bbox_size=4)
     )
 )
 
@@ -256,6 +256,22 @@ test_pipeline = [
         ]
     )
 ]
+test_rpn_pipeline = [
+    dict(type='LoadImageFromFile', to_float32=True,  rearrange=True, channel_order='rgb'),
+    dict(type='MultiScaleFlipAug',
+         img_scale=img_size,
+         flip=False,
+         transforms=[
+            dict(type='Resize', img_scale=img_size, keep_ratio=True),
+            dict(type='Normalize', **img_norm_cfg),
+            dict(type='Pad', size_divisor=32),
+            # dict(type='Pad', size=img_size,  center_pad=True),
+            # dict(type='RandomExpandAndCropBox', expand_range=(0.95, 1.2), crop_range=(0.9, 1)),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ]
+    )
+]
 
 # find_unused_parameters = True
 samples_per_gpu = 10
@@ -287,7 +303,9 @@ data = dict(
         data_root=data_root,
         pattern='test',
         test_mode=True,
-        pipeline=test_pipeline
+        # pipeline=test_pipeline
+        test_rpn=True,
+        pipeline=test_rpn_pipeline
     )
 )
 # #

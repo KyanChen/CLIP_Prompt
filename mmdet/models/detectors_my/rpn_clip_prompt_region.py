@@ -342,7 +342,46 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             assert 'proposals' not in kwargs
             return self.aug_test(imgs, img_metas, **kwargs)
 
-    def simple_test(self, img, img_metas, gt_bboxes, rescale=False, **kwargs):
+    def simple_test_rpn(self, img, img_metas, rescale=False, **kwargs):
+        if self.with_clip_img_backbone:
+            image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
+        else:
+            img_f_maps = self.img_backbone(img)
+        img_f_maps = self.img_neck(img_f_maps)
+        proposal_list = self.rpn_head.simple_test_rpn(img_f_maps, img_metas)
+        per_img_boxes = [len(x) for x in proposal_list]
+
+        boxes_feats, bbox_feat_maps = self.att_head(img_f_maps, proposal_list)
+
+        prompts = self.prompt_learner()  # 620x77x512
+        tokenized_prompts = self.tokenized_prompts
+        text_features = self.text_encoder(prompts, tokenized_prompts)
+
+        boxes_feats = boxes_feats / boxes_feats.norm(dim=-1, keepdim=True)
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+
+        logit_scale = self.logit_scale.exp()
+        logits = logit_scale * boxes_feats @ text_features.t()  # 2x620
+
+        logits = torch.split(logits, per_img_boxes, dim=0)
+        pred_att_list = [x.detach().cpu() for x in logits]
+        proposal_list = [x.detach().cpu()for x in proposal_list]
+        # (tl_x, tl_y, br_x, br_y, score)
+        # proposal_list
+
+        if rescale:
+            for proposals, meta in zip(proposal_list, img_metas):
+                proposals[:, :4] /= proposals.new_tensor(meta['scale_factor'])
+
+        results = []
+        for proposals, pred_att in zip(proposal_list, pred_att_list):
+            results.append(torch.cat((proposals, pred_att), dim=1))
+
+        return results
+
+    def simple_test(self, img, img_metas, gt_bboxes=None, rescale=False, **kwargs):
+        if gt_bboxes is None:
+            return self.simple_test_rpn(img, img_metas, rescale=rescale, **kwargs)
         gt_bboxes = gt_bboxes[0]
         if self.with_clip_img_backbone:
             image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024

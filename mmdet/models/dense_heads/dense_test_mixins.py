@@ -121,7 +121,8 @@ class BBoxTestMixin(object):
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
             img_metas (list[dict]): Meta info of each image.
-
+            rescale: If rescale to original size
+            class_agnostic: If class agnostic, when nms
         Returns:
             list[Tensor]: Proposals of each image, each item has shape (n, 5),
                 where 5 represent (tl_x, tl_y, br_x, br_y, score).

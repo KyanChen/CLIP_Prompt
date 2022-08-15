@@ -205,7 +205,7 @@ class RPNHead(AnchorHead):
             cfg (mmcv.Config): Test / postprocessing configuration,
                 if None, `self.test_cfg` would be used.
             img_shape (tuple(int)): The shape of model's input image.
-
+            class_agnostic: If true, different mlvl feature in RPN
         Returns:
             Tensor: Labeled boxes in shape (n, 5), where the first 4 columns
                 are bounding box positions (tl_x, tl_y, br_x, br_y) and the
