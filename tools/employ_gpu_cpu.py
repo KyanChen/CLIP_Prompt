@@ -13,23 +13,23 @@ class Net(nn.Module):
         return self.conv2d(x)
 
 
-net = Net()
-net = torch.nn.DataParallel(net, device_ids=[0, 1, 2, 3, 4, 5, 6, 7])
+net1 = Net()
+net1 = torch.nn.DataParallel(net1, device_ids=[0, 1, 2, 3, 4, 5, 6, 7])
 torch.backends.cudnn.enabled = True
-
+net2 = Net()
 print("Start Running...")
 while True:
     device = torch.device("cuda:0")
     imgs = torch.rand((20, 3, 512, 512)).contiguous()
     imgs = imgs.to(device)
-    net.to(device)
-    outputs = net(imgs)
+    net1.to(device)
+    outputs = net1(imgs)
 
     device = 'cpu'
     imgs = torch.rand((20, 3, 512, 512)).contiguous()
     imgs = imgs.to(device)
-    net.to(device)
-    _ = net(imgs)
+    net2.to(device)
+    _ = net2(imgs)
 
 # t0 = time.time()
 # imgs = torch.rand((1, 3, 1024, 1024))
