@@ -49,9 +49,15 @@ class GroupSampler(Sampler):
                     end_0 = idx_0+num_split_0
                     end_1 = idx_1+num_split_1
                     if end_0 > len(dataset_type_dict[0]):
+                        if rank == 0:
+                            import pdb
+                            pdb.set_trace()
                         end_0 = len(dataset_type_dict[0])
                         end_1 = idx_1 + self.samples_per_gpu - (end_0 - idx_0)
                     if end_1 > len(dataset_type_dict[0]):
+                        if rank == 0:
+                            import pdb
+                            pdb.set_trace()
                         end_1 = len(dataset_type_dict[0])
                         end_0 = idx_0 + self.samples_per_gpu - (end_1 - idx_1)
                         assert end_0 <= len(dataset_type_dict[0])
@@ -62,9 +68,6 @@ class GroupSampler(Sampler):
                     idx_1 += num_split_1
                     assert len(indice_0+indice_1) == self.samples_per_gpu
                     indice_rearrange = indice_rearrange + indice_0 + indice_1
-                if rank == 0:
-                    import pdb
-                    pdb.set_trace()
                 indice = np.array(indice_rearrange, dtype=np.int64)
             indices.append(indice)
         indices = np.concatenate(indices)
