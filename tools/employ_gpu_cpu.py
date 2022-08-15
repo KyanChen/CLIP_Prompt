@@ -1,12 +1,20 @@
 import torch
+import torch.nn as nn
 import time
 import tqdm
 
-resneXt = torch.hub.load('NVIDIA/DeepLearningExamples:torchhub', 'nvidia_resneXt', pretrained=False)
 
-# device = torch.device("cpu")
-net = torch.nn.DataParallel(resneXt, device_ids=[0, 1, 2, 3, 4, 5, 6, 7])
-# net = resneXt
+class Net(nn.Module):
+    def __int__(self):
+        super(Net, self).__int__()
+        self.conv2d = nn.Sequential(*[nn.Conv2d(3, 1024, 17)] * 5)
+
+    def forward(self, x):
+        return self.conv2d(x)
+
+
+net = Net()
+net = torch.nn.DataParallel(net, device_ids=[0, 1, 2, 3, 4, 5, 6, 7])
 torch.backends.cudnn.enabled = True
 
 print("Start Running...")
