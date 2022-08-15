@@ -39,7 +39,7 @@ class GroupSampler(Sampler):
                 if rank == 0:
                     import pdb
                     pdb.set_trace()
-                ratio = (sum(self.flag_dataset == 0)) / len(self.flag_dataset)
+                ratio = sum(self.flag_dataset == 0) / len(self.flag_dataset)
                 num_split_0 = int(ratio * self.samples_per_gpu)
                 num_split_1 = self.samples_per_gpu - num_split_0
                 dataset_type_dict = {}
