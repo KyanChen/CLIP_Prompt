@@ -61,9 +61,9 @@ class GroupSampler(Sampler):
                     indice_0 = dataset_type_dict[0][start_0: end_0]
                     indice_1 = dataset_type_dict[1][start_1: end_1]
                     if len(indice_0) == 0:
-                        indice_1[-1] = dataset_type_dict[0][-1]
+                        indice_1[-4:] = dataset_type_dict[0][-4:]
                     if len(indice_1) == 0:
-                        indice_0[-1] = dataset_type_dict[1][-1]
+                        indice_0[-4:] = dataset_type_dict[1][-4:]
                     start_0 = end_0
                     start_1 = end_1
                     assert len(indice_0+indice_1) == self.samples_per_gpu
