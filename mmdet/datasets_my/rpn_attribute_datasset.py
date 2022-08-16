@@ -467,7 +467,8 @@ class RPNAttributeDataset(Dataset):
 
         # 纯RPN mAP
         print('RPN mAP', flush=True)
-
+        import pdb
+        pdb.set_trace()
         metric = MeanAveragePrecision(
             iou_type="bbox",
             max_detection_thresholds=[100, 500, 1000],
