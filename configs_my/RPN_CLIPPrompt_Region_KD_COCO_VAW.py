@@ -274,7 +274,7 @@ test_rpn_pipeline = [
 ]
 
 # find_unused_parameters = True
-samples_per_gpu = 28
+samples_per_gpu = 20
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,

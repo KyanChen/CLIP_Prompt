@@ -73,6 +73,7 @@ def parse_args():
         help='score threshold (default: 0.3)')
     parser.add_argument(
         '--gpu-collect',
+        default=False,
         action='store_true',
         help='whether to use gpu to collect results.')
     parser.add_argument(
