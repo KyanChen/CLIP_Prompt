@@ -27,7 +27,8 @@ if __name__ == "__main__":
         # iou_thresholds=[0.5],
         max_detection_thresholds=[100, 500, 1000],
         class_metrics=True,
-        compute_on_cpu=True
+        compute_on_cpu=True,
+        sync_on_compute=False
     )
 
     # Update metric with predictions and respective ground truth
@@ -35,8 +36,8 @@ if __name__ == "__main__":
     metric.update(preds, target)
 
     # Compute the results
-    import pdb
-    pdb.set_trace()
+    # import pdb
+    # pdb.set_trace()
     result = metric.compute()
     from pprint import pprint
     pprint(result)
