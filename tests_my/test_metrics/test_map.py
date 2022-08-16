@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # Initialize metric
     metric = MeanAveragePrecision(
         iou_type="bbox",
-        iou_thresholds=[0.5],
+        # iou_thresholds=[0.5],
         max_detection_thresholds=[100, 500, 1000],
         class_metrics=True,
         compute_on_cpu=True
