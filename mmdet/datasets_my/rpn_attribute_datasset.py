@@ -461,6 +461,10 @@ class RPNAttributeDataset(Dataset):
         # results List[Tensor] N, Nx(4+1+620)
         # gt_labels List[Tensor] N, Nx(4+620)
         gt_labels = self.get_rpn_img_instance_labels()
+
+        results = [x.cuda() for x in results]
+        gt_labels = [x.cuda() for x in gt_labels]
+
         # 纯RPN mAP
         import pdb
         pdb.set_trace()
