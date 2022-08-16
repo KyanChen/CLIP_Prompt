@@ -475,11 +475,12 @@ class RPNAttributeDataset(Dataset):
             sync_on_compute=False
         )
         assert len(gt_labels) == len(results)
-        idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//100]
+        # idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//100]
         # idxs = torch.randperm(len(gt_labels))[0:1]
-        for idx in idxs:
-            pred = results[idx]
-            gt = gt_labels[idx]
+        # for idx in idxs:
+        #     pred = results[idx]
+        #     gt = gt_labels[idx]
+        for pred, gt in zip(results, gt_labels):
             pred_input = [
                 dict(
                     boxes=pred[:, :4],
@@ -498,7 +499,7 @@ class RPNAttributeDataset(Dataset):
         result = metric.compute()
         from pprint import pprint
         pprint(result)
-        return results['map']
+        return result['map']
 
     def evaluate(self,
                  results,
