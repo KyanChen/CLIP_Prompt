@@ -466,8 +466,6 @@ class RPNAttributeDataset(Dataset):
         gt_labels = [x.cuda() for x in gt_labels]
 
         # 纯RPN mAP
-        import pdb
-        pdb.set_trace()
         print('RPN mAP', flush=True)
         metric = MeanAveragePrecision(
             iou_type="bbox",
@@ -496,6 +494,8 @@ class RPNAttributeDataset(Dataset):
             ]
             metric.update(pred_input, gt_input)
         print('computing!')
+        import pdb
+        pdb.set_trace()
         result = metric.compute()
         from pprint import pprint
         pprint(result)
