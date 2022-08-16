@@ -467,11 +467,13 @@ class RPNAttributeDataset(Dataset):
 
         # 纯RPN mAP
         print('RPN mAP', flush=True)
+
         metric = MeanAveragePrecision(
             iou_type="bbox",
             max_detection_thresholds=[100, 500, 1000],
             class_metrics=True,
-            compute_on_cpu=True
+            # compute_on_cpu=True,
+            sync_on_compute=False
         )
         assert len(gt_labels) == len(results)
         # idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//1000]
