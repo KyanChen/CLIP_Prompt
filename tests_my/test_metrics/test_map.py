@@ -35,6 +35,8 @@ if __name__ == "__main__":
     metric.update(preds, target)
 
     # Compute the results
+    import pdb
+    pdb.set_trace()
     result = metric.compute()
     from pprint import pprint
     pprint(result)
