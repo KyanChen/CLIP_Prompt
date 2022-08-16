@@ -54,7 +54,7 @@ class RPNAttributeDataset(Dataset):
             id2images_vaw, id2instances_vaw = self.read_data_vaw(pattern)
             self.id2images = id2images_vaw
             self.id2instances = id2instances_vaw
-            self.img_ids = list(self.id2images.keys())[:12*16]
+            self.img_ids = list(self.id2images.keys())
         else:
             id2images_coco, id2instances_coco = self.read_data_coco(pattern)
             id2images_vaw, id2instances_vaw = self.read_data_vaw(pattern)
@@ -467,18 +467,16 @@ class RPNAttributeDataset(Dataset):
 
         # 纯RPN mAP
         print('RPN mAP', flush=True)
-        import pdb
-        pdb.set_trace()
         metric = MeanAveragePrecision(
             iou_type="bbox",
             max_detection_thresholds=[100, 500, 1000],
             class_metrics=True,
-            compute_on_cpu=True,
+            # compute_on_cpu=True,
             sync_on_compute=False
         )
         assert len(gt_labels) == len(results)
-        # idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//1000]
-        idxs = torch.randperm(len(gt_labels))[0:1]
+        idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//100]
+        # idxs = torch.randperm(len(gt_labels))[0:1]
         for idx in idxs:
             pred = results[idx]
             gt = gt_labels[idx]
@@ -497,8 +495,6 @@ class RPNAttributeDataset(Dataset):
             ]
             metric.update(pred_input, gt_input)
         print('computing!')
-        import pdb
-        pdb.set_trace()
         result = metric.compute()
         from pprint import pprint
         pprint(result)
