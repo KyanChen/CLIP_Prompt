@@ -16,7 +16,7 @@ preds = [
 target = [
     dict(
         boxes=Tensor([[214.0, 41.0, 562.0, 285.0], [12.0, 41.0, 66.0, 210.0]]),
-        labels=IntTensor([0, 1]),
+        labels=IntTensor([0, 0]),
     )
 ]
 
@@ -26,7 +26,8 @@ if __name__ == "__main__":
         iou_type="bbox",
         iou_thresholds=[0.5],
         max_detection_thresholds=[100, 500, 1000],
-        class_metrics=True
+        class_metrics=True,
+        compute_on_cpu=True
     )
 
     # Update metric with predictions and respective ground truth
