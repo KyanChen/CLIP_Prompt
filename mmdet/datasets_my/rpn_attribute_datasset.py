@@ -470,7 +470,11 @@ class RPNAttributeDataset(Dataset):
             class_metrics=True,
             compute_on_cpu=True
         )
-        for pred, gt in zip(results, gt_labels):
+        assert len(gt_labels) == len(results)
+        idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//10]
+        for idx in idxs:
+            pred = results[idx]
+            gt = gt_labels[idx]
             pred_input = [
                 dict(
                     boxes=pred[:, :4],
