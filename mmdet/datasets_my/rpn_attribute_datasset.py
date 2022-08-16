@@ -462,6 +462,8 @@ class RPNAttributeDataset(Dataset):
         # gt_labels List[Tensor] N, Nx(4+620)
         gt_labels = self.get_rpn_img_instance_labels()
         # 纯RPN mAP
+        import pdb
+        pdb.set_trace()
         print('RPN mAP', flush=True)
         metric = MeanAveragePrecision(
             iou_type="bbox",
@@ -489,6 +491,7 @@ class RPNAttributeDataset(Dataset):
                 )
             ]
             metric.update(pred_input, gt_input)
+        print('computing!')
         result = metric.compute()
         from pprint import pprint
         pprint(result)
