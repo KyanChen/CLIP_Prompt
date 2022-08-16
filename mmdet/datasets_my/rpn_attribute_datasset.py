@@ -14,6 +14,7 @@ import numpy as np
 import torch
 from mmcv import tensor2imgs
 from mmcv.parallel import DataContainer
+from torchmetrics.detection import MeanAveragePrecision
 
 from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
@@ -460,6 +461,34 @@ class RPNAttributeDataset(Dataset):
         # results List[Tensor] N, Nx(4+1+620)
         # gt_labels List[Tensor] N, Nx(4+620)
         gt_labels = self.get_rpn_img_instance_labels()
+
+        # 纯RPN mAP
+        print('RPN mAP', flush=True)
+        metric = MeanAveragePrecision(
+            iou_type="bbox",
+            # iou_thresholds=[0.5],
+            max_detection_thresholds=[100, 500, 1000],
+            class_metrics=True
+        )
+        for pred, gt in zip(results, gt_labels):
+            pred_input = [
+                dict(
+                    boxes=pred[:, :4],
+                    scores=pred[:, 4],
+                    labels=torch.zeros_like(pred[:, 4]),
+                )
+            ]
+            gt_input = [
+                dict(
+                    boxes=gt_labels[:, :4],
+                    labels=torch.zeros_like(pred[:, 0]),
+                )
+            ]
+            metric.update(pred_input, gt_input)
+        result = metric.compute()
+        from pprint import pprint
+        pprint(result)
+        return results['map']
 
     def evaluate(self,
                  results,

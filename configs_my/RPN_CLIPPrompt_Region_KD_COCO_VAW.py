@@ -25,14 +25,14 @@ mp_start_method = 'fork'
 #   - `base_batch_size` = (8 GPUs) x (2 samples per GPU).
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
-data_root = '/data/kyanchen/prompt/data'
-# data_root = '/data/kyanchen/Data'
+# data_root = '/data/kyanchen/prompt/data'
+data_root = '/data/kyanchen/Data'
 model = dict(
     type='RPN_CLIP_Prompter_Region',
     att2id_file=data_root+'/VAW/attribute_index.json',
     rpn_all=False,
     need_train_names=[
-        'img_backbone',
+        # 'img_backbone',
         'img_neck',
         'rpn_head',
         'att_head',
@@ -274,7 +274,7 @@ test_rpn_pipeline = [
 ]
 
 # find_unused_parameters = True
-samples_per_gpu = 10
+samples_per_gpu = 28
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
@@ -334,7 +334,7 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        'img_backbone': {'lr_mult': 0.01},
+        # 'img_backbone': {'lr_mult': 0.01},
         'img_neck': {},
         'rpn_head': {},
         'att_head': {},
