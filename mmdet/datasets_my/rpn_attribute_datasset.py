@@ -473,7 +473,7 @@ class RPNAttributeDataset(Dataset):
         )
         assert len(gt_labels) == len(results)
         # idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//1000]
-        idxs = torch.randperm(len(gt_labels))
+        idxs = torch.randperm(len(gt_labels))[0]
         for idx in idxs:
             pred = results[idx]
             gt = gt_labels[idx]
