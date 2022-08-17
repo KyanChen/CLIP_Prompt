@@ -489,7 +489,9 @@ class RPNAttributeDataset(Dataset):
         metric = metric.cuda()
 
         assert len(gt_labels) == len(results)
-        idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//10]
+        import time
+        t0 = time.time()
+        idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//5]
         # idxs = torch.randperm(len(gt_labels))[0:1]
         for idx in idxs:
             pred = results[idx].cuda()
@@ -511,6 +513,7 @@ class RPNAttributeDataset(Dataset):
             metric.update(pred_input, gt_input)
         print('computing!')
         result = metric.compute()
+        print('time: ', time.time()-t0)
         from pprint import pprint
         pprint(result)
         return result['map']
