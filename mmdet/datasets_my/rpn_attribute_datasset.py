@@ -484,8 +484,9 @@ class RPNAttributeDataset(Dataset):
             max_detection_thresholds=[100, 500, 1000],
             class_metrics=True,
             # compute_on_cpu=True,
-            sync_on_compute=eval_dist
+            sync_on_compute=False
         )
+        metric = metric.cuda()
 
         assert len(gt_labels) == len(results)
         idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//5]
