@@ -256,11 +256,11 @@ def main():
                                  args.gpu_collect)
 
     rank, world_size = get_dist_info()
-    num_per_rank = len(outputs) // world_size
+    num_per_rank = len(dataset) // world_size
     start_idx = rank * num_per_rank
     end_idx = (rank+1) * num_per_rank
     if rank == world_size - 1:
-        end_idx = len(outputs)
+        end_idx = len(dataset)
 
     kwargs = {} if args.eval_options is None else args.eval_options
     eval_kwargs = cfg.get('evaluation', {}).copy()
