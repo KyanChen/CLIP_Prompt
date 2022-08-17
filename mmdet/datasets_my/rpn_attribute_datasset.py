@@ -6,6 +6,8 @@ import pickle
 import random
 import tempfile
 import warnings
+from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
+                         wrap_fp16_model)
 from collections import OrderedDict, defaultdict
 import imagesize
 import cv2
@@ -457,13 +459,21 @@ class RPNAttributeDataset(Dataset):
             gt_labels.append(gt_labels_tmp)
         return gt_labels
 
-    def evaluate_rpn(self, results):
+    def evaluate_rpn(self, results, eval_dist=False):
         # results List[Tensor] N, Nx(4+1+620)
         # gt_labels List[Tensor] N, Nx(4+620)
         gt_labels = self.get_rpn_img_instance_labels()
 
         # results = [x.cuda() for x in results]
         # gt_labels = [x.cuda() for x in gt_labels]
+        if eval_dist:
+            rank, world_size = get_dist_info()
+            num_per_rank = len(gt_labels) // world_size
+            start_idx = rank * num_per_rank
+            end_idx = (rank + 1) * num_per_rank
+            if rank == world_size - 1:
+                end_idx = len(gt_labels)
+            gt_labels = gt_labels[start_idx:end_idx]
 
         # 纯RPN mAP
         print('RPN mAP', flush=True)
@@ -472,10 +482,11 @@ class RPNAttributeDataset(Dataset):
             max_detection_thresholds=[100, 500, 1000],
             class_metrics=True,
             # compute_on_cpu=True,
-            sync_on_compute=False
+            sync_on_compute=eval_dist
         )
+
         assert len(gt_labels) == len(results)
-        idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//2]
+        idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//100]
         # idxs = torch.randperm(len(gt_labels))[0:1]
         for idx in idxs:
             pred = results[idx]
@@ -505,11 +516,12 @@ class RPNAttributeDataset(Dataset):
                  results,
                  logger=None,
                  metric='mAP',
+                 eval_dist=False,
                  per_class_out_file=None,
                  is_logit=True
                  ):
         if self.test_rpn:
-            return self.evaluate_rpn(results)
+            return self.evaluate_rpn(results, eval_dist)
         if isinstance(results[0], type(np.array(0))):
             results = np.concatenate(results, axis=0)
         else:
