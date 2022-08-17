@@ -225,7 +225,7 @@ def main():
     if fp16_cfg is not None:
         wrap_fp16_model(model)
     if args.checkpoint is not None and os.path.exists(args.checkpoint):
-        checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
+        checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu', revise_keys=[(r'^module\.', ''), (r'^img_backbone\.', 'backbone.'), (r'^img_neck\.', 'neck.')])
     else:
         checkpoint = {}
         warnings.warn('No loading model')
