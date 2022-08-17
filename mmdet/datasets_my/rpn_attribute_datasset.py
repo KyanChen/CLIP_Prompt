@@ -56,7 +56,7 @@ class RPNAttributeDataset(Dataset):
             id2images_vaw, id2instances_vaw = self.read_data_vaw(pattern)
             self.id2images = id2images_vaw
             self.id2instances = id2instances_vaw
-            self.img_ids = list(self.id2images.keys())[:8*20]
+            self.img_ids = list(self.id2images.keys())
         else:
             id2images_coco, id2instances_coco = self.read_data_coco(pattern)
             id2images_vaw, id2instances_vaw = self.read_data_vaw(pattern)
@@ -488,11 +488,11 @@ class RPNAttributeDataset(Dataset):
         )
 
         assert len(gt_labels) == len(results)
-        idxs = torch.randperm(len(gt_labels))[:len(gt_labels)]
+        idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//5]
         # idxs = torch.randperm(len(gt_labels))[0:1]
         for idx in idxs:
-            pred = results[idx]
-            gt = gt_labels[idx]
+            pred = results[idx].cuda()
+            gt = gt_labels[idx].cuda()
         # for pred, gt in zip(results, gt_labels):
             pred_input = [
                 dict(
