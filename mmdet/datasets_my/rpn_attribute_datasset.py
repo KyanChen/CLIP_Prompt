@@ -489,7 +489,7 @@ class RPNAttributeDataset(Dataset):
         metric = metric.cuda()
 
         assert len(gt_labels) == len(results)
-        idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//5]
+        idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//10]
         # idxs = torch.randperm(len(gt_labels))[0:1]
         for idx in idxs:
             pred = results[idx].cuda()
