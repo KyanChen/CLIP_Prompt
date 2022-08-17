@@ -463,17 +463,19 @@ class RPNAttributeDataset(Dataset):
         # results List[Tensor] N, Nx(4+1+620)
         # gt_labels List[Tensor] N, Nx(4+620)
         gt_labels = self.get_rpn_img_instance_labels()
+        if results is None:
+            return
 
         # results = [x.cuda() for x in results]
         # gt_labels = [x.cuda() for x in gt_labels]
-        if eval_dist:
-            rank, world_size = get_dist_info()
-            num_per_rank = len(gt_labels) // world_size
-            start_idx = rank * num_per_rank
-            end_idx = (rank + 1) * num_per_rank
-            if rank == world_size - 1:
-                end_idx = len(gt_labels)
-            gt_labels = gt_labels[start_idx:end_idx]
+        # if eval_dist:
+        #     rank, world_size = get_dist_info()
+        #     num_per_rank = len(gt_labels) // world_size
+        #     start_idx = rank * num_per_rank
+        #     end_idx = (rank + 1) * num_per_rank
+        #     if rank == world_size - 1:
+        #         end_idx = len(gt_labels)
+        #     gt_labels = gt_labels[start_idx:end_idx]
 
         # 纯RPN mAP
         print('RPN mAP', flush=True)
