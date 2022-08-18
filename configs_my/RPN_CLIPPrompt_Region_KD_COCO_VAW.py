@@ -274,7 +274,7 @@ test_rpn_pipeline = [
 ]
 
 # find_unused_parameters = True
-samples_per_gpu = 12
+samples_per_gpu = 28
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
@@ -354,7 +354,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=2000,
     warmup_ratio=0.1,
-    step=[35, 50])
+    step=[30, 40])
 
 # lr_config = dict(
 #     policy='CosineAnnealing',
@@ -366,7 +366,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=60)
+runner = dict(type='EpochBasedRunner', max_epochs=50)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None
