@@ -108,7 +108,7 @@ class RPNAttributeDataset(Dataset):
         id2instances = {}
         for data in json_data['images']:
             img_id = 'coco_' + str(data['id'])
-            data['file_name'] = str(data['id']) + ".jpg"
+            data['file_name'] = f'{data["id"]:012d}.jpg'
             id2images[img_id] = data
         for data in json_data['annotations']:
             img_id = 'coco_' + str(data['image_id'])
