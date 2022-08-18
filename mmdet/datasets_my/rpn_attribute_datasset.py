@@ -471,14 +471,16 @@ class RPNAttributeDataset(Dataset):
         gt_bboxes = [gt[:, :4].numpy() for gt in gt_labels]
         proposals = [x[:, :5].numpy() for x in results]
         proposal_nums = [100, 300, 1000]
-        iou_thrs = [0.5,
-                    np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
-                    ]
-        for iou_x in iou_thrs:
-            recalls = eval_recalls(
-                gt_bboxes, proposals, proposal_nums, iou_x)
-            ar = recalls.mean(axis=1)
-        return None
+        iou_thrs = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
+        recalls = eval_recalls(
+            gt_bboxes, proposals, proposal_nums, iou_thrs)
+        ar = recalls.mean(axis=1)
+        log_msg = []
+        for i, num in enumerate(proposal_nums):
+            log_msg.append(f'\nAR@{num}\t{ar[i]:.4f}')
+        log_msg = ''.join(log_msg)
+        print(log_msg)
+        return ar[0]
 
     def evaluate(self,
                  results,
