@@ -469,7 +469,7 @@ class RPNAttributeDataset(Dataset):
 
         print('Computing!')
         gt_bboxes = [gt[:, :4].numpy() for gt in gt_labels]
-        proposals = [x[:, :5] for x in results]
+        proposals = [x[:, :5].numpy() for x in results]
         proposal_nums = [100, 300, 1000]
         iou_thrs = [0.5,
                     np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
