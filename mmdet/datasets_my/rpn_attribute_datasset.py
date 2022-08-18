@@ -474,6 +474,7 @@ class RPNAttributeDataset(Dataset):
         iou_thrs = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
         recalls = eval_recalls(
             gt_bboxes, proposals, proposal_nums, iou_thrs)
+        print(recalls[:, 0])
         ar = recalls.mean(axis=1)
         log_msg = []
         for i, num in enumerate(proposal_nums):
