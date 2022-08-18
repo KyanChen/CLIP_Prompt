@@ -18,6 +18,7 @@ from mmcv import tensor2imgs
 from mmcv.parallel import DataContainer
 from torchmetrics.detection import MeanAveragePrecision
 
+from ..core import eval_recalls
 from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
 from ..datasets.pipelines import Compose
@@ -461,79 +462,39 @@ class RPNAttributeDataset(Dataset):
             gt_labels.append(gt_labels_tmp)
         return gt_labels
 
-    def evaluate_rpn(self, results, eval_dist=False):
+    def evaluate_rpn(self, results):
         # results List[Tensor] N, Nx(4+1+620)
         # gt_labels List[Tensor] N, Nx(4+620)
         gt_labels = self.get_rpn_img_instance_labels()
-        if results is None:
-            return
 
-        # results = [x.cuda() for x in results]
-        # gt_labels = [x.cuda() for x in gt_labels]
-        # if eval_dist:
-        #     rank, world_size = get_dist_info()
-        #     num_per_rank = len(gt_labels) // world_size
-        #     start_idx = rank * num_per_rank
-        #     end_idx = (rank + 1) * num_per_rank
-        #     if rank == world_size - 1:
-        #         end_idx = len(gt_labels)
-        #     gt_labels = gt_labels[start_idx:end_idx]
-
-        # 纯RPN mAP
-        print('RPN mAP', flush=True)
-        metric = MeanAveragePrecision(
-            iou_type="bbox",
-            max_detection_thresholds=[100, 500, 1000],
-            class_metrics=True,
-            # compute_on_cpu=True,
-            sync_on_compute=False
-        )
-        metric = metric.cuda()
-
-        assert len(gt_labels) == len(results)
-        import time
-        t0 = time.time()
-        idxs = torch.randperm(len(gt_labels))[:len(gt_labels)//5]
-        # idxs = torch.randperm(len(gt_labels))[0:1]
-        for idx in idxs:
-            pred = results[idx].cuda()
-            gt = gt_labels[idx].cuda()
-        # for pred, gt in zip(results, gt_labels):
-            pred_input = [
-                dict(
-                    boxes=pred[:, :4],
-                    scores=pred[:, 4],
-                    labels=torch.zeros_like(pred[:, 4]),
-                )
-            ]
-            gt_input = [
-                dict(
-                    boxes=gt[:, :4],
-                    labels=torch.zeros_like(gt[:, 0]),
-                )
-            ]
-            metric.update(pred_input, gt_input)
-        print('computing!')
-        result = metric.compute()
-        print('time: ', time.time()-t0)
-        from pprint import pprint
-        pprint(result)
-        return result['map']
+        print('Computing!')
+        gt_bboxes = [gt[:, :4].numpy() for gt in gt_labels]
+        proposals = [x[:, :5] for x in results]
+        proposal_nums = [100, 300, 1000]
+        iou_thrs = [0.5,
+                    np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
+                    ]
+        for iou_x in iou_thrs:
+            recalls = eval_recalls(
+                gt_bboxes, proposals, proposal_nums, iou_x)
+            ar = recalls.mean(axis=1)
+        return None
 
     def evaluate(self,
                  results,
                  logger=None,
                  metric='mAP',
-                 eval_dist=False,
                  per_class_out_file=None,
                  is_logit=True
                  ):
         if self.test_rpn:
-            return self.evaluate_rpn(results, eval_dist)
+            return self.evaluate_rpn(results)
+
         if isinstance(results[0], type(np.array(0))):
             results = np.concatenate(results, axis=0)
         else:
             results = np.array(results)
+
         preds = torch.from_numpy(results)
         gts = self.get_img_instance_labels()
         gts = torch.from_numpy(gts)
