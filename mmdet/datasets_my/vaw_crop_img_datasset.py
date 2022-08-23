@@ -50,7 +50,7 @@ class VAWCropDataset(Dataset):
             elif dataset_split == 'test':
                 self.instances, self.img_instances_pair = self.read_data(['test.json'])
 
-        self.instances = self.instances[:20]
+        # self.instances = self.instances[:20]
 
         print('num instances: ', len(self.instances))
         print('data len: ', len(self.instances))
@@ -79,7 +79,7 @@ class VAWCropDataset(Dataset):
         else:
             self.att2id = json.load(open(attribute_index_file, 'r'))
 
-        self.flag = np.zeros(len(self))
+        self.flag = np.zeros(len(self), dtype=int)
         print('num_att: ', len(self.att2id))
 
     def read_data(self, json_file_list):
