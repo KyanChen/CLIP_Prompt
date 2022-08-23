@@ -27,36 +27,44 @@ class VAWCropDataset(Dataset):
     def __init__(self,
                  data_root,
                  pipeline,
-                 pattern,
+                 dataset_split='train',
+                 att_group='common',
+                 attribute_index_file='',
                  test_mode=False,
                  open_category=True,
                  file_client_args=dict(backend='disk')
                  ):
 
-        assert pattern in ['train', 'val', 'test']
+        assert dataset_split in ['train', 'val', 'test']
         self.test_mode = test_mode
         self.pipeline = Compose(pipeline)
         self.data_root = data_root
         if open_category:
+            print('open_category: ', open_category)
             self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json", 'val.json', 'test.json'])
             self.instances = self.split_instance_by_category(pattern=pattern)
         else:
-            if pattern == 'train':
+            if dataset_split == 'train':
                 self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
-            elif pattern == 'val':
+            elif dataset_split == 'val':
                 self.instances, self.img_instances_pair = self.read_data(['val.json'])
-            elif pattern == 'test':
+            elif dataset_split == 'test':
                 self.instances, self.img_instances_pair = self.read_data(['test.json'])
 
         print('num instances: ', len(self.instances))
         print('data len: ', len(self.instances))
-        self.error_list = set({74197, 171246})
+        self.error_list = set()
         self.img_ids = list(self.img_instances_pair.keys())
 
-        # self.instances = self.get_instances()
-        # self.instances = self.instances[-10:]
-        attribute_index_file = os.path.join(self.data_root, "VAW/attribute_index.json")
-        self.classname_maps = json.load(open(attribute_index_file))
+        attribute_index_file = os.path.join(self.data_root, f"VAW/{attribute_index_file}")
+        att2id = json.load(open(attribute_index_file))
+        if 'common2common' in attribute_index_file:
+            if att_group in ['common1', 'common2']:
+                self.att2id = att2id[att_group]
+            elif att_group == 'all':
+                self.att2id = {}
+                self.att2id.update(att2id['common1'])
+                self.att2id.update(att2id['common2'])
 
     def read_data(self, json_file_list):
         json_data = [json.load(open(self.data_root + '/VAW/' + x)) for x in json_file_list]
@@ -100,20 +108,22 @@ class VAWCropDataset(Dataset):
 
         x, y, w, h = instance["instance_bbox"]
         results['crop_box'] = np.array([x, y, x + w, y + h])
-
-        positive_attributes = instance["positive_attributes"]
-        negative_attributes = instance["negative_attributes"]
-        labels = np.ones(len(self.classname_maps.keys())) * 2
-        for att in positive_attributes:
-            labels[self.classname_maps[att]] = 1
-        for att in negative_attributes:
-            labels[self.classname_maps[att]] = 0
-        results['gt_labels'] = labels.astype(np.int)
-
         if self.test_mode:
             results = self.pipeline(results)
         else:
             try:
+                positive_attributes = instance["positive_attributes"]
+                negative_attributes = instance["negative_attributes"]
+                labels = np.ones(self.att2id.keys()) * 2
+                for att in positive_attributes:
+                    att_id = self.att2id.get(att, None)
+                    if att_id is not None:
+                        labels[att_id] = 1
+                for att in negative_attributes:
+                    att_id = self.att2id.get(att, None)
+                    if att_id is not None:
+                        labels[att_id] = 0
+                results['gt_labels'] = labels.astype(np.int)
                 results = self.pipeline(results)
             except Exception as e:
                 print(e)
@@ -140,15 +150,16 @@ class VAWCropDataset(Dataset):
         for results in self.instances:
             positive_attributes = results['positive_attributes']
             negative_attributes = results['negative_attributes']
-            label = np.ones(len(self.classname_maps.keys())) * 2
+            labels = np.ones(self.att2id.keys()) * 2
             for att in positive_attributes:
-                label[self.classname_maps[att]] = 1
+                att_id = self.att2id.get(att, None)
+                if att_id is not None:
+                    labels[att_id] = 1
             for att in negative_attributes:
-                label[self.classname_maps[att]] = 0
-
-            gt_labels = label.astype(np.int)
-
-            np_gt_labels.append(gt_labels.astype(np.int))
+                att_id = self.att2id.get(att, None)
+                if att_id is not None:
+                    labels[att_id] = 0
+            np_gt_labels.append(labels.astype(np.int))
         return np.stack(np_gt_labels, axis=0)
 
     def evaluate(self,

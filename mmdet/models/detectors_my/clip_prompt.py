@@ -11,10 +11,10 @@ import warnings
 @DETECTORS.register_module()
 class CLIP_Prompter(BaseDetector):
     def __init__(self,
-                 classname_path,
+                 attribute_index_file,
+                 need_train_names,
                  backbone,
                  prompt_learner,
-                 need_train_names,
                  img_encoder=None,
                  prompt_learner_weights='',
                  neck=None,
@@ -28,9 +28,20 @@ class CLIP_Prompter(BaseDetector):
             warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
             backbone.pretrained = pretrained
-
-        classname_maps = json.load(open(classname_path))
-        classnames = list(classname_maps.keys())
+        if isinstance(attribute_index_file, dict):
+            file = attribute_index_file['file']
+            att2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['att_group']
+            if 'common2common' in file:
+                if att_group in ['common1', 'common2']:
+                    self.att2id = att2id[att_group]
+                elif att_group == 'all':
+                    self.att2id = {}
+                    self.att2id.update(att2id['common1'])
+                    self.att2id.update(att2id['common2'])
+        else:
+            self.att2id = json.load(open(attribute_index_file, 'r'))
+        atts = list(self.att2id.keys())
 
         clip_model = build_backbone(backbone).model
         if img_encoder is None:
@@ -39,7 +50,6 @@ class CLIP_Prompter(BaseDetector):
             self.image_encoder = build_backbone(img_encoder)
             self.img_proj_head = nn.Linear(768, 1024)
         self.logit_scale = clip_model.logit_scale
-        self.dtype = clip_model.dtype
 
         self.text_encoder = build_backbone(
             dict(
@@ -48,7 +58,7 @@ class CLIP_Prompter(BaseDetector):
             )
         )
 
-        prompt_learner.update(dict(classnames=classnames, clip_model=clip_model))
+        prompt_learner.update(dict(classnames=atts, clip_model=clip_model))
         self.prompt_learner = build_backbone(prompt_learner)
 
         if prompt_learner_weights:

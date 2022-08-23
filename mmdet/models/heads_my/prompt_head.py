@@ -1,4 +1,5 @@
 import json
+import os
 import warnings
 from abc import abstractmethod
 
@@ -19,6 +20,8 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer, LayerNorm
 class PromptHead(BaseModule):
     def __init__(self,
                  data_root='',
+                 att_group='common1',
+                 attribute_index_file='attribute_index.json',
                  train_cfg=None,
                  test_cfg=None,
                  init_cfg=None,
@@ -34,6 +37,19 @@ class PromptHead(BaseModule):
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
         attr_freq = json.load(open(data_root + '/VAW/attr_freq_wo_sort.json', 'r'))
+
+        attribute_index_file = os.path.join(self.data_root, f"VAW/{attribute_index_file}")
+        att2id = json.load(open(attribute_index_file))
+        if 'common2common' in attribute_index_file:
+            if att_group in ['common1', 'common2']:
+                self.att2id = att2id[att_group]
+            elif att_group == 'all':
+                self.att2id = {}
+                self.att2id.update(att2id['common1'])
+                self.att2id.update(att2id['common2'])
+        else:
+            self.att2id = att2id
+
         self.re_weight_gamma = re_weight_gamma
         self.re_weight_beta = re_weight_beta
         self.re_weight_alpha = re_weight_alpha
@@ -43,9 +59,16 @@ class PromptHead(BaseModule):
         self.balance_kd = balance_kd
 
     def reweight_att(self, attr_freq):
-        pos_rew = torch.from_numpy(np.array([v['pos'] for k, v in attr_freq.items()], dtype=np.float32))
-        neg_rew = torch.from_numpy(np.array([v['neg'] for k, v in attr_freq.items()], dtype=np.float32))
-        total_rew_bak = torch.from_numpy(np.array([v['total'] for k, v in attr_freq.items()], dtype=np.float32))
+        refine_attr_freq = {}
+        idx_pre = -1
+        for att, idx in self.att2id.items():
+            assert idx > idx_pre
+            idx_pre = idx
+            refine_attr_freq[att] = attr_freq[att]
+
+        pos_rew = torch.from_numpy(np.array([v['pos'] for k, v in refine_attr_freq.items()], dtype=np.float32))
+        neg_rew = torch.from_numpy(np.array([v['neg'] for k, v in refine_attr_freq.items()], dtype=np.float32))
+        total_rew_bak = torch.from_numpy(np.array([v['total'] for k, v in refine_attr_freq.items()], dtype=np.float32))
 
         # total_rew = 99 * (total_rew_bak - total_rew_bak.min()) / (total_rew_bak.max() - total_rew_bak.min()) + 1
         # total_rew = 1 - torch.pow(self.re_weight_beta, total_rew)
@@ -53,7 +76,7 @@ class PromptHead(BaseModule):
         # total_rew = 620 * total_rew / total_rew.sum()
 
         total_rew = 1 / torch.pow(total_rew_bak, self.re_weight_alpha)
-        total_rew = 620 * total_rew / total_rew.sum()
+        total_rew = len(refine_attr_freq) * total_rew / total_rew.sum()
         # import pdb
         # pdb.set_trace()
         return total_rew

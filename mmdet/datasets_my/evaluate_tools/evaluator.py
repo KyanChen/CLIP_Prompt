@@ -40,9 +40,20 @@ class Evaluator(object):
         """
 
          # Read file that maps from id to attribute name.
-        with open(fpath_attr2idx, 'r') as f:
-            self.attr2idx = json.load(f)
-            self.idx2attr = {v: k for k, v in self.attr2idx.items()}
+        if isinstance(fpath_attr2idx, dict):
+            file = fpath_attr2idx['file']
+            att2id = json.load(open(file, 'r'))
+            att_group = fpath_attr2idx['att_group']
+            if 'common2common' in file:
+                if att_group in ['common1', 'common2']:
+                    self.attr2idx = att2id[att_group]
+                elif att_group == 'all':
+                    self.attr2idx = {}
+                    self.attr2idx.update(att2id['common1'])
+                    self.attr2idx.update(att2id['common2'])
+        else:
+            self.attr2idx = json.load(open(fpath_attr2idx, 'r'))
+        self.idx2attr = {v: k for k, v in self.attr2idx.items()}
 
         # Read file that shows metadata of attributes (e.g., "plaid" is pattern).
         with open(fpath_attr_type, 'r') as f:
