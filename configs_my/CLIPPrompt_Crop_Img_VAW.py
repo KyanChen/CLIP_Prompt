@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=20)
+checkpoint_config = dict(interval=5)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -105,11 +105,11 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 100
+samples_per_gpu = 256
 data = dict(
     samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=0,
-    persistent_workers=False,
+    workers_per_gpu=8,
+    persistent_workers=True,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -149,7 +149,7 @@ optimizer = dict(
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_learner': {},
-               'image_encoder': {'lr_mult': 0.1},
+               'image_encoder': {'lr_mult': 0.01},
                'bbox_head': {}, 'logit_scale': {}
                },
     type='SGD',
