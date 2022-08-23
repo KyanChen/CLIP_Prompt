@@ -181,7 +181,7 @@ lr_config = dict(
     warmup_iters=2000,
     warmup_ratio=0.1,
     # gamma=0.5,
-    step=[50, 80]
+    step=[90, 130]
 )
 
 # lr_config = dict(
@@ -194,7 +194,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=100)
+runner = dict(type='EpochBasedRunner', max_epochs=150)
 evaluation = dict(interval=10, metric='mAP')
 
 load_from = None
