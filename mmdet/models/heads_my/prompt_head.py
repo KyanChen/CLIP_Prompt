@@ -20,7 +20,6 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer, LayerNorm
 class PromptHead(BaseModule):
     def __init__(self,
                  data_root='',
-                 att_group='common1',
                  attribute_index_file='attribute_index.json',
                  train_cfg=None,
                  test_cfg=None,
