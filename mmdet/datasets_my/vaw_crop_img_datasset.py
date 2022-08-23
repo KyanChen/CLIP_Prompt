@@ -28,8 +28,7 @@ class VAWCropDataset(Dataset):
                  data_root,
                  pipeline,
                  dataset_split='train',
-                 att_group='common',
-                 attribute_index_file='',
+                 attribute_index_file=None,
                  test_mode=False,
                  open_category=True,
                  file_client_args=dict(backend='disk')
@@ -58,15 +57,21 @@ class VAWCropDataset(Dataset):
         self.error_list = set()
         self.img_ids = list(self.img_instances_pair.keys())
 
-        attribute_index_file = os.path.join(self.data_root, f"VAW/{attribute_index_file}")
-        att2id = json.load(open(attribute_index_file))
-        if 'common2common' in attribute_index_file:
-            if att_group in ['common1', 'common2']:
-                self.att2id = att2id[att_group]
-            elif att_group == 'all':
-                self.att2id = {}
-                self.att2id.update(att2id['common1'])
-                self.att2id.update(att2id['common2'])
+        self.attribute_index_file = attribute_index_file
+        if isinstance(attribute_index_file, dict):
+            file = attribute_index_file['file']
+            att2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['att_group']
+            if 'common2common' in file:
+                if att_group in ['common1', 'common2']:
+                    self.att2id = att2id[att_group]
+                elif att_group == 'all':
+                    self.att2id = {}
+                    self.att2id.update(att2id['common1'])
+                    self.att2id.update(att2id['common2'])
+        else:
+            self.att2id = json.load(open(attribute_index_file, 'r'))
+
         self.flag = np.zeros(len(self))
         print('num_att: ', len(self.att2id))
 
@@ -181,6 +186,7 @@ class VAWCropDataset(Dataset):
 
         output = cal_metrics(self.data_root + '/VAW',
                              preds, gts,
+                             fpath_attribute_index=self.attribute_index_file,
                              return_all=True,
                              return_evaluator=per_class_out_file,
                              is_logit=is_logit)
