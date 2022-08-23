@@ -154,7 +154,7 @@ class VAWCropDataset(Dataset):
         for results in self.instances:
             positive_attributes = results['positive_attributes']
             negative_attributes = results['negative_attributes']
-            labels = np.ones(self.att2id.keys()) * 2
+            labels = np.ones(len(self.att2id.keys())) * 2
             for att in positive_attributes:
                 att_id = self.att2id.get(att, None)
                 if att_id is not None:
