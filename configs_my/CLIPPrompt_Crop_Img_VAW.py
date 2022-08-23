@@ -28,6 +28,7 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 # model settings
 # data_root = 'D:/Dataset'
 data_root = '/data/kyanchen/prompt/data'
+
 attribute_index_file = dict(
     file=data_root+'/VAW/common2common_att2id.json',
     att_group='common1'

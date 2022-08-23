@@ -69,6 +69,13 @@ class VAWCropDataset(Dataset):
                     self.att2id = {}
                     self.att2id.update(att2id['common1'])
                     self.att2id.update(att2id['common2'])
+            elif 'common2rare' in file:
+                if att_group in ['common', 'rare']:
+                    self.att2id = att2id[att_group]
+                elif att_group == 'all':
+                    self.att2id = {}
+                    self.att2id.update(att2id['common'])
+                    self.att2id.update(att2id['rare'])
         else:
             self.att2id = json.load(open(attribute_index_file, 'r'))
 

@@ -51,6 +51,13 @@ class Evaluator(object):
                     self.attr2idx = {}
                     self.attr2idx.update(att2id['common1'])
                     self.attr2idx.update(att2id['common2'])
+            elif 'common2rare' in file:
+                if att_group in ['common', 'rare']:
+                    self.att2id = att2id[att_group]
+                elif att_group == 'all':
+                    self.att2id = {}
+                    self.att2id.update(att2id['common'])
+                    self.att2id.update(att2id['rare'])
         else:
             self.attr2idx = json.load(open(fpath_attr2idx, 'r'))
         self.idx2attr = {v: k for k, v in self.attr2idx.items()}
