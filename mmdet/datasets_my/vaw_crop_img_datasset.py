@@ -65,6 +65,7 @@ class VAWCropDataset(Dataset):
                 self.att2id = {}
                 self.att2id.update(att2id['common1'])
                 self.att2id.update(att2id['common2'])
+        self.flag = np.zeros(len(self))
 
     def read_data(self, json_file_list):
         json_data = [json.load(open(self.data_root + '/VAW/' + x)) for x in json_file_list]
