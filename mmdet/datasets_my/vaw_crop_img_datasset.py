@@ -51,6 +51,8 @@ class VAWCropDataset(Dataset):
             elif dataset_split == 'test':
                 self.instances, self.img_instances_pair = self.read_data(['test.json'])
 
+        self.instances = self.instances[:20]
+
         print('num instances: ', len(self.instances))
         print('data len: ', len(self.instances))
         self.error_list = set()
