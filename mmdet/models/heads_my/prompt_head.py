@@ -38,17 +38,20 @@ class PromptHead(BaseModule):
         self.test_cfg = test_cfg
         attr_freq = json.load(open(data_root + '/VAW/attr_freq_wo_sort.json', 'r'))
 
-        attribute_index_file = os.path.join(self.data_root, f"VAW/{attribute_index_file}")
-        att2id = json.load(open(attribute_index_file))
-        if 'common2common' in attribute_index_file:
-            if att_group in ['common1', 'common2']:
-                self.att2id = att2id[att_group]
-            elif att_group == 'all':
-                self.att2id = {}
-                self.att2id.update(att2id['common1'])
-                self.att2id.update(att2id['common2'])
+        self.attribute_index_file = attribute_index_file
+        if isinstance(attribute_index_file, dict):
+            file = attribute_index_file['file']
+            att2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['att_group']
+            if 'common2common' in file:
+                if att_group in ['common1', 'common2']:
+                    self.att2id = att2id[att_group]
+                elif att_group == 'all':
+                    self.att2id = {}
+                    self.att2id.update(att2id['common1'])
+                    self.att2id.update(att2id['common2'])
         else:
-            self.att2id = att2id
+            self.att2id = json.load(open(attribute_index_file, 'r'))
 
         self.re_weight_gamma = re_weight_gamma
         self.re_weight_beta = re_weight_beta
@@ -174,7 +177,10 @@ class PromptHead(BaseModule):
                 raise NotImplementedError
 
         try:
-            acc = cal_metrics(f'{self.data_root}/VAW', cls_scores, gt_labels, is_logit=True).float()
+            acc = cal_metrics(f'{self.data_root}/VAW',
+                              cls_scores, gt_labels,
+                              fpath_attribute_index=self.attribute_index_file,
+                              is_logit=True).float()
             # acc = cal_metrics(f'{self.data_root}/VAW', kd_logits, gt_labels, is_logit=True).float()
         except Exception as e:
             print(e)

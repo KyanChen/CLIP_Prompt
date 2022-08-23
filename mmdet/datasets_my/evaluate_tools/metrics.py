@@ -3,8 +3,9 @@ import torch
 from .evaluator import Evaluator
 
 
-def cal_metrics(prefix_path, pred, gt_label, return_all=False, return_evaluator=False, is_logit=True):
-    fpath_attribute_index = prefix_path + '/attribute_index.json'
+def cal_metrics(prefix_path, pred, gt_label, fpath_attribute_index=None, return_all=False, return_evaluator=False, is_logit=True):
+    if fpath_attribute_index is None:
+        fpath_attribute_index = prefix_path + '/attribute_index.json'
     fpath_attribute_types = prefix_path + '/attribute_types.json'
     fpath_attribute_parent_types = prefix_path + '/attribute_parent_types.json'
     fpath_head_tail = prefix_path + '/head_tail.json'

@@ -28,12 +28,14 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 # model settings
 # data_root = 'D:/Dataset'
 data_root = '/data/kyanchen/prompt/data'
+attribute_index_file = dict(
+    file=data_root+'/VAW/common2common_att2id.json',
+    att_group='common1'
+)
 model = dict(
     type='CLIP_Prompter',
     # classname_path=data_root+'/VAW/attribute_index.json',
-    classname_path=dict(
-        path=data_root+'/VAW/common2common_att2id.json',
-        keys='common1'),
+    attribute_index_file=attribute_index_file,
     need_train_names=[
         'prompt_learner', 'image_encoder',
         'bbox_head', 'logit_scale'
