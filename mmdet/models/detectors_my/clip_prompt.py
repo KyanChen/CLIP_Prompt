@@ -48,6 +48,7 @@ class CLIP_Prompter(BaseDetector):
                     self.att2id.update(att2id['rare'])
         else:
             self.att2id = json.load(open(attribute_index_file, 'r'))
+        self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
         atts = list(self.att2id.keys())
 
         clip_model = build_backbone(backbone).model

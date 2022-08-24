@@ -60,6 +60,7 @@ class Evaluator(object):
                     self.attr2idx.update(att2id['rare'])
         else:
             self.attr2idx = json.load(open(fpath_attr2idx, 'r'))
+        self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
         self.idx2attr = {v: k for k, v in self.attr2idx.items()}
 
         # Read file that shows metadata of attributes (e.g., "plaid" is pattern).

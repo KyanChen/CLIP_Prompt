@@ -58,6 +58,7 @@ class PromptHead(BaseModule):
                     self.att2id.update(att2id['rare'])
         else:
             self.att2id = json.load(open(attribute_index_file, 'r'))
+        self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
 
         self.re_weight_gamma = re_weight_gamma
         self.re_weight_beta = re_weight_beta

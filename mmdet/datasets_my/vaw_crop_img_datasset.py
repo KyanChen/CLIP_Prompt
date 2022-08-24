@@ -78,6 +78,7 @@ class VAWCropDataset(Dataset):
                     self.att2id.update(att2id['rare'])
         else:
             self.att2id = json.load(open(attribute_index_file, 'r'))
+        self.att2id = {k: v-min(self.att2id.values()) for k, v in self.att2id.items()}
 
         self.flag = np.zeros(len(self), dtype=int)
         print('num_att: ', len(self.att2id))
