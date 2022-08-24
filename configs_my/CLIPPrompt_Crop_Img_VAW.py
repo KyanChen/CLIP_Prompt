@@ -31,7 +31,7 @@ data_root = '/data/kyanchen/prompt/data'
 
 attribute_index_file = dict(
     file=data_root+'/VAW/common2common_att2id.json',
-    att_group='common1'
+    att_group='common2'
 )
 # attribute_index_file = dict(
 #     file=data_root+'/VAW/common2rare_att2id.json',
@@ -138,7 +138,7 @@ data = dict(
         dataset_split='train',
         attribute_index_file=dict(
             file=data_root+'/VAW/common2common_att2id.json',
-            att_group='common1'
+            att_group='common2'
         ),
         # attribute_index_file=dict(
         #     file=data_root+'/VAW/common2rare_att2id.json',
