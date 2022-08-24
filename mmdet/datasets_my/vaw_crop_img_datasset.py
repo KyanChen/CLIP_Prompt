@@ -128,7 +128,11 @@ class VAWCropDataset(Dataset):
         x, y, w, h = instance["instance_bbox"]
         results['crop_box'] = np.array([x, y, x + w, y + h])
         if self.test_mode:
-            results = self.pipeline(results)
+            try:
+                results = self.pipeline(results)
+            except Exception as e:
+                print(e)
+                print(idx)
         else:
             try:
                 positive_attributes = instance["positive_attributes"]
