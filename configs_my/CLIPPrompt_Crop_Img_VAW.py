@@ -29,14 +29,14 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 # data_root = 'D:/Dataset'
 data_root = '/data/kyanchen/prompt/data'
 
-# attribute_index_file = dict(
-#     file=data_root+'/VAW/common2common_att2id.json',
-#     att_group='common1'
-# )
 attribute_index_file = dict(
-    file=data_root+'/VAW/common2rare_att2id.json',
-    att_group='rare'
+    file=data_root+'/VAW/common2common_att2id.json',
+    att_group='common1'
 )
+# attribute_index_file = dict(
+#     file=data_root+'/VAW/common2rare_att2id.json',
+#     att_group='rare'
+# )
 model = dict(
     type='CLIP_Prompter',
     # classname_path=data_root+'/VAW/attribute_index.json',
@@ -136,14 +136,14 @@ data = dict(
         type=dataset_type,
         data_root=data_root,
         dataset_split='train',
-        # attribute_index_file=dict(
-        #     file=data_root+'/VAW/common2common_att2id.json',
-        #     att_group='common1'
-        # ),
         attribute_index_file=dict(
-            file=data_root+'/VAW/common2rare_att2id.json',
-            att_group='rare'
+            file=data_root+'/VAW/common2common_att2id.json',
+            att_group='common1'
         ),
+        # attribute_index_file=dict(
+        #     file=data_root+'/VAW/common2rare_att2id.json',
+        #     att_group='rare'
+        # ),
         test_mode=True,
         open_category=False,
         pipeline=test_pipeline
