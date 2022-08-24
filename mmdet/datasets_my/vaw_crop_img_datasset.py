@@ -47,6 +47,7 @@ class VAWCropDataset(Dataset):
                 self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
                 self.instances.pop(74197)
                 self.instances.pop(171246)
+                self.instances.pop(171245)
             elif dataset_split == 'val':
                 self.instances, self.img_instances_pair = self.read_data(['val.json'])
             elif dataset_split == 'test':
