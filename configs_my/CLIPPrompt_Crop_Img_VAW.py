@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=5)
+checkpoint_config = dict(interval=20)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -29,14 +29,14 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 # data_root = 'D:/Dataset'
 data_root = '/data/kyanchen/prompt/data'
 
-attribute_index_file = dict(
-    file=data_root+'/VAW/common2common_att2id.json',
-    att_group='common2'
-)
 # attribute_index_file = dict(
-#     file=data_root+'/VAW/common2rare_att2id.json',
-#     att_group='rare'
+#     file=data_root+'/VAW/common2common_att2id.json',
+#     att_group='common2'
 # )
+attribute_index_file = dict(
+    file=data_root+'/VAW/common2rare_att2id.json',
+    att_group='all'
+)
 model = dict(
     type='CLIP_Prompter',
     # classname_path=data_root+'/VAW/attribute_index.json',
@@ -185,7 +185,7 @@ lr_config = dict(
     warmup_iters=2000,
     warmup_ratio=0.1,
     # gamma=0.5,
-    step=[90, 130]
+    step=[60, 80]
 )
 
 # lr_config = dict(
@@ -198,7 +198,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=150)
+runner = dict(type='EpochBasedRunner', max_epochs=100)
 evaluation = dict(interval=10, metric='mAP')
 
 load_from = None
