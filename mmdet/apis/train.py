@@ -162,8 +162,6 @@ def train_detector(model,
             broadcast_buffers=False,
             find_unused_parameters=find_unused_parameters)
     else:
-        import pdb
-        pdb.set_trace()
         model = build_dp(model, cfg.device, device_ids=cfg.gpu_ids)
 
     # build optimizer
