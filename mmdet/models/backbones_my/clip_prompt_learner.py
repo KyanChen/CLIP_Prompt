@@ -168,8 +168,7 @@ class PromptAttributes(BaseModule):
         # clip_imsize = clip_model.visual.input_resolution
         n_prompt_vec = prompt_config.get('n_prompt', 16)
         is_att_specific = prompt_config.get('is_att_specific', False)
-        import pdb
-        pdb.set_trace()
+
         if is_att_specific:
             print("Initializing att-specific contexts")
             prompt_vectors = torch.empty(n_att, n_prompt_vec, word_dim, dtype=torch.float32)
@@ -185,11 +184,13 @@ class PromptAttributes(BaseModule):
 
         self.prompt_vectors = nn.Parameter(prompt_vectors)  # to be optimized
 
-        sot_token = torch.tensor(_tokenizer.encoder["<|startoftext|>"], dtype=torch.long)
-        eot_token = torch.tensor(_tokenizer.encoder["<|endoftext|>"], dtype=torch.long)
+        sot_token = torch.tensor([_tokenizer.encoder["<|startoftext|>"]], dtype=torch.long)
+        eot_token = torch.tensor([_tokenizer.encoder["<|endoftext|>"]], dtype=torch.long)
         pad_token = torch.tensor([0], dtype=torch.long)
         attribute_list = [attribute.replace("_", " ") for attribute in attribute_list]
         attribute_tokens = [torch.tensor(_tokenizer.encode(attribute)) for attribute in attribute_list]
+        import pdb
+        pdb.set_trace()
         self.sot_embedding = clip_model.token_embedding(sot_token).detach()
         self.eot_embedding = clip_model.token_embedding(eot_token).detach()
         self.pad_embedding = clip_model.token_embedding(pad_token).detach()
