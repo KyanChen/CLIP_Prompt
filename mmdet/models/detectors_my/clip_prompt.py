@@ -89,8 +89,6 @@ class CLIP_Prompter(BaseDetector):
         self.need_train_names = need_train_names
 
         print("Turning off gradients in both the image and the text encoder")
-        import pdb
-        pdb.set_trace()
         for name, param in self.named_parameters():
             flag = False
             for need_train_name in self.need_train_names:
@@ -153,8 +151,7 @@ class CLIP_Prompter(BaseDetector):
         # tokenized_prompts = self.tokenized_prompts
         # text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
 
-        prompt_context = self.prompt_learner()  # 620x77x512
-        eot_index = self.prompt_learner.eot_index
+        prompt_context, eot_index = self.prompt_learner()  # 620x77x512
         text_features = self.text_encoder(prompt_context, eot_index)
 
         if hasattr(self, 'img_proj_head'):
