@@ -191,19 +191,19 @@ class PromptAttributes(BaseModule):
         pad_token = torch.tensor([0], dtype=torch.long)
         attribute_list = [attribute.replace("_", " ") for attribute in attribute_list]
         attribute_tokens = [torch.tensor(_tokenizer.encode(attribute)) for attribute in attribute_list]
-        self.sot_embedding = clip_model.token_embedding(sot_token).detach()
-        self.eot_embedding = clip_model.token_embedding(eot_token).detach()
-        self.pad_embedding = clip_model.token_embedding(pad_token).detach()
-        self.attribute_embeddings = [clip_model.token_embedding(x).detach() for x in attribute_tokens]
+        self.register_buffer('sot_embedding', clip_model.token_embedding(sot_token).detach())
+        self.register_buffer('eot_embedding', clip_model.token_embedding(eot_token).detach())
+        self.register_buffer('pad_embedding', clip_model.token_embedding(pad_token).detach())
+        self.register_buffer('attribute_embeddings', [clip_model.token_embedding(x).detach() for x in attribute_tokens])
 
         if load_ckpt_from is not None:
             state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
             ctx_data = state_dict['prompt_learner.ctx']
             self.ctx.data.copy_(ctx_data)
 
-        prompt_context, eot_index = self.rearrange_context(**prompt_config)
-        self.register_buffer("prompt_context", prompt_context)  # SOS
-        self.register_buffer("eot_index", eot_index)  # CLS, EOS
+        # prompt_context, eot_index = self.rearrange_context(**prompt_config)
+        # self.register_buffer("prompt_context", prompt_context)  # SOS
+        # self.register_buffer("eot_index", eot_index)  # CLS, EOS
 
         # prompts = [prompt_prefix + " " + name + "." for name in classnames]
         # tokenized_prompts = torch.cat([tokenize(p) for p in prompts])
@@ -261,6 +261,5 @@ class PromptAttributes(BaseModule):
         return torch.stack(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long)
 
     def forward(self):
-        # prompt_context, eot_index = self.rearrange_context(
-        #     **self.prompt_config)
-        return self.prompt_context, self.eot_index
+        prompt_context, eot_index = self.rearrange_context(**self.prompt_config)
+        return prompt_context, eot_index
