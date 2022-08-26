@@ -10,8 +10,8 @@ class SubModelConstructor(DefaultOptimizerConstructor):
     def __call__(self, model):
         if hasattr(model, 'module'):
             model = model.module
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
 
         optimizer_cfg = self.optimizer_cfg.copy()
         sub_models = optimizer_cfg.pop('sub_model', None)
