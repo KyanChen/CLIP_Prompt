@@ -197,11 +197,6 @@ class PromptAttributes(BaseModule):
             att2types = json.load(open(file, 'r'))
             id2type = att2types['id2type']
             att2typeid = att2types['att2typeid']
-            for attribute in attribute_list:
-                try:
-                    id2type[str(att2typeid[attribute])]
-                except:
-                    print(attribute)
             att_type_list = [id2type[str(att2typeid[attribute])] for attribute in attribute_list]
             att_type_list = [att_type.replace("_", " ") for att_type in att_type_list]
             type_tokens = [torch.tensor(_tokenizer.encode(att_type)) for att_type in att_type_list]
