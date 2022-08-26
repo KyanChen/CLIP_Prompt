@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import warnings
 from collections import OrderedDict
@@ -170,6 +172,7 @@ class PromptAttributes(BaseModule):
         # clip_imsize = clip_model.visual.input_resolution
         n_prompt_vec = prompt_config.get('n_prompt', 16)
         is_att_specific = prompt_config.get('is_att_specific', False)
+        with_att_type = prompt_config.get('with_att_type', False)
 
         if is_att_specific:
             print("Initializing att-specific contexts")
@@ -189,6 +192,16 @@ class PromptAttributes(BaseModule):
         sot_token = torch.tensor([_tokenizer.encoder["<|startoftext|>"]], dtype=torch.long)
         eot_token = torch.tensor([_tokenizer.encoder["<|endoftext|>"]], dtype=torch.long)
         pad_token = torch.tensor([0], dtype=torch.long)
+        if with_att_type:
+            file = '/data/kyanchen/prompt/data/VAW/att2types.json'
+            att2types = json.load(open(file, 'r'))
+            id2type = att2types['id2type']
+            att2typeid = att2types['att2typeid']
+            att_type_list = [id2type[att2typeid[attribute]] for attribute in attribute_list]
+            att_type_list = [att_type.replace("_", " ") for att_type in att_type_list]
+            type_tokens = [torch.tensor(_tokenizer.encode(att_type)) for att_type in att_type_list]
+            self.type_embeddings = [clip_model.token_embedding(x).detach() for x in type_tokens]
+
         attribute_list = [attribute.replace("_", " ") for attribute in attribute_list]
         attribute_tokens = [torch.tensor(_tokenizer.encode(attribute)) for attribute in attribute_list]
         self.register_buffer('sot_embedding', clip_model.token_embedding(sot_token).detach())
@@ -220,6 +233,7 @@ class PromptAttributes(BaseModule):
             **kwargs
     ):
         if with_att_type:
+            self.type_embeddings = [x.to(self.prompt_vectors.device) for x in self.type_embeddings]
             assert att_position == 'mid'
 
         self.attribute_embeddings = [x.to(self.prompt_vectors.device) for x in self.attribute_embeddings]
@@ -243,7 +257,16 @@ class PromptAttributes(BaseModule):
                 rearranged_context_tmp.append(self.eot_embedding)
             elif att_position == 'mid':
                 if with_att_type:
-                    pass
+                    n_part = len(prompt_vectors) // 3
+                    part_1 = prompt_vectors[:n_part]
+                    part_2 = prompt_vectors[n_part:n_part*2]
+                    part_3 = prompt_vectors[n_part*2:]
+                    rearranged_context_tmp.append(part_1)
+                    rearranged_context_tmp.append(self.attribute_embeddings[i])
+                    rearranged_context_tmp.append(part_2)
+                    rearranged_context_tmp.append(self.type_embeddings[i])
+                    rearranged_context_tmp.append(part_3)
+                    rearranged_context_tmp.append(self.eot_embedding)
                 else:
                     n_part = len(prompt_vectors) // 2
                     part_1 = prompt_vectors[:n_part]
