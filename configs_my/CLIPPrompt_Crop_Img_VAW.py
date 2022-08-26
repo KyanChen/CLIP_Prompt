@@ -167,7 +167,7 @@ optimizer = dict(
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_learner': {},
-               'image_encoder': {'lr_mult': 0.01},
+               'image_encoder': {'lr_mult': 0.1},
                'bbox_head': {}, 'logit_scale': {}
                },
     type='SGD',
