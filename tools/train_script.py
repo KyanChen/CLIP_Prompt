@@ -4,6 +4,12 @@ import time
 while True:
     os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
               "sh dist_train.sh "
+              "../configs_my/CLIPPrompt_Crop_Img_VAW4.py "
+              "results/EXP20220826_9 "
+              "8")
+
+    os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
+              "sh dist_train.sh "
               "../configs_my/CLIPPrompt_Crop_Img_VAW.py "
               # "../configs_my/CLIPPrompt_Region_KD_VAW.py "
               # "../configs_my/CLIPPrompt_Region_VAW.py "
@@ -20,7 +26,17 @@ while True:
     os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
               "sh dist_train.sh "
               "../configs_my/CLIPPrompt_Crop_Img_VAW1.py "
-              "results/EXP20220826_4 "
+              "results/EXP20220826_6 "
+              "8")
+    os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
+              "sh dist_train.sh "
+              "../configs_my/CLIPPrompt_Crop_Img_VAW2.py "
+              "results/EXP20220826_7 "
+              "8")
+    os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
+              "sh dist_train.sh "
+              "../configs_my/CLIPPrompt_Crop_Img_VAW3.py "
+              "results/EXP20220826_8 "
               "8")
 
     time.sleep(60*2)
