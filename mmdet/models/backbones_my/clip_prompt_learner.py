@@ -81,6 +81,8 @@ class PromptLearner(BaseModule):
             self.ctx.data.copy_(ctx_data)
 
     def forward(self):
+        import pdb
+        pdb.set_trace()
         ctx = self.ctx  # 4x512
         if ctx.dim() == 2:
             ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1)  # 620x4x512

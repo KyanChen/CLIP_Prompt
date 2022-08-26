@@ -144,9 +144,11 @@ class CLIP_Prompter(BaseDetector):
     ):
         image_features, last_f_map, f_maps = self.image_encoder(img)  # 2x1024
 
-        # prompts = self.prompt_learner()  # 620x77x512
-        # tokenized_prompts = self.tokenized_prompts
-        # text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
+        prompts = self.prompt_learner()  # 620x77x512
+        import pdb
+        pdb.set_trace()
+        tokenized_prompts = self.tokenized_prompts
+        text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
 
         prompt_context = self.prompt_learner()  # 620x77x512
         eot_index = self.prompt_learner.eot_index

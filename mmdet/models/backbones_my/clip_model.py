@@ -71,8 +71,6 @@ class TextEncoder(BaseModule):
     #     return x
 
     def forward(self, prompts, eot_index):
-        import pdb
-        pdb.set_trace()
         x = prompts + self.positional_embedding.type(self.dtype)
         x = x.permute(1, 0, 2)  # NLD -> LND
         x = self.transformer(x)
