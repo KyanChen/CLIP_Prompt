@@ -66,8 +66,8 @@ class CLIP_Prompter(BaseDetector):
             )
         )
 
-        prompt_learner.update(dict(classnames=atts, clip_model=clip_model))
-        # prompt_learner.update(dict(attribute_list=atts, clip_model=clip_model))
+        # prompt_learner.update(dict(classnames=atts, clip_model=clip_model))
+        prompt_learner.update(dict(attribute_list=atts, clip_model=clip_model))
         self.prompt_learner = build_backbone(prompt_learner)
 
         # if prompt_learner_weights:
@@ -87,7 +87,10 @@ class CLIP_Prompter(BaseDetector):
         self.test_cfg = test_cfg
 
         self.need_train_names = need_train_names
+
         print("Turning off gradients in both the image and the text encoder")
+        import pdb
+        pdb.set_trace()
         for name, param in self.named_parameters():
             flag = False
             for need_train_name in self.need_train_names:
