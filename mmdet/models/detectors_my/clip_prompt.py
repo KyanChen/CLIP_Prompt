@@ -199,7 +199,7 @@ class CLIP_Prompter(BaseDetector):
     def simple_test(self, img, img_metas, rescale=False):
         image_features, last_f_map, f_maps = self.image_encoder(img)  # 2x1024
 
-        prompt_context = self.prompt_learner()  # 620x77x512
+        prompt_context = self.prompt_learner(device=img.device)  # 620x77x512
         eot_index = self.prompt_learner.eot_index
         text_features = self.text_encoder(prompt_context, eot_index)
 

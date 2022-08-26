@@ -256,5 +256,5 @@ class PromptAttributes(BaseModule):
             rearranged_context.append(rearranged_context_tmp)
         return torch.stack(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long)
 
-    def forward(self):
-        return self.prompt_context
+    def forward(self, device):
+        return self.prompt_context.to(device)
