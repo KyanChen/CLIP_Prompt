@@ -194,7 +194,7 @@ class PromptAttributes(BaseModule):
         self.register_buffer('sot_embedding', clip_model.token_embedding(sot_token).detach())
         self.register_buffer('eot_embedding', clip_model.token_embedding(eot_token).detach())
         self.register_buffer('pad_embedding', clip_model.token_embedding(pad_token).detach())
-        self.register_buffer('attribute_embeddings', [clip_model.token_embedding(x).detach() for x in attribute_tokens])
+        self.attribute_embeddings = [clip_model.token_embedding(x).detach() for x in attribute_tokens]
 
         if load_ckpt_from is not None:
             state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
@@ -221,6 +221,8 @@ class PromptAttributes(BaseModule):
     ):
         if with_att_type:
             assert att_position == 'mid'
+
+        self.attribute_embeddings = [x.to(self.prompt_vectors.device) for x in self.attribute_embeddings]
         rearranged_context = []
         eot_index = []
         for i in range(len(self.attribute_embeddings)):
