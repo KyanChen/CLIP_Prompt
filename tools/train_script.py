@@ -14,7 +14,7 @@ while True:
               # "../configs_my/rpn_r50_fpn_mstrain_vg.py "
               # "../configs_my/CLIPPrompt_Region_FasterRcnn_KD_VAW.py "
               # "../configs_my/RPN_CLIPPrompt_Region_KD_COCO_VAW.py "
-              "results/EXP20220826_3 "
+              "results/EXP20220826_5 "
               "8")
 
     os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
