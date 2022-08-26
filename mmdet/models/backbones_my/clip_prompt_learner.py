@@ -8,7 +8,6 @@ from mmcv.runner import BaseModule, get_dist_info
 from ..builder import BACKBONES
 from .clip import tokenize, _Tokenizer
 
-
 _tokenizer = _Tokenizer()
 
 
@@ -84,7 +83,7 @@ class PromptLearner(BaseModule):
     def forward(self):
         ctx = self.ctx  # 4x512
         if ctx.dim() == 2:
-            ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1)  #620x4x512
+            ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1)  # 620x4x512
 
         prefix = self.token_prefix
         suffix = self.token_suffix
@@ -93,7 +92,7 @@ class PromptLearner(BaseModule):
             prompts = torch.cat(
                 [
                     prefix,  # (n_cls, 1, dim)
-                    ctx,     # (n_cls, n_ctx, dim)
+                    ctx,  # (n_cls, n_ctx, dim)
                     suffix,  # (n_cls, *, dim)
                 ],
                 dim=1,
@@ -104,18 +103,18 @@ class PromptLearner(BaseModule):
             prompts = []
             for i in range(self.n_cls):
                 name_len = self.name_lens[i]
-                prefix_i = prefix[i : i + 1, :, :]
-                class_i = suffix[i : i + 1, :name_len, :]
-                suffix_i = suffix[i : i + 1, name_len:, :]
-                ctx_i_half1 = ctx[i : i + 1, :half_n_ctx, :]
-                ctx_i_half2 = ctx[i : i + 1, half_n_ctx:, :]
+                prefix_i = prefix[i: i + 1, :, :]
+                class_i = suffix[i: i + 1, :name_len, :]
+                suffix_i = suffix[i: i + 1, name_len:, :]
+                ctx_i_half1 = ctx[i: i + 1, :half_n_ctx, :]
+                ctx_i_half2 = ctx[i: i + 1, half_n_ctx:, :]
                 prompt = torch.cat(
                     [
-                        prefix_i,     # (1, 1, dim)
+                        prefix_i,  # (1, 1, dim)
                         ctx_i_half1,  # (1, n_ctx//2, dim)
-                        class_i,      # (1, name_len, dim)
+                        class_i,  # (1, name_len, dim)
                         ctx_i_half2,  # (1, n_ctx//2, dim)
-                        suffix_i,     # (1, *, dim)
+                        suffix_i,  # (1, *, dim)
                     ],
                     dim=1,
                 )
@@ -126,15 +125,15 @@ class PromptLearner(BaseModule):
             prompts = []
             for i in range(self.n_cls):
                 name_len = self.name_lens[i]
-                prefix_i = prefix[i : i + 1, :, :]
-                class_i = suffix[i : i + 1, :name_len, :]
-                suffix_i = suffix[i : i + 1, name_len:, :]
-                ctx_i = ctx[i : i + 1, :, :]
+                prefix_i = prefix[i: i + 1, :, :]
+                class_i = suffix[i: i + 1, :name_len, :]
+                suffix_i = suffix[i: i + 1, name_len:, :]
+                ctx_i = ctx[i: i + 1, :, :]
                 prompt = torch.cat(
                     [
                         prefix_i,  # (1, 1, dim)
-                        class_i,   # (1, name_len, dim)
-                        ctx_i,     # (1, n_ctx, dim)
+                        class_i,  # (1, name_len, dim)
+                        ctx_i,  # (1, n_ctx, dim)
                         suffix_i,  # (1, *, dim)
                     ],
                     dim=1,
@@ -146,7 +145,7 @@ class PromptLearner(BaseModule):
             raise ValueError
 
         return prompts
-    
+
 
 @BACKBONES.register_module()
 class PromptAttributes(BaseModule):
@@ -189,8 +188,6 @@ class PromptAttributes(BaseModule):
         pad_token = torch.tensor([0], dtype=torch.long)
         attribute_list = [attribute.replace("_", " ") for attribute in attribute_list]
         attribute_tokens = [torch.tensor(_tokenizer.encode(attribute)) for attribute in attribute_list]
-        import pdb
-        pdb.set_trace()
         self.sot_embedding = clip_model.token_embedding(sot_token).detach()
         self.eot_embedding = clip_model.token_embedding(eot_token).detach()
         self.pad_embedding = clip_model.token_embedding(pad_token).detach()
@@ -219,8 +216,7 @@ class PromptAttributes(BaseModule):
             **kwargs
     ):
         if with_att_type:
-           assert att_position == 'mid'
-
+            assert att_position == 'mid'
         rearranged_context = []
         eot_index = []
         for i in range(len(self.attribute_embeddings)):
@@ -253,13 +249,12 @@ class PromptAttributes(BaseModule):
             else:
                 raise NotImplementedError
             rearranged_context_tmp = torch.cat(rearranged_context_tmp, dim=0)
-            eot_index.append(len(rearranged_context_tmp)-1)
+            eot_index.append(len(rearranged_context_tmp) - 1)
             rearranged_context_tmp = [rearranged_context_tmp] + \
-                                     [self.pad_embedding] * (context_length-len(rearranged_context_tmp))
+                                     [self.pad_embedding] * (context_length - len(rearranged_context_tmp))
             rearranged_context_tmp = torch.cat(rearranged_context_tmp, dim=0)
             rearranged_context.append(rearranged_context_tmp)
         return torch.cat(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long)
 
     def forward(self):
         return self.prompt_context
-
