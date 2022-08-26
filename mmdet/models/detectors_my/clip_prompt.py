@@ -66,14 +66,15 @@ class CLIP_Prompter(BaseDetector):
             )
         )
 
-        prompt_learner.update(dict(classnames=atts, clip_model=clip_model))
+        # prompt_learner.update(dict(classnames=atts, clip_model=clip_model))
+        prompt_learner.update(dict(attribute_list=atts, clip_model=clip_model))
         self.prompt_learner = build_backbone(prompt_learner)
 
-        if prompt_learner_weights:
-            state_dict = torch.load(prompt_learner_weights, map_location="cpu")
-            self.prompt_learner.load_state_dict(state_dict)
+        # if prompt_learner_weights:
+        #     state_dict = torch.load(prompt_learner_weights, map_location="cpu")
+        #     self.prompt_learner.load_state_dict(state_dict)
 
-        self.tokenized_prompts = self.prompt_learner.tokenized_prompts
+        # self.tokenized_prompts = self.prompt_learner.tokenized_prompts
 
         if neck is not None:
             self.neck = build_neck(neck)
@@ -141,11 +142,15 @@ class CLIP_Prompter(BaseDetector):
                       gt_bboxes_ignore=None):
         image_features, last_f_map, f_maps = self.image_encoder(img)  # 2x1024
 
-        prompts = self.prompt_learner()  # 620x77x512
-        tokenized_prompts = self.tokenized_prompts
-        text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
+        # prompts = self.prompt_learner()  # 620x77x512
+        # tokenized_prompts = self.tokenized_prompts
+        # text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
 
-        if hasattr(self, 'img_proj_head'):
+        prompt_context = self.prompt_learner()  # 620x77x512
+        eot_index = self.prompt_learner.eot_index
+        text_features = self.text_encoder(prompt_context, eot_index)
+
+    if hasattr(self, 'img_proj_head'):
             image_features = getattr(self, 'img_proj_head')(image_features)
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)

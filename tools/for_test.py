@@ -25,7 +25,7 @@ for i in range(1, len(x1)):
     train_set.append((input_tmp, y[i]))
 batch_size = 10
 
-optimizer = torch.optim.SGD([{'params': rnn.parameters()}, {'params': fc.parameters()}], lr=0.0001, momentum=0.9)
+optimizer = torch.optim.SGD([{'params': rnn.parameters()}, {'params': fc.parameters()}], lr=1, momentum=0.9)
 
 plt_loss = []
 for i_epoch in range(30):

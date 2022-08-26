@@ -1,9 +1,10 @@
+import numpy as np
 import warnings
 from collections import OrderedDict
 
 import torch
 import torch.nn as nn
-from mmcv.runner import BaseModule
+from mmcv.runner import BaseModule, get_dist_info
 from ..builder import BACKBONES
 from .clip import tokenize, _Tokenizer
 
@@ -49,8 +50,10 @@ class PromptLearner(BaseModule):
             nn.init.normal_(ctx_vectors, std=0.02)
             prompt_prefix = " ".join(["X"] * n_ctx)
 
-        print(f'Initial context: "{prompt_prefix}"')
-        print(f"Number of context words (tokens): {n_ctx}")
+        rank, world_size = get_dist_info()
+        if rank == 0:
+            print(f'Initial context: "{prompt_prefix}"')
+            print(f"Number of context words (tokens): {n_ctx}")
 
         self.ctx = nn.Parameter(ctx_vectors)  # to be optimized
 
@@ -143,4 +146,119 @@ class PromptLearner(BaseModule):
             raise ValueError
 
         return prompts
+    
+
+@BACKBONES.register_module()
+class PromptAttributes(BaseModule):
+    def __init__(self,
+                 attribute_list,
+                 clip_model,
+                 prompt_config=dict(
+                     n_prompt=16,
+                     is_att_specific=False,
+                     att_position='mid',
+                     with_att_type=False,
+                     context_length=77
+                 ),
+                 load_ckpt_from=None
+                 ):
+        super(PromptAttributes, self).__init__()
+        n_att = len(attribute_list)
+        word_dim = clip_model.ln_final.weight.shape[0]
+        # clip_imsize = clip_model.visual.input_resolution
+        n_prompt_vec = prompt_config.get('n_prompt', 16)
+        is_att_specific = prompt_config.get('is_att_specific', False)
+        import pdb
+        pdb.set_trace()
+        if is_att_specific:
+            print("Initializing att-specific contexts")
+            prompt_vectors = torch.empty(n_att, n_prompt_vec, word_dim, dtype=torch.float32)
+        else:
+            prompt_vectors = torch.empty(n_prompt_vec, word_dim, dtype=torch.float32)
+            nn.init.normal_(prompt_vectors, std=0.02)
+
+        # prompt_prefix = " ".join(["X"] * n_ctx)
+        # print(f'Initial context: "{prompt_prefix}"')
+        rank, world_size = get_dist_info()
+        if rank == 0:
+            print(f"Number of context words (tokens): {n_prompt_vec}")
+
+        self.prompt_vectors = nn.Parameter(prompt_vectors)  # to be optimized
+
+        sot_token = _tokenizer.encoder["<|startoftext|>"]
+        eot_token = _tokenizer.encoder["<|endoftext|>"]
+        pad_token = torch.tensor([0], dtype=torch.long)
+        attribute_list = [attribute.replace("_", " ") for attribute in attribute_list]
+        attribute_tokens = [_tokenizer.encode(attribute) for attribute in attribute_list]
+        self.sot_embedding = clip_model.token_embedding(sot_token).detach()
+        self.eot_embedding = clip_model.token_embedding(eot_token).detach()
+        self.pad_embedding = clip_model.token_embedding(pad_token).detach()
+        self.attribute_embeddings = [clip_model.token_embedding(x).detach() for x in attribute_tokens]
+
+        if load_ckpt_from is not None:
+            state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
+            ctx_data = state_dict['prompt_learner.ctx']
+            self.ctx.data.copy_(ctx_data)
+
+        self.prompt_context, self.eot_index = self.rearrange_context(
+            **prompt_config
+        )
+        # prompts = [prompt_prefix + " " + name + "." for name in classnames]
+        # tokenized_prompts = torch.cat([tokenize(p) for p in prompts])
+        #
+        # self.tokenized_prompts = tokenized_prompts  # torch.Tensor
+
+    def rearrange_context(
+            self,
+            context_length=77,
+            is_att_specific=False,
+            att_position='mid',
+            with_att_type=False,
+            *args,
+            **kwargs
+    ):
+        if with_att_type:
+           assert att_position == 'mid'
+
+        rearranged_context = []
+        eot_index = []
+        for i in range(len(self.attribute_embeddings)):
+            rearranged_context_tmp = [self.sot_embedding]
+
+            if is_att_specific:
+                prompt_vectors = self.prompt_vectors[i]
+            else:
+                prompt_vectors = self.prompt_vectors
+
+            if att_position == 'end':
+                rearranged_context_tmp.append(prompt_vectors)
+                rearranged_context_tmp.append(self.attribute_embeddings[i])
+                rearranged_context_tmp.append(self.eot_embedding)
+            elif att_position == 'front':
+                rearranged_context_tmp.append(self.attribute_embeddings[i])
+                rearranged_context_tmp.append(prompt_vectors)
+                rearranged_context_tmp.append(self.eot_embedding)
+            elif att_position == 'mid':
+                if with_att_type:
+                    pass
+                else:
+                    n_part = len(prompt_vectors) // 2
+                    part_1 = prompt_vectors[:n_part]
+                    part_2 = prompt_vectors[n_part:]
+                    rearranged_context_tmp.append(part_1)
+                    rearranged_context_tmp.append(self.attribute_embeddings[i])
+                    rearranged_context_tmp.append(part_2)
+                    rearranged_context_tmp.append(self.eot_embedding)
+            else:
+                raise NotImplementedError
+            rearranged_context_tmp = torch.cat(rearranged_context_tmp, dim=0)
+            eot_index.append(len(rearranged_context_tmp)-1)
+            rearranged_context_tmp = [rearranged_context_tmp] + \
+                                     [self.pad_embedding] * (context_length-len(rearranged_context_tmp))
+            rearranged_context_tmp = torch.cat(rearranged_context_tmp, dim=0)
+            rearranged_context.append(rearranged_context_tmp)
+        return torch.cat(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long)
+
+    def forward(self):
+        return self.prompt_context
 
