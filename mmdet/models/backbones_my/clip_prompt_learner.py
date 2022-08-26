@@ -55,6 +55,8 @@ class PromptLearner(BaseModule):
             print(f"Number of context words (tokens): {n_ctx}")
 
         self.ctx = nn.Parameter(ctx_vectors)  # to be optimized
+        import pdb
+        pdb.set_trace()
 
         classnames = [name.replace("_", " ") for name in classnames]
         name_lens = [len(_tokenizer.encode(name)) for name in classnames]
