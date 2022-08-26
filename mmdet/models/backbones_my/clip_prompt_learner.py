@@ -185,11 +185,11 @@ class PromptAttributes(BaseModule):
 
         self.prompt_vectors = nn.Parameter(prompt_vectors)  # to be optimized
 
-        sot_token = _tokenizer.encoder["<|startoftext|>"]
-        eot_token = _tokenizer.encoder["<|endoftext|>"]
+        sot_token = torch.tensor(_tokenizer.encoder["<|startoftext|>"], dtype=torch.long)
+        eot_token = torch.tensor(_tokenizer.encoder["<|endoftext|>"], dtype=torch.long)
         pad_token = torch.tensor([0], dtype=torch.long)
         attribute_list = [attribute.replace("_", " ") for attribute in attribute_list]
-        attribute_tokens = [_tokenizer.encode(attribute) for attribute in attribute_list]
+        attribute_tokens = [torch.tensor(_tokenizer.encode(attribute)) for attribute in attribute_list]
         self.sot_embedding = clip_model.token_embedding(sot_token).detach()
         self.eot_embedding = clip_model.token_embedding(eot_token).detach()
         self.pad_embedding = clip_model.token_embedding(pad_token).detach()
