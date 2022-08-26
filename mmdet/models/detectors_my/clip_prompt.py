@@ -1,6 +1,7 @@
 import json
 
 import torch
+from mmcv.runner import get_dist_info
 from torch import nn
 
 from ..builder import DETECTORS, build_backbone, build_head, build_neck
@@ -88,7 +89,9 @@ class CLIP_Prompter(BaseDetector):
 
         self.need_train_names = need_train_names
 
-        print("Turning off gradients in both the image and the text encoder")
+        rank, world_size = get_dist_info()
+        if rank == 0:
+            print("Turning off gradients in both the image and the text encoder")
         for name, param in self.named_parameters():
             flag = False
             for need_train_name in self.need_train_names:
