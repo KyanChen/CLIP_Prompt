@@ -164,6 +164,7 @@ class PromptAttributes(BaseModule):
                  load_ckpt_from=None
                  ):
         super(PromptAttributes, self).__init__()
+        self.prompt_config = prompt_config
         n_att = len(attribute_list)
         word_dim = clip_model.ln_final.weight.shape[0]
         # clip_imsize = clip_model.visual.input_resolution
@@ -200,9 +201,6 @@ class PromptAttributes(BaseModule):
             ctx_data = state_dict['prompt_learner.ctx']
             self.ctx.data.copy_(ctx_data)
 
-        self.prompt_context, self.eot_index = self.rearrange_context(
-            **prompt_config
-        )
         # prompts = [prompt_prefix + " " + name + "." for name in classnames]
         # tokenized_prompts = torch.cat([tokenize(p) for p in prompts])
         #
@@ -259,4 +257,6 @@ class PromptAttributes(BaseModule):
         return torch.stack(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long)
 
     def forward(self):
-        return self.prompt_context
+        prompt_context, eot_index = self.rearrange_context(
+            **self.prompt_config)
+        return prompt_context, eot_index
