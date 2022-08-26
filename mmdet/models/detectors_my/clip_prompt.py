@@ -148,7 +148,7 @@ class CLIP_Prompter(BaseDetector):
         # tokenized_prompts = self.tokenized_prompts
         # text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
 
-        prompt_context = self.prompt_learner().to(img.device)  # 620x77x512
+        prompt_context = self.prompt_learner()  # 620x77x512
         eot_index = self.prompt_learner.eot_index
         text_features = self.text_encoder(prompt_context, eot_index)
 
