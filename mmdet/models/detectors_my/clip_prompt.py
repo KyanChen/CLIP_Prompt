@@ -135,11 +135,13 @@ class CLIP_Prompter(BaseDetector):
 
         return outputs
 
-    def forward_train(self,
-                      img,
-                      img_metas,
-                      gt_labels,
-                      gt_bboxes_ignore=None):
+    def forward_train(
+            self,
+          img,
+          img_metas,
+          gt_labels,
+          gt_bboxes_ignore=None
+    ):
         image_features, last_f_map, f_maps = self.image_encoder(img)  # 2x1024
 
         # prompts = self.prompt_learner()  # 620x77x512
@@ -150,7 +152,7 @@ class CLIP_Prompter(BaseDetector):
         eot_index = self.prompt_learner.eot_index
         text_features = self.text_encoder(prompt_context, eot_index)
 
-    if hasattr(self, 'img_proj_head'):
+        if hasattr(self, 'img_proj_head'):
             image_features = getattr(self, 'img_proj_head')(image_features)
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
@@ -197,9 +199,9 @@ class CLIP_Prompter(BaseDetector):
     def simple_test(self, img, img_metas, rescale=False):
         image_features, last_f_map, f_maps = self.image_encoder(img)  # 2x1024
 
-        prompts = self.prompt_learner()  # 620x77x512
-        tokenized_prompts = self.tokenized_prompts
-        text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
+        prompt_context = self.prompt_learner()  # 620x77x512
+        eot_index = self.prompt_learner.eot_index
+        text_features = self.text_encoder(prompt_context, eot_index)
 
         if hasattr(self, 'img_proj_head'):
             image_features = getattr(self, 'img_proj_head')(image_features)
