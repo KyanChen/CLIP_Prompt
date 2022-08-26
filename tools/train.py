@@ -219,9 +219,6 @@ def main():
         copy.deepcopy(cfg.model),
         train_cfg=cfg.get('train_cfg'),
         test_cfg=cfg.get('test_cfg'))
-    import pdb
-    pdb.set_trace()
-    model.init_weights()
 
     datasets = [build_dataset(cfg.data.train)]
     if len(cfg.workflow) == 2:
