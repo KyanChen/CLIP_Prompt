@@ -161,7 +161,8 @@ class PromptAttributes(BaseModule):
                      is_att_specific=False,
                      att_position='mid',
                      with_att_type=False,
-                     context_length=77
+                     context_length=77,
+                     n_prompt_type=8,
                  ),
                  load_ckpt_from=None
                  ):
@@ -173,6 +174,7 @@ class PromptAttributes(BaseModule):
         n_prompt_vec = prompt_config.get('n_prompt', 16)
         is_att_specific = prompt_config.get('is_att_specific', False)
         with_att_type = prompt_config.get('with_att_type', False)
+        n_prompt_type = prompt_config.get('n_prompt_type', None)
 
         if is_att_specific:
             print("Initializing att-specific contexts")
@@ -180,12 +182,23 @@ class PromptAttributes(BaseModule):
         else:
             prompt_vectors = torch.empty(n_prompt_vec, word_dim, dtype=torch.float32)
             nn.init.normal_(prompt_vectors, std=0.02)
+        if n_prompt_type:
+            assert n_prompt_type == n_prompt_vec
+            file = '/data/kyanchen/prompt/data/VAW/att2types.json'
+            att2types = json.load(open(file, 'r'))
+            id2type = att2types['id2type']
+            prompt_vectors = torch.empty(1+len(id2type), n_prompt_vec, word_dim, dtype=torch.float32)
+            nn.init.normal_(prompt_vectors, std=0.02)
+
+            att2typeid = att2types['att2typeid']
+            self.att_type_id = [att2typeid[attribute] for attribute in attribute_list]
 
         # prompt_prefix = " ".join(["X"] * n_ctx)
         # print(f'Initial context: "{prompt_prefix}"')
         rank, world_size = get_dist_info()
         if rank == 0:
-            print(f"Number of context words (tokens): {n_prompt_vec}")
+            print(f"Number of all-shared prompt (tokens): {n_prompt_vec}")
+            print(f"Number of type-shared prompt (tokens): {n_prompt_type}")
 
         self.prompt_vectors = nn.Parameter(prompt_vectors)  # to be optimized
 
@@ -229,6 +242,7 @@ class PromptAttributes(BaseModule):
             is_att_specific=False,
             att_position='mid',
             with_att_type=False,
+            n_prompt_type=None,
             *args,
             **kwargs
     ):
@@ -257,10 +271,23 @@ class PromptAttributes(BaseModule):
                 rearranged_context_tmp.append(self.eot_embedding)
             elif att_position == 'mid':
                 if with_att_type:
+                    n_part = prompt_vectors.size(1) // 2
+                    all_shared_part_1 = prompt_vectors[0, :n_part]
+                    all_shared_part_2 = prompt_vectors[0, n_part:]
+                    type_shared_vec = prompt_vectors[self.att_type_id[i]+1]
+                    type_shared_part_1 = type_shared_vec[0, :n_part]
+                    type_shared_part_2 = type_shared_vec[0, n_part:]
+                    rearranged_context_tmp.append(all_shared_part_1)
+                    rearranged_context_tmp.append(type_shared_part_1)
+                    rearranged_context_tmp.append(self.attribute_embeddings[i])
+                    rearranged_context_tmp.append(type_shared_part_2)
+                    rearranged_context_tmp.append(all_shared_part_2)
+                    rearranged_context_tmp.append(self.eot_embedding)
+                elif n_prompt_type:
                     n_part = len(prompt_vectors) // 3
                     part_1 = prompt_vectors[:n_part]
-                    part_2 = prompt_vectors[n_part:n_part*2]
-                    part_3 = prompt_vectors[n_part*2:]
+                    part_2 = prompt_vectors[n_part:n_part * 2]
+                    part_3 = prompt_vectors[n_part * 2:]
                     rearranged_context_tmp.append(part_1)
                     rearranged_context_tmp.append(self.attribute_embeddings[i])
                     rearranged_context_tmp.append(part_2)
