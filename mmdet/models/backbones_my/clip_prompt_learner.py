@@ -275,8 +275,8 @@ class PromptAttributes(BaseModule):
                     all_shared_part_1 = prompt_vectors[0, :n_part]
                     all_shared_part_2 = prompt_vectors[0, n_part:]
                     type_shared_vec = prompt_vectors[self.att_type_id[i]+1]
-                    type_shared_part_1 = type_shared_vec[0, :n_part]
-                    type_shared_part_2 = type_shared_vec[0, n_part:]
+                    type_shared_part_1 = type_shared_vec[:n_part]
+                    type_shared_part_2 = type_shared_vec[n_part:]
                     rearranged_context_tmp.append(all_shared_part_1)
                     rearranged_context_tmp.append(type_shared_part_1)
                     rearranged_context_tmp.append(self.attribute_embeddings[i])
