@@ -63,12 +63,12 @@ model = dict(
     prompt_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
-            n_prompt=8,
+            n_prompt=4,
             is_att_specific=False,
             att_position='mid',
             with_att_type=False,
             context_length=77,
-            n_prompt_type=8
+            n_prompt_type=4
         ),
     ),
     neck=None,
@@ -168,8 +168,8 @@ optimizer = dict(
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_learner': {},
-               # 'image_encoder': {'lr_mult': 0.1},
-               'image_encoder': {},
+               'image_encoder': {'lr_mult': 0.1},
+               # 'image_encoder': {},
                'bbox_head': {}, 'logit_scale': {}
                },
     type='SGD',

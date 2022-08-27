@@ -246,8 +246,6 @@ class PromptAttributes(BaseModule):
             *args,
             **kwargs
     ):
-        import pdb
-        pdb.set_trace()
         if with_att_type:
             self.type_embeddings = [x.to(self.prompt_vectors.device) for x in self.type_embeddings]
             assert att_position == 'mid'
