@@ -272,7 +272,7 @@ class PromptAttributes(BaseModule):
                 rearranged_context_tmp.append(prompt_vectors)
                 rearranged_context_tmp.append(self.eot_embedding)
             elif att_position == 'mid':
-                if with_att_type:
+                if n_prompt_type:
                     n_part = prompt_vectors.size(1) // 2
                     all_shared_part_1 = prompt_vectors[0, :n_part]
                     all_shared_part_2 = prompt_vectors[0, n_part:]
@@ -285,7 +285,7 @@ class PromptAttributes(BaseModule):
                     rearranged_context_tmp.append(type_shared_part_2)
                     rearranged_context_tmp.append(all_shared_part_2)
                     rearranged_context_tmp.append(self.eot_embedding)
-                elif n_prompt_type:
+                elif with_att_type:
                     n_part = len(prompt_vectors) // 3
                     part_1 = prompt_vectors[:n_part]
                     part_2 = prompt_vectors[n_part:n_part * 2]
