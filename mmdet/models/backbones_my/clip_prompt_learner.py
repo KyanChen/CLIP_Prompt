@@ -183,8 +183,6 @@ class PromptAttributes(BaseModule):
             prompt_vectors = torch.empty(n_prompt_vec, word_dim, dtype=torch.float32)
             nn.init.normal_(prompt_vectors, std=0.02)
         if n_prompt_type:
-            import pdb
-            pdb.set_trace()
             assert n_prompt_type == n_prompt_vec
             file = '/data/kyanchen/prompt/data/VAW/att2types.json'
             att2types = json.load(open(file, 'r'))
