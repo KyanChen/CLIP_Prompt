@@ -4,7 +4,7 @@ import time
 while True:
     os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
               "sh dist_train.sh "
-              "../configs_my/CLIPPrompt_Crop_Img_VAW0.py "
+              "../configs_my/CLIPPrompt_Crop_Img_VAW.py "
               "results/EXP20220828_0 "
               "8")
 
