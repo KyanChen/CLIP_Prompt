@@ -181,7 +181,8 @@ class PromptAttributes(BaseModule):
         n_prompt_type = prompt_config.get('n_prompt_type', None)
         self.generated_context = prompt_config.get('generated_context', False)
         pos_emb = prompt_config.get('pos_emb', False)
-
+        import pdb
+        pdb.set_trace()
         if is_att_specific:
             print("Initializing att-specific contexts")
             prompt_vectors = torch.empty(n_att, n_prompt_vec, word_dim, dtype=torch.float32)
