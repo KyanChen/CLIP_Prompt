@@ -181,8 +181,6 @@ class PromptAttributes(BaseModule):
         n_prompt_type = prompt_config.get('n_prompt_type', None)
         self.generated_context = prompt_config.get('generated_context', False)
         pos_emb = prompt_config.get('pos_emb', False)
-        import pdb
-        pdb.set_trace()
         if is_att_specific:
             print("Initializing att-specific contexts")
             prompt_vectors = torch.empty(n_att, n_prompt_vec, word_dim, dtype=torch.float32)
@@ -388,6 +386,8 @@ class PromptAttributes(BaseModule):
         return torch.stack(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long)
 
     def forward(self):
+        import pdb
+        pdb.set_trace()
         if self.generated_context:
             self.attribute_embeddings = [x.to(self.prompt_vectors.device) for x in self.attribute_embeddings]
             rearranged_context = []
