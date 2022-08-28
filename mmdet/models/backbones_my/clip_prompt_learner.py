@@ -7,6 +7,8 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 from mmcv.runner import BaseModule, get_dist_info
+from torch.nn import TransformerEncoderLayer, LayerNorm, TransformerEncoder
+
 from ..builder import BACKBONES
 from .clip import tokenize, _Tokenizer
 
@@ -163,6 +165,8 @@ class PromptAttributes(BaseModule):
                      with_att_type=False,
                      context_length=77,
                      n_prompt_type=8,
+                     generated_context=False,
+                     pos_emb=True,
                  ),
                  load_ckpt_from=None
                  ):
@@ -175,6 +179,8 @@ class PromptAttributes(BaseModule):
         is_att_specific = prompt_config.get('is_att_specific', False)
         with_att_type = prompt_config.get('with_att_type', False)
         n_prompt_type = prompt_config.get('n_prompt_type', None)
+        self.generated_context = prompt_config.get('generated_context', False)
+        pos_emb = prompt_config.get('pos_emb', False)
 
         if is_att_specific:
             print("Initializing att-specific contexts")
@@ -182,7 +188,7 @@ class PromptAttributes(BaseModule):
         else:
             prompt_vectors = torch.empty(n_prompt_vec, word_dim, dtype=torch.float32)
             nn.init.normal_(prompt_vectors, std=0.02)
-        if n_prompt_type:
+        if n_prompt_type and not self.generated_context:
             assert n_prompt_type == n_prompt_vec
             file = '/data/kyanchen/prompt/data/VAW/att2types.json'
             att2types = json.load(open(file, 'r'))
@@ -222,6 +228,17 @@ class PromptAttributes(BaseModule):
         self.register_buffer('pad_embedding', clip_model.token_embedding(pad_token).detach())
         self.attribute_embeddings = [clip_model.token_embedding(x).detach() for x in attribute_tokens]
 
+        if self.generated_context:
+            self.att_len = [len(x) for x in self.attribute_embeddings]
+            self.max_att_len = max(self.att_len) + 4
+            self.transformer_layer = self.build_transformer_encoder(
+                embed_dim=word_dim,
+                num_encoder_layers=3,
+                dim_feedforward=2048
+            )
+            if pos_emb:
+                self.pos_embed = nn.Parameter(torch.randn(1, self.max_att_len+n_prompt_vec, word_dim) * .02)
+
         if load_ckpt_from is not None:
             state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
             ctx_data = state_dict['prompt_learner.ctx']
@@ -235,6 +252,22 @@ class PromptAttributes(BaseModule):
         # tokenized_prompts = torch.cat([tokenize(p) for p in prompts])
         #
         # self.tokenized_prompts = tokenized_prompts  # torch.Tensor
+
+    def build_transformer_encoder(
+            self, embed_dim, num_encoder_layers=3, dim_feedforward=2048
+    ):
+        encoder_layer = TransformerEncoderLayer(
+            d_model=embed_dim,
+            nhead=8,
+            dim_feedforward=dim_feedforward,
+            dropout=0.1,
+            activation='gelu',
+            batch_first=True
+        )
+        encoder_norm = LayerNorm(embed_dim)
+        encoder = TransformerEncoder(encoder_layer, num_encoder_layers, encoder_norm)
+
+        return encoder
 
     def rearrange_context(
             self,
@@ -312,6 +345,63 @@ class PromptAttributes(BaseModule):
             rearranged_context.append(rearranged_context_tmp)
         return torch.stack(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long)
 
+    def rearrange_generated_context(
+            self,
+            prompt_vectors,
+            context_length=77,
+            att_position='none',
+            *args,
+            **kwargs
+    ):
+        rearranged_context = []
+        eot_index = []
+        for i in range(len(prompt_vectors)):
+            rearranged_context_tmp = [self.sot_embedding]
+            if att_position == 'end':
+                rearranged_context_tmp.append(prompt_vectors[i])
+                rearranged_context_tmp.append(self.attribute_embeddings[i])
+                rearranged_context_tmp.append(self.eot_embedding)
+            elif att_position == 'front':
+                rearranged_context_tmp.append(self.attribute_embeddings[i])
+                rearranged_context_tmp.append(prompt_vectors[i])
+                rearranged_context_tmp.append(self.eot_embedding)
+            elif att_position == 'mid':
+                n_part = prompt_vectors.size(1) // 2
+                part_1 = prompt_vectors[i, :n_part]
+                part_2 = prompt_vectors[i, n_part:]
+                rearranged_context_tmp.append(part_1)
+                rearranged_context_tmp.append(self.attribute_embeddings[i])
+                rearranged_context_tmp.append(part_2)
+                rearranged_context_tmp.append(self.eot_embedding)
+            elif att_position == 'none':
+                rearranged_context_tmp.append(prompt_vectors[i])
+                rearranged_context_tmp.append(self.eot_embedding)
+            else:
+                raise NotImplementedError
+            rearranged_context_tmp = torch.cat(rearranged_context_tmp, dim=0)
+            eot_index.append(len(rearranged_context_tmp) - 1)
+            rearranged_context_tmp = [rearranged_context_tmp] + \
+                                     [self.pad_embedding] * (context_length - len(rearranged_context_tmp))
+            rearranged_context_tmp = torch.cat(rearranged_context_tmp, dim=0)
+            rearranged_context.append(rearranged_context_tmp)
+        return torch.stack(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long)
+
     def forward(self):
-        prompt_context, eot_index = self.rearrange_context(**self.prompt_config)
+        if self.generated_context:
+            self.attribute_embeddings = [x.to(self.prompt_vectors.device) for x in self.attribute_embeddings]
+            rearranged_context = []
+            for i in range(len(self.attribute_embeddings)):
+                rearranged_context_tmp = [self.prompt_vectors]
+                rearranged_context_tmp.append(self.attribute_embeddings[i])
+                rearranged_context_tmp += [self.pad_embedding] * (self.max_att_len - self.att_len[i])
+                rearranged_context_tmp = torch.cat(rearranged_context_tmp, dim=0)
+                rearranged_context.append(rearranged_context_tmp)
+            rearranged_context = torch.stack(rearranged_context, dim=0)
+            if hasattr(self, 'pos_embed'):
+                rearranged_context = rearranged_context + self.pos_embed
+            prompt = self.transformer_layer(rearranged_context)
+            prompt = prompt[:, :len(self.prompt_vectors), :]
+            prompt_context, eot_index = self.rearrange_generated_context(prompt, **self.prompt_config)
+        else:
+            prompt_context, eot_index = self.rearrange_context(**self.prompt_config)
         return prompt_context, eot_index
