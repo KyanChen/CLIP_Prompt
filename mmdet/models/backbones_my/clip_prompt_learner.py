@@ -386,8 +386,6 @@ class PromptAttributes(BaseModule):
         return torch.stack(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long)
 
     def forward(self):
-        import pdb
-        pdb.set_trace()
         if self.generated_context:
             self.attribute_embeddings = [x.to(self.prompt_vectors.device) for x in self.attribute_embeddings]
             rearranged_context = []
