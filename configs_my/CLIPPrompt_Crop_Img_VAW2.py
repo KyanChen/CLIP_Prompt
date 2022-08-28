@@ -65,11 +65,11 @@ model = dict(
         prompt_config=dict(
             n_prompt=16,
             is_att_specific=False,
-            att_position='none',
+            att_position='end',
             with_att_type=False,
             context_length=77,
             n_prompt_type=None,
-            generated_context=True,
+            generated_context=False,
             pos_emb=False,
         ),
     ),
@@ -174,9 +174,9 @@ optimizer = dict(
                # 'image_encoder': {},
                'bbox_head': {}, 'logit_scale': {}
                },
-    type='AdamW',
-    lr=1e-4,
-    # momentum=0.9,
+    type='SGD',
+    lr=0.01,
+    momentum=0.9,
     weight_decay=0.0005
 )
 #

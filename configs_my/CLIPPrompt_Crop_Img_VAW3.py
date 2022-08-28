@@ -65,12 +65,12 @@ model = dict(
         prompt_config=dict(
             n_prompt=16,
             is_att_specific=False,
-            att_position='none',
+            att_position='front',
             with_att_type=False,
             context_length=77,
             n_prompt_type=None,
-            generated_context=True,
-            pos_emb=True,
+            generated_context=False,
+            pos_emb=False,
         ),
     ),
     neck=None,
@@ -171,7 +171,6 @@ optimizer = dict(
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_learner': {},
                'image_encoder': {'lr_mult': 0.1},
-               # 'image_encoder': {},
                'bbox_head': {}, 'logit_scale': {}
                },
     type='AdamW',

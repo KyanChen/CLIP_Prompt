@@ -5,7 +5,7 @@ while True:
     os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
               "sh dist_train.sh "
               "../configs_my/CLIPPrompt_Crop_Img_VAW.py "
-              "results/EXP20220828_0 "
+              "results/EXP20220828_4 "
               "8")
 
     os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
@@ -20,18 +20,18 @@ while True:
               # "../configs_my/rpn_r50_fpn_mstrain_vg.py "
               # "../configs_my/CLIPPrompt_Region_FasterRcnn_KD_VAW.py "
               # "../configs_my/RPN_CLIPPrompt_Region_KD_COCO_VAW.py "
-              "results/EXP20220828_1 "
+              "results/EXP20220828_5 "
               "8")
 
     os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
               "sh dist_train.sh "
               "../configs_my/CLIPPrompt_Crop_Img_VAW2.py "
-              "results/EXP20220828_2 "
+              "results/EXP20220828_6 "
               "8")
-    os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
-              "sh dist_train.sh "
-              "../configs_my/CLIPPrompt_Crop_Img_VAW3.py "
-              "results/EXP20220828_3 "
-              "8")
+    # os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
+    #           "sh dist_train.sh "
+    #           "../configs_my/CLIPPrompt_Crop_Img_VAW3.py "
+    #           "results/EXP20220828_3 "
+    #           "8")
     time.sleep(60*2)
 
