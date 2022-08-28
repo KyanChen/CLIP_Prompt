@@ -204,6 +204,8 @@ class PromptAttributes(BaseModule):
         if rank == 0:
             print(f"Number of all-shared prompt (tokens): {n_prompt_vec}")
             print(f"Number of type-shared prompt (tokens): {n_prompt_type}")
+            print('generated context: ', self.generated_context)
+            print('pos emb: ', pos_emb)
 
         self.prompt_vectors = nn.Parameter(prompt_vectors)  # to be optimized
 

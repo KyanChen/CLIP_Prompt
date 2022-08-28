@@ -70,7 +70,7 @@ model = dict(
             context_length=77,
             n_prompt_type=None,
             generated_context=True,
-            pos_emb=True,
+            pos_emb=False,
         ),
     ),
     neck=None,

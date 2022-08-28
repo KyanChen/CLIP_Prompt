@@ -63,11 +63,14 @@ model = dict(
     prompt_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
-            n_prompt=64,
+            n_prompt=16,
             is_att_specific=False,
-            att_position='mid',
+            att_position='none',
             with_att_type=False,
-            context_length=77
+            context_length=77,
+            n_prompt_type=None,
+            generated_context=True,
+            pos_emb=False,
         ),
     ),
     neck=None,
@@ -196,7 +199,7 @@ lr_config = dict(
     warmup_iters=2000,
     warmup_ratio=0.1,
     # gamma=0.5,
-    step=[100, 130]
+    step=[50, 80]
 )
 
 # lr_config = dict(
@@ -209,7 +212,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=150)
+runner = dict(type='EpochBasedRunner', max_epochs=100)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None
