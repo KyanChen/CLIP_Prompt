@@ -206,6 +206,7 @@ class PromptAttributes(BaseModule):
             print('generated context: ', self.generated_context)
             print('pos emb: ', pos_emb)
             print('att position: ', att_position)
+            print('with att type: ', with_att_type)
 
         self.prompt_vectors = nn.Parameter(prompt_vectors)  # to be optimized
 
