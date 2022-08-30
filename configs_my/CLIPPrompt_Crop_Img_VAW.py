@@ -29,14 +29,14 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 # data_root = 'D:/Dataset'
 data_root = '/data/kyanchen/prompt/data'
 
-# attribute_index_file = dict(
-#     file=data_root+'/VAW/common2common_att2id.json',
-#     att_group='common2'
-# )
 attribute_index_file = dict(
-    file=data_root+'/VAW/common2rare_att2id.json',
-    att_group='all'
+    file=data_root+'/VAW/common2common_att2id.json',
+    att_group='common1'
 )
+# attribute_index_file = dict(
+#     file=data_root+'/VAW/common2rare_att2id.json',
+#     att_group='all'
+# )
 model = dict(
     type='CLIP_Prompter',
     # classname_path=data_root+'/VAW/attribute_index.json',
@@ -70,7 +70,7 @@ model = dict(
             context_length=77,
             n_prompt_type=None,
             generated_context=True,
-            pos_emb=True,
+            pos_emb=False,
         ),
     ),
     neck=None,
@@ -200,7 +200,7 @@ lr_config = dict(
     warmup_ratio=0.1,
     # gamma=0.5,
     # step=[50, 80],
-    step=[30, 50, 80]
+    step=[30, 50]
 )
 
 # lr_config = dict(
@@ -213,7 +213,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=100)
+runner = dict(type='EpochBasedRunner', max_epochs=80)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None

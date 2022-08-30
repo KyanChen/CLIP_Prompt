@@ -29,14 +29,14 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 # data_root = 'D:/Dataset'
 data_root = '/data/kyanchen/prompt/data'
 
-# attribute_index_file = dict(
-#     file=data_root+'/VAW/common2common_att2id.json',
-#     att_group='common2'
-# )
 attribute_index_file = dict(
-    file=data_root+'/VAW/common2rare_att2id.json',
-    att_group='all'
+    file=data_root+'/VAW/common2common_att2id.json',
+    att_group='common1'
 )
+# attribute_index_file = dict(
+#     file=data_root+'/VAW/common2rare_att2id.json',
+#     att_group='all'
+# )
 model = dict(
     type='CLIP_Prompter',
     # classname_path=data_root+'/VAW/attribute_index.json',
@@ -63,10 +63,10 @@ model = dict(
     prompt_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
-            n_prompt=16,
+            n_prompt=30,
             is_att_specific=False,
-            att_position='end',
-            with_att_type=False,
+            att_position='mid',
+            with_att_type=True,
             context_length=77,
             n_prompt_type=None,
             generated_context=False,
@@ -174,8 +174,11 @@ optimizer = dict(
                # 'image_encoder': {},
                'bbox_head': {}, 'logit_scale': {}
                },
+    # type='AdamW',
+    # lr=1e-4,
+    # weight_decay=0.0005,
     type='SGD',
-    lr=0.01,
+    lr=1e-2,
     momentum=0.9,
     weight_decay=0.0005
 )
@@ -199,7 +202,8 @@ lr_config = dict(
     warmup_iters=2000,
     warmup_ratio=0.1,
     # gamma=0.5,
-    step=[50, 80]
+    # step=[50, 80],
+    step=[40, 60]
 )
 
 # lr_config = dict(
@@ -212,7 +216,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=100)
+runner = dict(type='EpochBasedRunner', max_epochs=80)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None
