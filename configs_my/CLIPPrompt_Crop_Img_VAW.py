@@ -70,7 +70,7 @@ model = dict(
             context_length=77,
             n_prompt_type=None,
             generated_context=True,
-            pos_emb=True,
+            pos_emb=False,
         ),
     ),
     neck=None,
@@ -122,7 +122,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 140
+samples_per_gpu = 150
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -199,7 +199,8 @@ lr_config = dict(
     warmup_iters=2000,
     warmup_ratio=0.1,
     # gamma=0.5,
-    step=[50, 80]
+    # step=[50, 80],
+    step=[30, 50, 80]
 )
 
 # lr_config = dict(

@@ -85,8 +85,6 @@ class PromptLearner(BaseModule):
             self.ctx.data.copy_(ctx_data)
 
     def forward(self):
-        import pdb
-        pdb.set_trace()
         ctx = self.ctx  # 4x512
         if ctx.dim() == 2:
             ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1)  # 620x4x512
@@ -176,6 +174,7 @@ class PromptAttributes(BaseModule):
         word_dim = clip_model.ln_final.weight.shape[0]
         # clip_imsize = clip_model.visual.input_resolution
         n_prompt_vec = prompt_config.get('n_prompt', 16)
+        att_position = prompt_config.get('att_position', 16)
         is_att_specific = prompt_config.get('is_att_specific', False)
         with_att_type = prompt_config.get('with_att_type', False)
         n_prompt_type = prompt_config.get('n_prompt_type', None)
@@ -206,6 +205,7 @@ class PromptAttributes(BaseModule):
             print(f"Number of type-shared prompt (tokens): {n_prompt_type}")
             print('generated context: ', self.generated_context)
             print('pos emb: ', pos_emb)
+            print('att position: ', att_position)
 
         self.prompt_vectors = nn.Parameter(prompt_vectors)  # to be optimized
 
@@ -231,11 +231,11 @@ class PromptAttributes(BaseModule):
 
         if self.generated_context:
             self.att_len = [len(x) for x in self.attribute_embeddings]
-            self.max_att_len = max(self.att_len) + 4
+            self.max_att_len = max(self.att_len) + 2
             self.transformer_layer = self.build_transformer_encoder(
                 embed_dim=word_dim,
-                num_encoder_layers=3,
-                dim_feedforward=2048
+                num_encoder_layers=2,
+                dim_feedforward=1024
             )
             if pos_emb:
                 self.pos_embed = nn.Parameter(torch.randn(1, self.max_att_len+n_prompt_vec, word_dim) * .02)
@@ -262,11 +262,12 @@ class PromptAttributes(BaseModule):
             nhead=8,
             dim_feedforward=dim_feedforward,
             dropout=0.1,
+            norm_first=True,
             activation='gelu',
             batch_first=True
         )
-        encoder_norm = LayerNorm(embed_dim)
-        encoder = TransformerEncoder(encoder_layer, num_encoder_layers, encoder_norm)
+        # encoder_norm = LayerNorm(embed_dim)
+        encoder = TransformerEncoder(encoder_layer, num_encoder_layers)
 
         return encoder
 
