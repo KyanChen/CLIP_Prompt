@@ -69,13 +69,13 @@ model = dict(
     prompt_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
-            n_prompt=8,
+            n_prompt=16,
             is_att_specific=False,
             att_position='mid',
             with_att_type=False,
             context_length=77,
-            n_prompt_type=8,
-            generated_context=False,
+            n_prompt_type=None,
+            generated_context=True,
             pos_emb=False,
         ),
     ),
@@ -161,7 +161,7 @@ data = dict(
         # ),
         attribute_index_file=dict(
             file=data_root+'/VAW/common2rare_att2id.json',
-            att_group='rare'
+            att_group='common'
         ),
         test_mode=True,
         open_category=False,
