@@ -197,8 +197,8 @@ class VAWCropDataset(Dataset):
         preds = torch.from_numpy(results)
         gts = self.get_labels()
         gts = torch.from_numpy(gts)
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
 
         output = cal_metrics(self.data_root + '/VAW',
                              preds, gts,
