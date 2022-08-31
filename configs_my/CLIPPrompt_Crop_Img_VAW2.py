@@ -31,13 +31,14 @@ data_root = '/data/kyanchen/prompt/data'
 
 # attribute_index_file = dict(
 #     file=data_root+'/VAW/common2common_att2id.json',
-#     att_group='common1'
+#     att_group='common2'
 # )
 
 attribute_index_file = dict(
     file=data_root+'/VAW/common2rare_att2id.json',
     att_group='common'
 )
+
 # attribute_index_file = dict(
 #     file=data_root+'/VAW/common2rare_att2id.json',
 #     att_group='all'
@@ -63,15 +64,15 @@ model = dict(
     #     n_ctx=16,
     #     ctx_init='',
     #     c_specific=False,
-    #     class_token_position='middle'
+    #     class_token_position='end'
     # ),
     prompt_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
-            n_prompt=30,
+            n_prompt=16,
             is_att_specific=False,
             att_position='mid',
-            with_att_type=True,
+            with_att_type=False,
             context_length=77,
             n_prompt_type=None,
             generated_context=False,
@@ -127,7 +128,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 160
+samples_per_gpu = 200
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -179,9 +180,6 @@ optimizer = dict(
                # 'image_encoder': {},
                'bbox_head': {}, 'logit_scale': {}
                },
-    # type='AdamW',
-    # lr=1e-4,
-    # weight_decay=0.0005,
     type='SGD',
     lr=1e-2,
     momentum=0.9,
@@ -208,7 +206,7 @@ lr_config = dict(
     warmup_ratio=0.1,
     # gamma=0.5,
     # step=[50, 80],
-    step=[40, 60]
+    step=[80, 120]
 )
 
 # lr_config = dict(
@@ -221,7 +219,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=80)
+runner = dict(type='EpochBasedRunner', max_epochs=150)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None

@@ -5,7 +5,17 @@ while True:
     os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
               "sh dist_train.sh "
               "../configs_my/CLIPPrompt_Crop_Img_VAW.py "
-              "results/EXP20220831_2 "
+              "results/EXP20220901_0 "
+              "8")
+    os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
+              "sh dist_train.sh "
+              "../configs_my/CLIPPrompt_Crop_Img_VAW1.py "
+              "results/EXP20220901_1 "
+              "8")
+    os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
+              "sh dist_train.sh "
+              "../configs_my/CLIPPrompt_Crop_Img_VAW2.py "
+              "results/EXP20220901_2 "
               "8")
 
     # os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "

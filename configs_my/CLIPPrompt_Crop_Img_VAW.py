@@ -29,15 +29,15 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 # data_root = 'D:/Dataset'
 data_root = '/data/kyanchen/prompt/data'
 
-attribute_index_file = dict(
-    file=data_root+'/VAW/common2common_att2id.json',
-    att_group='common2'
-)
-
 # attribute_index_file = dict(
-#     file=data_root+'/VAW/common2rare_att2id.json',
-#     att_group='rare'
+#     file=data_root+'/VAW/common2common_att2id.json',
+#     att_group='common2'
 # )
+
+attribute_index_file = dict(
+    file=data_root+'/VAW/common2rare_att2id.json',
+    att_group='common'
+)
 
 # attribute_index_file = dict(
 #     file=data_root+'/VAW/common2rare_att2id.json',
@@ -176,7 +176,7 @@ optimizer = dict(
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_learner': {},
-               'image_encoder': {'lr_mult': 0.01},
+               'image_encoder': {'lr_mult': 0.1},
                # 'image_encoder': {},
                'bbox_head': {}, 'logit_scale': {}
                },
@@ -206,7 +206,7 @@ lr_config = dict(
     warmup_ratio=0.1,
     # gamma=0.5,
     # step=[50, 80],
-    step=[30, 50]
+    step=[80, 120]
 )
 
 # lr_config = dict(
@@ -219,7 +219,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=80)
+runner = dict(type='EpochBasedRunner', max_epochs=150)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None
