@@ -80,8 +80,8 @@ class TextEncoder(BaseModule):
 
         # x.shape = [batch_size, n_ctx, transformer.width]
         # take features from the eot embedding (eot_token is the highest number in each sequence)
-        # x = x[torch.arange(x.shape[0]), eot_index.argmax(dim=-1)] @ self.text_projection
-        x = x[torch.arange(x.shape[0]), eot_index] @ self.text_projection
+        x = x[torch.arange(x.shape[0]), eot_index.argmax(dim=-1)] @ self.text_projection
+        # x = x[torch.arange(x.shape[0]), eot_index] @ self.text_projection
         # x: 620x1024
         return x
 
