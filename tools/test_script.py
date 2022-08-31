@@ -9,7 +9,7 @@ for i in range(20, 100, 20):
               # '../configs_my/rpn_r50_fpn_mstrain_vaw.py '
               # "../configs_my/rpn_r50_fpn_mstrain_coco.py "
               "../configs_my/CLIPPrompt_Crop_Img_VAW.py "
-              f"results/EXP20220831_0/epoch_{i}.pth "
+              f"results/EXP20220831_9/epoch_{i}.pth "
               "8"
     )
 
