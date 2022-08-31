@@ -58,9 +58,9 @@ class PromptLearner(BaseModule):
             print(f'Initial context: "{prompt_prefix}"')
             print(f"Number of context words (tokens): {n_ctx}")
 
-        self.prompt_vectors = nn.Parameter(ctx_vectors)  # to be optimized
-        self.ctx = self.prompt_vectors
-        # self.ctx = nn.Parameter(ctx_vectors)  # to be optimized
+        # self.prompt_vectors = nn.Parameter(ctx_vectors)  # to be optimized
+        # self.ctx = self.prompt_vectors
+        self.ctx = nn.Parameter(ctx_vectors)  # to be optimized
 
         classnames = [name.replace("_", " ") for name in attribute_list]
         name_lens = [len(_tokenizer.encode(name)) for name in classnames]
@@ -210,8 +210,8 @@ class PromptAttributes(BaseModule):
             print('att position: ', att_position)
             print('with att type: ', with_att_type)
 
-        self.prompt_vectors = nn.Parameter(prompt_vectors)  # to be optimized
-
+        self.ctx = nn.Parameter(prompt_vectors)  # to be optimized
+        self.prompt_vectors = self.ctx
         sot_token = torch.tensor([_tokenizer.encoder["<|startoftext|>"]], dtype=torch.long)
         eot_token = torch.tensor([_tokenizer.encoder["<|endoftext|>"]], dtype=torch.long)
         pad_token = torch.tensor([0], dtype=torch.long)
