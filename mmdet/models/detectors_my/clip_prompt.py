@@ -74,7 +74,7 @@ class CLIP_Prompter(BaseDetector):
         #     state_dict = torch.load(prompt_learner_weights, map_location="cpu")
         #     self.prompt_learner.load_state_dict(state_dict)
 
-        # self.tokenized_prompts = self.prompt_learner.tokenized_prompts
+        self.tokenized_prompts = self.prompt_learner.tokenized_prompts
 
         if neck is not None:
             self.neck = build_neck(neck)
