@@ -75,7 +75,7 @@ model = dict(
             with_att_type=False,
             context_length=77,
             n_prompt_type=None,
-            generated_context=True,
+            generated_context=False,
             pos_emb=False,
         ),
     ),
