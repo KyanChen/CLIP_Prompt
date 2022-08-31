@@ -67,7 +67,7 @@ class CLIP_Prompter(BaseDetector):
             )
         )
 
-        # prompt_learner.update(dict(classnames=atts, clip_model=clip_model))
+        # prompt_learner.update(dict(attribute_list=atts, clip_model=clip_model))
         prompt_learner.update(dict(attribute_list=atts, clip_model=clip_model))
         self.prompt_learner = build_backbone(prompt_learner)
 

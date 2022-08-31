@@ -18,7 +18,7 @@ _tokenizer = _Tokenizer()
 @BACKBONES.register_module()
 class PromptLearner(BaseModule):
     def __init__(self,
-                 classnames,
+                 attribute_list,
                  clip_model,
                  n_ctx=16,
                  ctx_init='',
@@ -27,7 +27,7 @@ class PromptLearner(BaseModule):
                  load_ckpt_from=None
                  ):
         super().__init__()
-        n_cls = len(classnames)
+        n_cls = len(attribute_list)
         dtype = clip_model.dtype
         ctx_dim = clip_model.ln_final.weight.shape[0]
         clip_imsize = clip_model.visual.input_resolution
@@ -62,7 +62,7 @@ class PromptLearner(BaseModule):
         self.ctx = self.prompt_vectors
         # self.ctx = nn.Parameter(ctx_vectors)  # to be optimized
 
-        classnames = [name.replace("_", " ") for name in classnames]
+        classnames = [name.replace("_", " ") for name in attribute_list]
         name_lens = [len(_tokenizer.encode(name)) for name in classnames]
         prompts = [prompt_prefix + " " + name + "." for name in classnames]
 
