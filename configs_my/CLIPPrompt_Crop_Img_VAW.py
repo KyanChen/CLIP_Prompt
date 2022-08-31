@@ -59,26 +59,26 @@ model = dict(
         load_ckpt_from=None,
         precision='fp32',
     ),
-    prompt_learner=dict(
-        type='PromptLearner',
-        n_ctx=16,
-        ctx_init='',
-        c_specific=False,
-        class_token_position='end'
-    ),
     # prompt_learner=dict(
-    #     type='PromptAttributes',
-    #     prompt_config=dict(
-    #         n_prompt=16,
-    #         is_att_specific=False,
-    #         att_position='end',
-    #         with_att_type=False,
-    #         context_length=77,
-    #         n_prompt_type=None,
-    #         generated_context=False,
-    #         pos_emb=False,
-    #     ),
+    #     type='PromptLearner',
+    #     n_ctx=16,
+    #     ctx_init='',
+    #     c_specific=False,
+    #     class_token_position='end'
     # ),
+    prompt_learner=dict(
+        type='PromptAttributes',
+        prompt_config=dict(
+            n_prompt=16,
+            is_att_specific=False,
+            att_position='mid',
+            with_att_type=False,
+            context_length=77,
+            n_prompt_type=None,
+            generated_context=False,
+            pos_emb=False,
+        ),
+    ),
     neck=None,
     bbox_head=dict(
         type='PromptHead',
@@ -128,7 +128,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 150
+samples_per_gpu = 200
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -176,13 +176,13 @@ optimizer = dict(
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_learner': {},
-               'image_encoder': {'lr_mult': 0.1},
+               'image_encoder': {'lr_mult': 0.01},
                # 'image_encoder': {},
                'bbox_head': {}, 'logit_scale': {}
                },
-    type='AdamW',
-    lr=1e-4,
-    # momentum=0.9,
+    type='SGD',
+    lr=1e-2,
+    momentum=0.9,
     weight_decay=0.0005
 )
 #
