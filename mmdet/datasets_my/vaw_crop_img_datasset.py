@@ -197,6 +197,7 @@ class VAWCropDataset(Dataset):
         preds = torch.from_numpy(results)
         gts = self.get_labels()
         gts = torch.from_numpy(gts)
+        assert preds.shape[-1] == gts.shape[-1]
         # import pdb
         # pdb.set_trace()
 
