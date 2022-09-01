@@ -377,13 +377,13 @@ class PromptAttributes(BaseModule):
                 rearranged_context_tmp.append(prompt_vectors[i])
                 rearranged_context_tmp.append(self.eot_embedding)
             elif att_position == 'mid':
-                import pdb
-                pdb.set_trace()
+                # import pdb
+                # pdb.set_trace()
                 if with_att_type:
-                    n_part = len(prompt_vectors) // 3
-                    part_1 = prompt_vectors[:n_part]
-                    part_2 = prompt_vectors[n_part:n_part * 2]
-                    part_3 = prompt_vectors[n_part * 2:]
+                    n_part = prompt_vectors.size(1) // 3
+                    part_1 = prompt_vectors[i, :n_part]
+                    part_2 = prompt_vectors[i, n_part:n_part * 2]
+                    part_3 = prompt_vectors[i, n_part * 2:]
                     rearranged_context_tmp.append(part_1)
                     rearranged_context_tmp.append(self.attribute_embeddings[i])
                     rearranged_context_tmp.append(part_2)
