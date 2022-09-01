@@ -29,15 +29,15 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 # data_root = 'D:/Dataset'
 data_root = '/data/kyanchen/prompt/data'
 
-attribute_index_file = dict(
-    file=data_root+'/VAW/common2common_att2id.json',
-    att_group='common1'
-)
-
 # attribute_index_file = dict(
-#     file=data_root+'/VAW/common2rare_att2id.json',
-#     att_group='common'
+#     file=data_root+'/VAW/common2common_att2id.json',
+#     att_group='common1'
 # )
+
+attribute_index_file = dict(
+    file=data_root+'/VAW/common2rare_att2id.json',
+    att_group='common'
+)
 
 # attribute_index_file = dict(
 #     file=data_root+'/VAW/common2rare_att2id.json',
@@ -69,13 +69,13 @@ model = dict(
     prompt_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
-            n_prompt=30,
+            n_prompt=16,
             is_att_specific=False,
             att_position='mid',
             with_att_type=True,
             context_length=77,
             n_prompt_type=None,
-            generated_context=False,
+            generated_context=True,
             pos_emb=False,
         ),
     ),
@@ -155,14 +155,14 @@ data = dict(
         type=dataset_type,
         data_root=data_root,
         dataset_split='test',
-        attribute_index_file=dict(
-            file=data_root+'/VAW/common2common_att2id.json',
-            att_group='common2'
-        ),
         # attribute_index_file=dict(
-        #     file=data_root+'/VAW/common2rare_att2id.json',
-        #     att_group='rare'
+        #     file=data_root+'/VAW/common2common_att2id.json',
+        #     att_group='common'
         # ),
+        attribute_index_file=dict(
+            file=data_root+'/VAW/common2rare_att2id.json',
+            att_group='rare'
+        ),
         test_mode=True,
         open_category=False,
         pipeline=test_pipeline
@@ -176,12 +176,12 @@ optimizer = dict(
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_learner': {},
-               'image_encoder': {'lr_mult': 0.005},
+               'image_encoder': {'lr_mult': 0.1},
                # 'image_encoder': {},
                'bbox_head': {}, 'logit_scale': {}
                },
     type='SGD',
-    lr=1e-2,
+    lr=1e-3,
     momentum=0.9,
     weight_decay=0.0005
 )

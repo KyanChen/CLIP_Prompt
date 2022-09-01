@@ -178,7 +178,7 @@ class PromptAttributes(BaseModule):
         n_prompt_vec = prompt_config.get('n_prompt', 16)
         att_position = prompt_config.get('att_position', 16)
         is_att_specific = prompt_config.get('is_att_specific', False)
-        with_att_type = prompt_config.get('with_att_type', False)
+        self.with_att_type = prompt_config.get('with_att_type', False)
         n_prompt_type = prompt_config.get('n_prompt_type', None)
         self.generated_context = prompt_config.get('generated_context', False)
         pos_emb = prompt_config.get('pos_emb', False)
@@ -208,14 +208,14 @@ class PromptAttributes(BaseModule):
             print('generated context: ', self.generated_context)
             print('pos emb: ', pos_emb)
             print('att position: ', att_position)
-            print('with att type: ', with_att_type)
+            print('with att type: ', self.with_att_type)
 
         # self.ctx = nn.Parameter(prompt_vectors)  # to be optimized
         self.prompt_vectors = nn.Parameter(prompt_vectors)
         sot_token = torch.tensor([_tokenizer.encoder["<|startoftext|>"]], dtype=torch.long)
         eot_token = torch.tensor([_tokenizer.encoder["<|endoftext|>"]], dtype=torch.long)
         pad_token = torch.tensor([0], dtype=torch.long)
-        if with_att_type:
+        if self.with_att_type:
             file = '/data/kyanchen/prompt/data/VAW/att2types.json'
             att2types = json.load(open(file, 'r'))
             id2type = att2types['id2type']
@@ -234,7 +234,12 @@ class PromptAttributes(BaseModule):
 
         if self.generated_context:
             self.att_len = [len(x) for x in self.attribute_embeddings]
+            if self.with_att_type:
+                self.type_len = [len(x) for x in self.type_embeddings]
+
             self.max_att_len = max(self.att_len) + 2
+            if self.with_att_type:
+                self.max_att_len = max(self.att_len) + max(self.type_len)
             self.transformer_layer = self.build_transformer_encoder(
                 embed_dim=word_dim,
                 num_encoder_layers=2,
@@ -355,6 +360,7 @@ class PromptAttributes(BaseModule):
             prompt_vectors,
             context_length=77,
             att_position='none',
+            with_att_type=False,
             *args,
             **kwargs
     ):
@@ -371,13 +377,25 @@ class PromptAttributes(BaseModule):
                 rearranged_context_tmp.append(prompt_vectors[i])
                 rearranged_context_tmp.append(self.eot_embedding)
             elif att_position == 'mid':
-                n_part = prompt_vectors.size(1) // 2
-                part_1 = prompt_vectors[i, :n_part]
-                part_2 = prompt_vectors[i, n_part:]
-                rearranged_context_tmp.append(part_1)
-                rearranged_context_tmp.append(self.attribute_embeddings[i])
-                rearranged_context_tmp.append(part_2)
-                rearranged_context_tmp.append(self.eot_embedding)
+                if with_att_type:
+                    n_part = len(prompt_vectors) // 3
+                    part_1 = prompt_vectors[:n_part]
+                    part_2 = prompt_vectors[n_part:n_part * 2]
+                    part_3 = prompt_vectors[n_part * 2:]
+                    rearranged_context_tmp.append(part_1)
+                    rearranged_context_tmp.append(self.attribute_embeddings[i])
+                    rearranged_context_tmp.append(part_2)
+                    rearranged_context_tmp.append(self.type_embeddings[i])
+                    rearranged_context_tmp.append(part_3)
+                    rearranged_context_tmp.append(self.eot_embedding)
+                else:
+                    n_part = prompt_vectors.size(1) // 2
+                    part_1 = prompt_vectors[i, :n_part]
+                    part_2 = prompt_vectors[i, n_part:]
+                    rearranged_context_tmp.append(part_1)
+                    rearranged_context_tmp.append(self.attribute_embeddings[i])
+                    rearranged_context_tmp.append(part_2)
+                    rearranged_context_tmp.append(self.eot_embedding)
             elif att_position == 'none':
                 rearranged_context_tmp.append(prompt_vectors[i])
                 rearranged_context_tmp.append(self.eot_embedding)
@@ -394,11 +412,31 @@ class PromptAttributes(BaseModule):
     def forward(self):
         if self.generated_context:
             self.attribute_embeddings = [x.to(self.prompt_vectors.device) for x in self.attribute_embeddings]
+            if self.with_att_type:
+                self.type_embeddings = [x.to(self.prompt_vectors.device) for x in self.type_embeddings]
+
             rearranged_context = []
             for i in range(len(self.attribute_embeddings)):
-                rearranged_context_tmp = [self.prompt_vectors]
+                rearranged_context_tmp = []
+                # if self.with_att_type:
+                #     n_part = len(self.prompt_vectors) // 3
+                #     part_1 = self.prompt_vectors[:n_part]
+                #     part_2 = self.prompt_vectors[n_part:n_part * 2]
+                #     part_3 = self.prompt_vectors[n_part * 2:]
+                #     rearranged_context_tmp.append(part_1)
+                #     rearranged_context_tmp.append(self.attribute_embeddings[i])
+                #     rearranged_context_tmp.append(part_2)
+                #     rearranged_context_tmp.append(self.type_embeddings[i])
+                #     rearranged_context_tmp.append(part_3)
+                # else:
+                rearranged_context_tmp.append(self.prompt_vectors)
                 rearranged_context_tmp.append(self.attribute_embeddings[i])
-                rearranged_context_tmp += [self.pad_embedding] * (self.max_att_len - self.att_len[i])
+                if self.with_att_type:
+                    rearranged_context_tmp.append(self.type_embeddings[i])
+                    rearranged_context_tmp += [self.pad_embedding] * (self.max_att_len - self.att_len[i] - self.type_len[i])
+                else:
+                    rearranged_context_tmp += [self.pad_embedding] * (
+                                self.max_att_len - self.att_len[i])
                 rearranged_context_tmp = torch.cat(rearranged_context_tmp, dim=0)
                 rearranged_context.append(rearranged_context_tmp)
             rearranged_context = torch.stack(rearranged_context, dim=0)
