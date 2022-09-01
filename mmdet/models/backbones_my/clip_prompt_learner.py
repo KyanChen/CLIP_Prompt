@@ -377,6 +377,8 @@ class PromptAttributes(BaseModule):
                 rearranged_context_tmp.append(prompt_vectors[i])
                 rearranged_context_tmp.append(self.eot_embedding)
             elif att_position == 'mid':
+                import pdb
+                pdb.set_trace()
                 if with_att_type:
                     n_part = len(prompt_vectors) // 3
                     part_1 = prompt_vectors[:n_part]
