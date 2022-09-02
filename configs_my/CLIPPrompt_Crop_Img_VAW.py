@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=20)
+checkpoint_config = dict(interval=10)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -36,7 +36,7 @@ data_root = '/data/kyanchen/prompt/data'
 
 attribute_index_file = dict(
     file=data_root+'/VAW/common2rare_att2id.json',
-    att_group='rare'
+    att_group='common'
 )
 
 # attribute_index_file = dict(
@@ -128,7 +128,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 200
+samples_per_gpu = 180
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -161,7 +161,7 @@ data = dict(
         # ),
         attribute_index_file=dict(
             file=data_root+'/VAW/common2rare_att2id.json',
-            att_group='rare'
+            att_group='common'
         ),
         test_mode=True,
         open_category=False,
@@ -180,9 +180,12 @@ optimizer = dict(
                # 'image_encoder': {},
                'bbox_head': {}, 'logit_scale': {}
                },
-    type='SGD',
-    lr=1e-2,
-    momentum=0.9,
+    # type='SGD',
+    # lr=1e-2,
+    # momentum=0.9,
+    # weight_decay=0.0005,
+    type='AdamW',
+    lr=1e-4,
     weight_decay=0.0005
 )
 #
@@ -206,7 +209,7 @@ lr_config = dict(
     warmup_ratio=0.1,
     # gamma=0.5,
     # step=[50, 80],
-    step=[80, 120]
+    step=[30, 50]
 )
 
 # lr_config = dict(
@@ -219,7 +222,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=150)
+runner = dict(type='EpochBasedRunner', max_epochs=60)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None
