@@ -89,7 +89,7 @@ model = dict(
         balance_unk=0.15
     )
 )
-img_scale = (288, 288)
+img_scale = (224, 224)  # (224, 224) (288, 288)
 # dataset settings
 dataset_type = 'VAWCropDataset'
 img_norm_cfg = dict(
