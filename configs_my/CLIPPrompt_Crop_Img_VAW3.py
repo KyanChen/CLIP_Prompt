@@ -33,21 +33,33 @@ data_root = '/data/kyanchen/prompt/data'
 #     file=data_root+'/VAW/common2common_att2id.json',
 #     att_group='common2'
 # )
+
 attribute_index_file = dict(
     file=data_root+'/VAW/common2rare_att2id.json',
-    att_group='all'
+    att_group='common'
 )
+
+# attribute_index_file = dict(
+#     file=data_root+'/VAW/common2rare_att2id.json',
+#     att_group='all'
+# )
 model = dict(
     type='CLIP_Prompter',
     # classname_path=data_root+'/VAW/attribute_index.json',
     attribute_index_file=attribute_index_file,
     need_train_names=[
-        'prompt_learner', 'image_encoder',
+        'prompt_learner',
+        # 'image_encoder',
+        # 'text_encoder',
+        'img_proj_head',
+        'text_proj_head',
         'bbox_head', 'logit_scale'
     ],
+    img_proj_head=True,
+    text_proj_head=True,
     backbone=dict(
         type='CLIPModel',
-        backbone_name='RN50',
+        backbone_name='RN50',  # RN101, RN50x4
         with_attn=True,
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
@@ -58,15 +70,15 @@ model = dict(
     #     n_ctx=16,
     #     ctx_init='',
     #     c_specific=False,
-    #     class_token_position='middle'
+    #     class_token_position='end'
     # ),
     prompt_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
-            n_prompt=16,
+            n_prompt=30,
             is_att_specific=False,
-            att_position='front',
-            with_att_type=False,
+            att_position='mid',
+            with_att_type=True,
             context_length=77,
             n_prompt_type=None,
             generated_context=False,
@@ -83,6 +95,7 @@ model = dict(
         balance_unk=0.15
     )
 )
+img_scale = (224, 224)  # (224, 224) (288, 288)
 # dataset settings
 dataset_type = 'VAWCropDataset'
 img_norm_cfg = dict(
@@ -97,9 +110,9 @@ train_pipeline = [
     dict(type='ScaleCrop', scale_range=[0.0, 0.3]),
     dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='Resize', img_scale=(224, 224), keep_ratio=True),
+    dict(type='Resize', img_scale=img_scale, keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
-    dict(type='Pad', size=(224, 224), center_pad=True),
+    dict(type='Pad', size=img_scale, center_pad=True),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['gt_labels']),
     dict(type='Collect', keys=['img', 'gt_labels'])
@@ -110,19 +123,19 @@ test_pipeline = [
     dict(type='ScaleCrop', scale_range=[0.0, 0.2]),
     dict(type='RandomCrop', crop_size=[0.9, 0.9], crop_type='relative_range'),
     dict(type='MultiScaleFlipAug',
-         img_scale=(224, 224),
+         img_scale=img_scale,
          flip=False,
          transforms=[
-            dict(type='Resize', img_scale=(224, 224), keep_ratio=True),
+            dict(type='Resize', img_scale=img_scale, keep_ratio=True),
             dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size=(224, 224), center_pad=True),
+            dict(type='Pad', size=img_scale, center_pad=True),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img'])
         ]
     )
 ]
 
-samples_per_gpu = 160
+samples_per_gpu = 400
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -149,14 +162,14 @@ data = dict(
         type=dataset_type,
         data_root=data_root,
         dataset_split='test',
-        attribute_index_file=dict(
-            file=data_root+'/VAW/common2common_att2id.json',
-            att_group='common2'
-        ),
         # attribute_index_file=dict(
-        #     file=data_root+'/VAW/common2rare_att2id.json',
-        #     att_group='rare'
+        #     file=data_root+'/VAW/common2common_att2id.json',
+        #     att_group='common1'
         # ),
+        attribute_index_file=dict(
+            file=data_root+'/VAW/common2rare_att2id.json',
+            att_group='rare'
+        ),
         test_mode=True,
         open_category=False,
         pipeline=test_pipeline
@@ -170,13 +183,19 @@ optimizer = dict(
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_learner': {},
-               'image_encoder': {'lr_mult': 0.1},
+               # 'image_encoder': {'lr_mult': 0.1},
+               # 'text_encoder': {'lr_mult': 0.1},
+               'img_proj_head': {},
+               'text_proj_head': {},
                'bbox_head': {}, 'logit_scale': {}
                },
-    type='AdamW',
-    lr=1e-4,
-    # momentum=0.9,
-    weight_decay=0.0005
+    type='SGD',
+    lr=1e-2,
+    momentum=0.9,
+    weight_decay=0.0005,
+    # type='AdamW',
+    # lr=1e-4,
+    # weight_decay=0.0005
 )
 #
 # # optimizer
@@ -198,7 +217,8 @@ lr_config = dict(
     warmup_iters=2000,
     warmup_ratio=0.1,
     # gamma=0.5,
-    step=[50, 80]
+    step=[50, 80],
+    # step=[30, 50]
 )
 
 # lr_config = dict(
