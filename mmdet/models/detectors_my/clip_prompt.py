@@ -18,6 +18,8 @@ class CLIP_Prompter(BaseDetector):
                  prompt_learner,
                  img_encoder=None,
                  prompt_learner_weights='',
+                 img_proj_head=False,
+                 text_proj_head=False,
                  neck=None,
                  bbox_head=None,
                  train_cfg=None,
@@ -59,7 +61,18 @@ class CLIP_Prompter(BaseDetector):
             self.image_encoder = build_backbone(img_encoder)
             self.img_proj_head = nn.Linear(768, 1024)
         self.logit_scale = clip_model.logit_scale
-
+        if img_proj_head:
+            self.img_proj_head = nn.Sequential(
+                nn.Linear(1024, 512),
+                nn.ReLU(),
+                nn.Linear(512, 1024),
+            )
+        if text_proj_head:
+            self.text_proj_head = nn.Sequential(
+                nn.Linear(1024, 512),
+                nn.ReLU(),
+                nn.Linear(512, 1024),
+            )
         self.text_encoder = build_backbone(
             dict(
                 type='TextEncoder',
@@ -158,6 +171,8 @@ class CLIP_Prompter(BaseDetector):
 
         if hasattr(self, 'img_proj_head'):
             image_features = getattr(self, 'img_proj_head')(image_features)
+        if hasattr(self, 'text_proj_head'):
+            text_features = getattr(self, 'text_proj_head')(text_features)
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
@@ -211,6 +226,8 @@ class CLIP_Prompter(BaseDetector):
 
         if hasattr(self, 'img_proj_head'):
             image_features = getattr(self, 'img_proj_head')(image_features)
+        if hasattr(self, 'text_proj_head'):
+            text_features = getattr(self, 'text_proj_head')(text_features)
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
