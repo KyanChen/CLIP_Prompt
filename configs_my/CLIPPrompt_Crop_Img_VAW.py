@@ -53,7 +53,7 @@ model = dict(
     ],
     backbone=dict(
         type='CLIPModel',
-        backbone_name='RN101',  # RN101
+        backbone_name='RN50x4',  # RN101, RN50x4
         with_attn=True,
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
