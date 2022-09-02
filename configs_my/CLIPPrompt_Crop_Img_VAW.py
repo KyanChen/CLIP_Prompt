@@ -162,7 +162,7 @@ data = dict(
         # ),
         attribute_index_file=dict(
             file=data_root+'/VAW/common2rare_att2id.json',
-            att_group='rare'
+            att_group='common'
         ),
         test_mode=True,
         open_category=False,
