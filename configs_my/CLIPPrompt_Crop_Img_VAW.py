@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=10)
+checkpoint_config = dict(interval=20)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -36,7 +36,7 @@ data_root = '/data/kyanchen/prompt/data'
 
 attribute_index_file = dict(
     file=data_root+'/VAW/common2rare_att2id.json',
-    att_group='rare'
+    att_group='common'
 )
 
 # attribute_index_file = dict(
@@ -48,12 +48,14 @@ model = dict(
     # classname_path=data_root+'/VAW/attribute_index.json',
     attribute_index_file=attribute_index_file,
     need_train_names=[
-        'prompt_learner', 'image_encoder',
+        'prompt_learner',
+        # 'image_encoder',
+        'text_encoder',
         'bbox_head', 'logit_scale'
     ],
     backbone=dict(
         type='CLIPModel',
-        backbone_name='RN101',  # RN101, RN50x4
+        backbone_name='RN50',  # RN101, RN50x4
         with_attn=True,
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
@@ -129,7 +131,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 54
+samples_per_gpu = 256
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -177,17 +179,17 @@ optimizer = dict(
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_learner': {},
-               'image_encoder': {'lr_mult': 0.1},
-               # 'image_encoder': {},
+               # 'image_encoder': {'lr_mult': 0.1},
+               'text_encoder': {'lr_mult': 0.1},
                'bbox_head': {}, 'logit_scale': {}
                },
-    type='SGD',
-    lr=1e-2,
-    momentum=0.9,
-    weight_decay=0.0005,
-    # type='AdamW',
-    # lr=1e-4,
-    # weight_decay=0.0005
+    # type='SGD',
+    # lr=1e-2,
+    # momentum=0.9,
+    # weight_decay=0.0005,
+    type='AdamW',
+    lr=1e-4,
+    weight_decay=0.0005
 )
 #
 # # optimizer
