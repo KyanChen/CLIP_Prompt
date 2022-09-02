@@ -36,7 +36,7 @@ data_root = '/data/kyanchen/prompt/data'
 
 attribute_index_file = dict(
     file=data_root+'/VAW/common2rare_att2id.json',
-    att_group='rare'
+    att_group='common'
 )
 
 # attribute_index_file = dict(
@@ -53,7 +53,7 @@ model = dict(
     ],
     backbone=dict(
         type='CLIPModel',
-        backbone_name='RN50',
+        backbone_name='RN101',  # RN101
         with_attn=True,
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
@@ -69,13 +69,13 @@ model = dict(
     prompt_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
-            n_prompt=16,
+            n_prompt=30,
             is_att_specific=False,
             att_position='mid',
             with_att_type=True,
             context_length=77,
             n_prompt_type=None,
-            generated_context=True,
+            generated_context=False,
             pos_emb=False,
         ),
     ),
@@ -128,7 +128,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 180
+samples_per_gpu = 128
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -180,13 +180,13 @@ optimizer = dict(
                # 'image_encoder': {},
                'bbox_head': {}, 'logit_scale': {}
                },
-    # type='SGD',
-    # lr=1e-2,
-    # momentum=0.9,
-    # weight_decay=0.0005,
-    type='AdamW',
-    lr=1e-4,
-    weight_decay=0.0005
+    type='SGD',
+    lr=1e-2,
+    momentum=0.9,
+    weight_decay=0.0005,
+    # type='AdamW',
+    # lr=1e-4,
+    # weight_decay=0.0005
 )
 #
 # # optimizer
@@ -208,8 +208,8 @@ lr_config = dict(
     warmup_iters=2000,
     warmup_ratio=0.1,
     # gamma=0.5,
-    # step=[50, 80],
-    step=[30, 50]
+    step=[50, 80],
+    # step=[30, 50]
 )
 
 # lr_config = dict(
@@ -222,7 +222,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=60)
+runner = dict(type='EpochBasedRunner', max_epochs=100)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None
