@@ -89,6 +89,7 @@ model = dict(
         balance_unk=0.15
     )
 )
+img_scale = (288, 288)
 # dataset settings
 dataset_type = 'VAWCropDataset'
 img_norm_cfg = dict(
@@ -103,9 +104,9 @@ train_pipeline = [
     dict(type='ScaleCrop', scale_range=[0.0, 0.3]),
     dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='Resize', img_scale=(224, 224), keep_ratio=True),
+    dict(type='Resize', img_scale=img_scale, keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
-    dict(type='Pad', size=(224, 224), center_pad=True),
+    dict(type='Pad', size=img_scale, center_pad=True),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['gt_labels']),
     dict(type='Collect', keys=['img', 'gt_labels'])
@@ -116,12 +117,12 @@ test_pipeline = [
     dict(type='ScaleCrop', scale_range=[0.0, 0.2]),
     dict(type='RandomCrop', crop_size=[0.9, 0.9], crop_type='relative_range'),
     dict(type='MultiScaleFlipAug',
-         img_scale=(224, 224),
+         img_scale=img_scale,
          flip=False,
          transforms=[
-            dict(type='Resize', img_scale=(224, 224), keep_ratio=True),
+            dict(type='Resize', img_scale=img_scale, keep_ratio=True),
             dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size=(224, 224), center_pad=True),
+            dict(type='Pad', size=img_scale, center_pad=True),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img'])
         ]
