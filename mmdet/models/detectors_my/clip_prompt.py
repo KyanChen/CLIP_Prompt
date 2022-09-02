@@ -60,7 +60,7 @@ class CLIP_Prompter(BaseDetector):
         else:
             self.image_encoder = build_backbone(img_encoder)
             self.img_proj_head = nn.Linear(768, 1024)
-        self.logit_scale = clip_model.logit_scale
+        self.logit_scale = nn.Parameter(clip_model.logit_scale.data)
         if img_proj_head:
             self.img_proj_head = nn.Sequential(
                 nn.Linear(1024, 512),
