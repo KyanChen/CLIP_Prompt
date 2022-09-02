@@ -103,6 +103,8 @@ class CLIP_Prompter(BaseDetector):
 
         rank, world_size = get_dist_info()
         if rank == 0:
+            print('img_proj_head: ', img_proj_head)
+            print('text_proj_head: ', text_proj_head)
             print("Turning off gradients in both the image and the text encoder")
         for name, param in self.named_parameters():
             flag = False
