@@ -53,7 +53,7 @@ model = dict(
         'text_encoder',
         'bbox_head', 'logit_scale'
     ],
-    img_proj_head=False,
+    img_proj_head=True,
     text_proj_head=True,
     backbone=dict(
         type='CLIPModel',
