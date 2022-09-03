@@ -266,7 +266,7 @@ class VisionTransformer(nn.Module):
         if self.proj is not None:
             x = x @ self.proj
 
-        return x
+        return x, None, None
 
 
 class CLIP(nn.Module):
