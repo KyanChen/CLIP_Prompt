@@ -36,7 +36,7 @@ data_root = '/data/kyanchen/prompt/data'
 
 attribute_index_file = dict(
     file=data_root+'/VAW/common2rare_att2id.json',
-    att_group='rare'
+    att_group='common'
 )
 
 # attribute_index_file = dict(
@@ -49,8 +49,8 @@ model = dict(
     attribute_index_file=attribute_index_file,
     need_train_names=[
         'prompt_learner',
-        # 'image_encoder',
-        'text_encoder',
+        'image_encoder',
+        # 'text_encoder',
         'bbox_head', 'logit_scale'
     ],
     img_proj_head=False,
@@ -133,7 +133,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 256
+samples_per_gpu = 200
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -181,8 +181,8 @@ optimizer = dict(
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_learner': {},
-               # 'image_encoder': {'lr_mult': 0.1},
-               'text_encoder': {'lr_mult': 0.1},
+               'image_encoder': {'lr_mult': 0.1},
+               # 'text_encoder': {'lr_mult': 0.1},
                'bbox_head': {}, 'logit_scale': {}
                },
     # type='SGD',
