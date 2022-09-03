@@ -57,7 +57,7 @@ model = dict(
     text_proj_head=False,
     backbone=dict(
         type='CLIPModel',
-        backbone_name='RN50x64',  # RN101, RN50x4，RN50x64, ViT-B/16, ViT-L/14@336px, ViT-B/16
+        backbone_name='RN50x16',  # RN101, RN50x4，RN50x64, ViT-B/16, ViT-L/14@336px, ViT-B/16
         with_attn=True,
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
@@ -133,7 +133,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 8
+samples_per_gpu = 64
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
