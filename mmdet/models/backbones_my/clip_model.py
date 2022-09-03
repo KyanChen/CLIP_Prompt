@@ -38,8 +38,8 @@ class CLIPModel(BaseModule):
                 k = k.replace('image_encoder', 'visual')
                 k = k.replace('text_encoder.', '')
                 new_dict[k] = v
-        # import pdb
-        # pdb.set_trace()
+        import pdb
+        pdb.set_trace()
         self.model = build_model(new_dict, with_attn, out_indices=out_indices)
 
         if precision == "fp32" or precision == "amp":
