@@ -50,14 +50,14 @@ model = dict(
     need_train_names=[
         'prompt_learner',
         # 'image_encoder',
-        # 'text_encoder',
-        'img_proj_head',
+        'text_encoder',
         'bbox_head', 'logit_scale'
     ],
-    img_proj_head=True,
+    img_proj_head=False,
+    text_proj_head=False,
     backbone=dict(
         type='CLIPModel',
-        backbone_name='RN50',  # RN101, RN50x4
+        backbone_name='RN50x64',  # RN101, RN50x4，RN50x64, ViT-B/16, ViT-L/14@336px, ViT-B/16
         with_attn=True,
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
@@ -93,7 +93,7 @@ model = dict(
         balance_unk=0.15
     )
 )
-img_scale = (224, 224)  # (224, 224) (288, 288)
+img_scale = (224, 224)  # (224, 224) (288, 288) (336, 336)
 # dataset settings
 dataset_type = 'VAWCropDataset'
 img_norm_cfg = dict(
@@ -133,7 +133,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 512
+samples_per_gpu = 256
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -182,17 +182,16 @@ optimizer = dict(
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_learner': {},
                # 'image_encoder': {'lr_mult': 0.1},
-               # 'text_encoder': {'lr_mult': 0.1},
-               'img_proj_head': {},
+               'text_encoder': {'lr_mult': 0.1},
                'bbox_head': {}, 'logit_scale': {}
                },
-    type='SGD',
-    lr=1e-2,
-    momentum=0.9,
-    weight_decay=0.0005,
-    # type='AdamW',
-    # lr=1e-4,
-    # weight_decay=0.0005
+    # type='SGD',
+    # lr=1e-2,
+    # momentum=0.9,
+    # weight_decay=0.0005,
+    type='AdamW',
+    lr=1e-4,
+    weight_decay=0.0005
 )
 #
 # # optimizer
@@ -214,8 +213,8 @@ lr_config = dict(
     warmup_iters=2000,
     warmup_ratio=0.1,
     # gamma=0.5,
-    step=[50, 80],
-    # step=[30, 50]
+    # step=[50, 80],
+    step=[30, 45]
 )
 
 # lr_config = dict(
@@ -228,7 +227,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=100)
+runner = dict(type='EpochBasedRunner', max_epochs=60)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None

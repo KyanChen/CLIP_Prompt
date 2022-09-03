@@ -49,15 +49,15 @@ model = dict(
     attribute_index_file=attribute_index_file,
     need_train_names=[
         'prompt_learner',
-        'image_encoder',
-        # 'text_encoder',
+        # 'image_encoder',
+        'text_encoder',
         'bbox_head', 'logit_scale'
     ],
     img_proj_head=False,
     text_proj_head=False,
     backbone=dict(
         type='CLIPModel',
-        backbone_name='ViT-B/16',  # RN101, RN50x4， ViT-B/16, ViT-L/14@336px, ViT-B/16
+        backbone_name='RN50x64',  # RN101, RN50x4，RN50x64, ViT-B/16, ViT-L/14@336px, ViT-B/16
         with_attn=True,
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
@@ -133,7 +133,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 116
+samples_per_gpu = 256
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -181,8 +181,8 @@ optimizer = dict(
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_learner': {},
-               'image_encoder': {'lr_mult': 0.1},
-               # 'text_encoder': {'lr_mult': 0.1},
+               # 'image_encoder': {'lr_mult': 0.1},
+               'text_encoder': {'lr_mult': 0.1},
                'bbox_head': {}, 'logit_scale': {}
                },
     # type='SGD',
