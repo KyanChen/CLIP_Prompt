@@ -57,7 +57,7 @@ model = dict(
     text_proj_head=False,
     backbone=dict(
         type='CLIPModel',
-        backbone_name='RN50x16',  # RN101, RN50x4，RN50x64, ViT-B/16, ViT-L/14@336px, ViT-B/16
+        backbone_name='ViT-B/16',  # RN101, RN50x4，RN50x64, ViT-B/16, ViT-L/14@336px, ViT-B/16
         with_attn=True,
         # backbone_name='ViT-B/16',
         load_ckpt_from=None,
@@ -166,7 +166,7 @@ data = dict(
         # ),
         attribute_index_file=dict(
             file=data_root+'/VAW/common2rare_att2id.json',
-            att_group='rare'
+            att_group='common'
         ),
         test_mode=True,
         open_category=False,
