@@ -1,5 +1,5 @@
 import torch
-from mmcv.runner import BaseModule
+from mmcv.runner import BaseModule, get_dist_info
 
 from ..builder import BACKBONES
 
@@ -23,12 +23,15 @@ class CLIPModel(BaseModule):
             raise KeyError(f'invalid backbone_name {backbone_name} for CLIPModel')
 
         assert precision in ["fp16", "fp32", "amp"]
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
+        rank, world_size = get_dist_info()
         url = _MODELS[backbone_name]
         if load_ckpt_from is None:
             load_ckpt_from = _download(url)
         try:
+            if rank == 0:
+                print(f'load_ckpt_from {load_ckpt_from}')
             # loading JIT archive
             model = torch.jit.load(load_ckpt_from, map_location="cpu").eval()
             new_dict = model.state_dict()
@@ -39,6 +42,17 @@ class CLIPModel(BaseModule):
                 k = k.replace('image_encoder', 'visual')
                 k = k.replace('text_encoder.', '')
                 new_dict[k] = v
+
+            load_ckpt_from = _download(url)
+            model = torch.jit.load(load_ckpt_from, map_location="cpu").eval()
+            dict_tmp = model.state_dict()
+            for k, v in dict_tmp.items():
+                if k in new_dict.keys():
+                    continue
+                else:
+                    if rank == 0:
+                        print(f'load state dict: {k} from origin dict')
+                    new_dict[k] = v
         # import pdb
         # pdb.set_trace()
         self.model = build_model(new_dict, with_attn, out_indices=out_indices)
