@@ -271,6 +271,8 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                       dataset_type,
                       **kwargs
                       ):
+        import pdb
+        pdb.set_trace()
         if self.with_clip_img_backbone:
             image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
         else:
