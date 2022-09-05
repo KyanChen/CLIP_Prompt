@@ -39,7 +39,7 @@ model = dict(
         'img_neck',
         'rpn_head',
         'att_head',
-        # 'prompt_learner',
+        'prompt_learner',
         'logit_scale', 'head',
         'kd_img_align', 'kd_logit_scale',
     ],
@@ -366,7 +366,7 @@ optimizer = dict(
         'img_neck': {},
         'rpn_head': {},
         'att_head': {},
-        # 'prompt_learner': {},
+        'prompt_learner': {},
         'logit_scale': {}, 'head': {},
         'kd_img_align': {}, 'kd_logit_scale': {}
         },
