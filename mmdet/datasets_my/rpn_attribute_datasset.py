@@ -121,6 +121,7 @@ class RPNAttributeDataset(Dataset):
         print('data len: ', len(self))
         self.test_rpn = test_rpn
         self.error_list = set()
+        self.img_ids = self.img_ids[:100]
 
     def read_data_coco(self, pattern):
         json_file = 'instances_train2017' if pattern == 'train' else 'instances_val2017'
