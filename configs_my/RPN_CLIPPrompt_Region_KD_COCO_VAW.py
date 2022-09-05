@@ -301,7 +301,8 @@ data = dict(
     train=dict(
         type=dataset_type,
         data_root=data_root,
-        pattern='train',
+        dataset_split='train',
+        attribute_index_file=attribute_index_file,
         test_mode=False,
         pipeline=train_pipeline,
         kd_pipeline=kd_pipeline,
@@ -311,7 +312,8 @@ data = dict(
         samples_per_gpu=samples_per_gpu,
         type=dataset_type,
         data_root=data_root,
-        pattern='test',
+        dataset_split='test',
+        attribute_index_file=attribute_index_file,
         test_mode=True,
         pipeline=test_pipeline
     ),
@@ -319,7 +321,15 @@ data = dict(
         samples_per_gpu=12,
         type=dataset_type,
         data_root=data_root,
-        pattern='test',
+        dataset_split='test',
+        # attribute_index_file=dict(
+        #     file=data_root+'/VAW/common2common_att2id.json',
+        #     att_group='common1'
+        # ),
+        attribute_index_file=dict(
+            file=data_root + '/VAW/common2rare_att2id.json',
+            att_group='common'
+        ),
         test_mode=True,
         # pipeline=test_pipeline
         test_rpn=True,
