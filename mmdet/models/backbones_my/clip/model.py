@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from einops import rearrange
+from mmcv.runner import get_dist_info
 from torch import nn
 
 
@@ -464,20 +465,19 @@ def build_model(state_dict: dict, with_attn=True, out_indices=(1, 2, 3, 4)):
         context_length, vocab_size, transformer_width, transformer_heads, transformer_layers, with_attn,
         out_indices
     )
-    import pdb
-    pdb.set_trace()
-    for key in ["input_resolution", "context_length", "vocab_size"]:
-        if key in state_dict:
-            del state_dict[key]
-    if not with_attn:
-        visual_attnpool_key = [x for x in state_dict.keys() if 'visual.attnpool' in x]
-        print('delete visual attnpool key: ', visual_attnpool_key)
-        for key in visual_attnpool_key:
-            del state_dict[key]
+    # for key in ["input_resolution", "context_length", "vocab_size"]:
+    #     if key in state_dict:
+    #         del state_dict[key]
+    # if not with_attn:
+    #     visual_attnpool_key = [x for x in state_dict.keys() if 'visual.attnpool' in x]
+    #     print('delete visual attnpool key: ', visual_attnpool_key)
+    #     for key in visual_attnpool_key:
+    #         del state_dict[key]
     convert_weights(model)
     missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
-    print('load clip model: ')
-    print('missing_keys: ', missing_keys)
-    print('unexpected_keys: ', unexpected_keys)
-    print()
+    import pdb
+    pdb.set_trace()
+    rank, world_size = get_dist_info()
+    if rank == 0:
+        print(f'load clip model missing_keys:{missing_keys} \t unexpected_keys: {unexpected_keys}')
     return model.eval()

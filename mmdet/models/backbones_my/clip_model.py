@@ -31,7 +31,7 @@ class CLIPModel(BaseModule):
             load_ckpt_from = _download(url)
         try:
             if rank == 0:
-                print(f'load_ckpt_from {load_ckpt_from}')
+                print(f'load clip ckpt from {load_ckpt_from}')
             # loading JIT archive
             model = torch.jit.load(load_ckpt_from, map_location="cpu").eval()
             new_dict = model.state_dict()
