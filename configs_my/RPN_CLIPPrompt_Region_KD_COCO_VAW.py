@@ -65,7 +65,7 @@ model = dict(
         with_attn=False,
         out_indices=[1, 2, 3, 4],
         # backbone_name='ViT-B/16',
-        load_ckpt_from='results/EXP20220903_0/epoch_40.pth',
+        # load_ckpt_from='results/EXP20220903_0/epoch_40.pth',
         precision='fp32',
     ),
     img_neck=dict(
