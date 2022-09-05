@@ -331,9 +331,9 @@ data = dict(
             att_group='common'
         ),
         test_mode=True,
-        # pipeline=test_pipeline
-        test_rpn=False,
-        pipeline=test_rpn_pipeline
+        pipeline=test_pipeline
+        # test_rpn=True,
+        # pipeline=test_rpn_pipeline
     )
 )
 # #

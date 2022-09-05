@@ -46,6 +46,7 @@ class RPNAttributeDataset(Dataset):
         assert dataset_split in ['train', 'val', 'test']
         self.pattern = dataset_split
         self.test_mode = test_mode
+        self.test_rpn = test_rpn
         self.pipeline = Compose(pipeline)
 
         if kd_pipeline:
@@ -120,7 +121,6 @@ class RPNAttributeDataset(Dataset):
             self.flag_dataset = np.array(flag_dataset, dtype=np.int)
 
         print('data len: ', len(self))
-        self.test_rpn = test_rpn
         self.error_list = set()
 
     def read_data_coco(self, pattern):
