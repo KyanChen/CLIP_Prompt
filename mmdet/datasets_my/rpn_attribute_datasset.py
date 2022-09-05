@@ -254,9 +254,13 @@ class RPNAttributeDataset(Dataset):
             negative_attributes = instance.get("negative_attributes", [])
             labels = np.ones(len(self.att2id.keys())) * 2
             for att in positive_attributes:
-                labels[self.att2id[att]] = 1
+                att_id = self.att2id.get(att, None)
+                if att_id is not None:
+                    labels[att_id] = 1
             for att in negative_attributes:
-                labels[self.att2id[att]] = 0
+                att_id = self.att2id.get(att, None)
+                if att_id is not None:
+                    labels[att_id] = 0
             attr_label_list.append(labels)
 
         gt_bboxes = np.array(bbox_list, dtype=np.float32)
@@ -391,9 +395,13 @@ class RPNAttributeDataset(Dataset):
         negative_attributes = results["negative_attributes"]
         labels = np.ones(len(self.classname_maps.keys())) * 2
         for att in positive_attributes:
-            labels[self.classname_maps[att]] = 1
+            att_id = self.att2id.get(att, None)
+            if att_id is not None:
+                labels[att_id] = 1
         for att in negative_attributes:
-            labels[self.classname_maps[att]] = 0
+            att_id = self.att2id.get(att, None)
+            if att_id is not None:
+                labels[att_id] = 0
 
         results['gt_labels'] = labels.astype(np.int)
 
@@ -453,9 +461,13 @@ class RPNAttributeDataset(Dataset):
                 labels = np.ones(len(self.att2id.keys())) * 2
 
                 for att in positive_attributes:
-                    labels[self.att2id[att]] = 1
+                    att_id = self.att2id.get(att, None)
+                    if att_id is not None:
+                        labels[att_id] = 1
                 for att in negative_attributes:
-                    labels[self.att2id[att]] = 0
+                    att_id = self.att2id.get(att, None)
+                    if att_id is not None:
+                        labels[att_id] = 0
 
                 attr_label_list.append(labels)
         gt_labels = np.stack(attr_label_list, axis=0)
