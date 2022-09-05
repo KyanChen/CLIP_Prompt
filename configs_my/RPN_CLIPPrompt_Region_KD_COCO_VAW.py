@@ -26,17 +26,20 @@ mp_start_method = 'fork'
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 data_root = '/data/kyanchen/prompt/data'
-# data_root = '/data/kyanchen/Data'
+attribute_index_file = dict(
+    file=data_root+'/VAW/common2rare_att2id.json',
+    att_group='common'
+)
 model = dict(
     type='RPN_CLIP_Prompter_Region',
-    att2id_file=data_root+'/VAW/attribute_index.json',
-    rpn_all=False,
+    attribute_index_file=attribute_index_file,
+    rpn_all=True,  # RPN是否包含属性预测的内容
     need_train_names=[
         # 'img_backbone',
         'img_neck',
         'rpn_head',
         'att_head',
-        'prompt_learner',
+        # 'prompt_learner',
         'logit_scale', 'head',
         'kd_img_align', 'kd_logit_scale',
     ],
@@ -62,7 +65,7 @@ model = dict(
         with_attn=False,
         out_indices=[1, 2, 3, 4],
         # backbone_name='ViT-B/16',
-        load_ckpt_from=None,
+        load_ckpt_from='results/EXP20220903_0/epoch_40.pth',
         precision='fp32',
     ),
     img_neck=dict(
@@ -112,13 +115,27 @@ model = dict(
             global_pool=False,
         )
     ),
+    # prompt_learner=dict(
+    #     type='PromptLearner',
+    #     n_ctx=16,
+    #     ctx_init='',
+    #     c_specific=False,
+    #     class_token_position='middle',
+    #     load_ckpt_from='../pretrain/t_model.pth'
+    # ),
     prompt_learner=dict(
-        type='PromptLearner',
-        n_ctx=16,
-        ctx_init='',
-        c_specific=False,
-        class_token_position='middle',
-        load_ckpt_from='../pretrain/t_model.pth'
+        type='PromptAttributes',
+        prompt_config=dict(
+            n_prompt=30,
+            is_att_specific=False,
+            att_position='mid',
+            with_att_type=True,
+            context_length=77,
+            n_prompt_type=None,
+            generated_context=False,
+            pos_emb=False,
+        ),
+        load_ckpt_from='results/EXP20220903_0/epoch_40.pth'
     ),
     text_encoder=dict(
         type='CLIPModel',
@@ -126,7 +143,7 @@ model = dict(
         with_attn=False,
         out_indices=[1, 2, 3, 4],
         # backbone_name='ViT-B/16',
-        load_ckpt_from=None,
+        load_ckpt_from='results/EXP20220903_0/epoch_40.pth',
         precision='fp32',
     ),
     kd_model=dict(
@@ -134,7 +151,7 @@ model = dict(
         backbone_name='RN50',
         with_attn=True,
         out_indices=[],
-        load_ckpt_from='../pretrain/t_model.pth',
+        load_ckpt_from='results/EXP20220903_0/epoch_40.pth',
         precision='fp32',
     ),
     # text_header=dict(
@@ -231,8 +248,8 @@ train_pipeline = [
 
 kd_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
-    dict(type='ScaleCrop', scale_range=[0.0, 0.4]),
-    dict(type='RandomCrop', crop_size=[0.7, 0.7], crop_type='relative_range'),
+    dict(type='ScaleCrop', scale_range=[0.0, 0.3]),
+    dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=(224, 224), keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg_kd),
@@ -274,10 +291,10 @@ test_rpn_pipeline = [
 ]
 
 # find_unused_parameters = True
-samples_per_gpu = 28
+samples_per_gpu = 64
 data = dict(
     samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=4,
+    workers_per_gpu=8,
     # samples_per_gpu=4,
     # workers_per_gpu=0,
     persistent_workers=True,
@@ -296,7 +313,8 @@ data = dict(
         data_root=data_root,
         pattern='test',
         test_mode=True,
-        pipeline=test_pipeline),
+        pipeline=test_pipeline
+    ),
     test=dict(
         samples_per_gpu=12,
         type=dataset_type,
@@ -338,12 +356,12 @@ optimizer = dict(
         'img_neck': {},
         'rpn_head': {},
         'att_head': {},
-        'prompt_learner': {},
+        # 'prompt_learner': {},
         'logit_scale': {}, 'head': {},
         'kd_img_align': {}, 'kd_logit_scale': {}
         },
     type='AdamW',
-    lr=5e-4,
+    lr=1e-4,
     weight_decay=1e-3
 )
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
@@ -354,7 +372,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=2000,
     warmup_ratio=0.1,
-    step=[30, 40])
+    step=[35, 50])
 
 # lr_config = dict(
 #     policy='CosineAnnealing',
@@ -366,9 +384,9 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=50)
+runner = dict(type='EpochBasedRunner', max_epochs=60)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None
-resume_from = 'results/EXP20220818_0/latest.pth'
-# resume_from = None
+# resume_from = 'results/EXP20220818_0/latest.pth'
+resume_from = None

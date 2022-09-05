@@ -16,8 +16,8 @@ import torch.distributed as dist
 @DETECTORS.register_module()
 class RPN_CLIP_Prompter_Region(BaseModule):
     def __init__(self,
-                 att2id_file,
-                 rpn_all,
+                 attribute_index_file,
+                 rpn_all,  # 包含属性预测分支
                  need_train_names,
                  noneed_train_names,
                  img_backbone,
@@ -37,8 +37,29 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
 
-        att2id = json.load(open(att2id_file, 'r'))
-        classnames = list(att2id.keys())
+        if isinstance(attribute_index_file, dict):
+            file = attribute_index_file['file']
+            att2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['att_group']
+            if 'common2common' in file:
+                if att_group in ['common1', 'common2']:
+                    self.att2id = att2id[att_group]
+                elif att_group == 'all':
+                    self.att2id = {}
+                    self.att2id.update(att2id['common1'])
+                    self.att2id.update(att2id['common2'])
+            elif 'common2rare' in file:
+                if att_group in ['common', 'rare']:
+                    self.att2id = att2id[att_group]
+                elif att_group == 'all':
+                    self.att2id = {}
+                    self.att2id.update(att2id['common'])
+                    self.att2id.update(att2id['rare'])
+        else:
+            self.att2id = json.load(open(attribute_index_file, 'r'))
+        self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
+        atts = list(self.att2id.keys())
+
         self.rpn_all = rpn_all
         if kd_model:
             model_tmp = build_backbone(kd_model).model
@@ -79,9 +100,9 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             )
             self.logit_scale = nn.Parameter(clip_model.logit_scale.data)
 
-        prompt_learner.update(dict(classnames=classnames, clip_model=clip_model))
+        prompt_learner.update(dict(attribute_list=atts, clip_model=clip_model))
         self.prompt_learner = build_backbone(prompt_learner)
-        self.tokenized_prompts = self.prompt_learner.tokenized_prompts
+        # self.tokenized_prompts = self.prompt_learner.tokenized_prompts
 
         if img_neck is not None:
             load_ckpt_from = img_neck.pop('load_ckpt_from', None)
@@ -108,6 +129,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             rpn_head_.update(train_cfg=rpn_train_cfg, test_cfg=test_cfg.rpn)
             self.rpn_head = build_head(rpn_head_)
 
+        head['attribute_index_file'] = attribute_index_file
         self.head = build_head(head)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
@@ -275,9 +297,11 @@ class RPN_CLIP_Prompter_Region(BaseModule):
 
             boxes_feats, bbox_feat_maps = self.att_head(img_att, boxes_att)
 
-            prompts = self.prompt_learner()  # 620x77x512
-            tokenized_prompts = self.tokenized_prompts
-            text_features = self.text_encoder(prompts, tokenized_prompts)
+            # prompts = self.prompt_learner()  # 620x77x512
+            # tokenized_prompts = self.tokenized_prompts
+            # text_features = self.text_encoder(prompts, tokenized_prompts)
+            prompt_context, eot_index = self.prompt_learner()  # 620x77x512
+            text_features = self.text_encoder(prompt_context, eot_index)
 
             boxes_feats = boxes_feats / boxes_feats.norm(dim=-1, keepdim=True)
             text_features = text_features / text_features.norm(dim=-1, keepdim=True)
@@ -353,9 +377,11 @@ class RPN_CLIP_Prompter_Region(BaseModule):
 
         boxes_feats, bbox_feat_maps = self.att_head(img_f_maps, proposal_list)
 
-        prompts = self.prompt_learner()  # 620x77x512
-        tokenized_prompts = self.tokenized_prompts
-        text_features = self.text_encoder(prompts, tokenized_prompts)
+        # prompts = self.prompt_learner()  # 620x77x512
+        # tokenized_prompts = self.tokenized_prompts
+        # text_features = self.text_encoder(prompts, tokenized_prompts)
+        prompt_context, eot_index = self.prompt_learner()  # 620x77x512
+        text_features = self.text_encoder(prompt_context, eot_index)
 
         boxes_feats = boxes_feats / boxes_feats.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
@@ -392,9 +418,8 @@ class RPN_CLIP_Prompter_Region(BaseModule):
 
         boxes_feats, bbox_feat_maps = self.att_head(img_f_maps, gt_bboxes)
 
-        prompts = self.prompt_learner()  # 620x77x512
-        tokenized_prompts = self.tokenized_prompts
-        text_features = self.text_encoder(prompts, tokenized_prompts)
+        prompt_context, eot_index = self.prompt_learner()  # 620x77x512
+        text_features = self.text_encoder(prompt_context, eot_index)
 
         boxes_feats = boxes_feats / boxes_feats.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
