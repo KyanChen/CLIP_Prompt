@@ -536,10 +536,11 @@ class RPNAttributeDataset(Dataset):
         preds = torch.from_numpy(results)
         gts = self.get_img_instance_labels()
         gts = torch.from_numpy(gts)
-        assert len(preds) == len(gts)
+        assert preds.shape[-1] == gts.shape[-1]
 
         output = cal_metrics(self.data_root + '/VAW',
                              preds, gts,
+                             fpath_attribute_index=self.attribute_index_file,
                              return_all=True,
                              return_evaluator=per_class_out_file,
                              is_logit=is_logit)
