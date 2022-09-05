@@ -59,6 +59,7 @@ class RPNAttributeDataset(Dataset):
             self.id2images = id2images_vaw
             self.id2instances = id2instances_vaw
             self.img_ids = list(self.id2images.keys())
+            self.img_ids = self.img_ids[:100]
         else:
             id2images_coco, id2instances_coco = self.read_data_coco(dataset_split)
             id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
@@ -72,7 +73,6 @@ class RPNAttributeDataset(Dataset):
 
             # filter images too small and containing no annotations
             self.img_ids = self._filter_imgs()
-            self.img_ids = self.img_ids[:100]
             self._set_group_flag()
 
         self.attribute_index_file = attribute_index_file
