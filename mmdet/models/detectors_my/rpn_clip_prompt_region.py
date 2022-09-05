@@ -341,8 +341,8 @@ class RPN_CLIP_Prompter_Region(BaseModule):
 
             logit_scale = self.logit_scale.exp()
             logits = logit_scale * boxes_feats @ text_features.t()  # 2x620
-            import pdb
-            pdb.set_trace()
+            # import pdb
+            # pdb.set_trace()
             labels_att = torch.cat(labels_att, dim=0)
             att_losses = self.head.forward_train(logits, img_metas_att, labels_att, **extra_info)
         else:

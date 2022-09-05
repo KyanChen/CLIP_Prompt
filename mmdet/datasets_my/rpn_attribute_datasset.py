@@ -34,7 +34,8 @@ class RPNAttributeDataset(Dataset):
     def __init__(self,
                  data_root,
                  pipeline,
-                 pattern,
+                 dataset_split='train',
+                 attribute_index_file=None,
                  dataset_balance=False,
                  kd_pipeline=None,
                  test_rpn=False,
@@ -42,8 +43,8 @@ class RPNAttributeDataset(Dataset):
                  file_client_args=dict(backend='disk')
                  ):
         super(RPNAttributeDataset, self).__init__()
-        assert pattern in ['train', 'val', 'test']
-        self.pattern = pattern
+        assert dataset_split in ['train', 'val', 'test']
+        self.pattern = dataset_split
         self.test_mode = test_mode
         self.pipeline = Compose(pipeline)
 
@@ -54,13 +55,13 @@ class RPNAttributeDataset(Dataset):
 
         self.data_root = data_root
         if test_mode:
-            id2images_vaw, id2instances_vaw = self.read_data_vaw(pattern)
+            id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
             self.id2images = id2images_vaw
             self.id2instances = id2instances_vaw
             self.img_ids = list(self.id2images.keys())
         else:
-            id2images_coco, id2instances_coco = self.read_data_coco(pattern)
-            id2images_vaw, id2instances_vaw = self.read_data_vaw(pattern)
+            id2images_coco, id2instances_coco = self.read_data_coco(dataset_split)
+            id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
             self.id2images = {}
             self.id2images.update(id2images_coco)
             self.id2images.update(id2images_vaw)
@@ -73,8 +74,28 @@ class RPNAttributeDataset(Dataset):
             self.img_ids = self._filter_imgs()
             self._set_group_flag()
 
-        attribute_index_file = os.path.join(self.data_root, "VAW/attribute_index.json")
-        self.att2id = json.load(open(attribute_index_file, 'r'))
+        self.attribute_index_file = attribute_index_file
+        if isinstance(attribute_index_file, dict):
+            file = attribute_index_file['file']
+            att2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['att_group']
+            if 'common2common' in file:
+                if att_group in ['common1', 'common2']:
+                    self.att2id = att2id[att_group]
+                elif att_group == 'all':
+                    self.att2id = {}
+                    self.att2id.update(att2id['common1'])
+                    self.att2id.update(att2id['common2'])
+            elif 'common2rare' in file:
+                if att_group in ['common', 'rare']:
+                    self.att2id = att2id[att_group]
+                elif att_group == 'all':
+                    self.att2id = {}
+                    self.att2id.update(att2id['common'])
+                    self.att2id.update(att2id['rare'])
+        else:
+            self.att2id = json.load(open(attribute_index_file, 'r'))
+        self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
 
         img_ids_per_dataset = {}
         for x in self.img_ids:
