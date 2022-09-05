@@ -59,9 +59,11 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             self.att2id = json.load(open(attribute_index_file, 'r'))
         self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
         atts = list(self.att2id.keys())
-
+        rank, world_size = get_dist_info()
         self.rpn_all = rpn_all
         if kd_model:
+            if rank == 0:
+                print('build kd img backbone')
             model_tmp = build_backbone(kd_model).model
             self.kd_model = model_tmp.visual.eval()
             self.kd_logit_scale = nn.Parameter(model_tmp.logit_scale.data)
@@ -76,6 +78,8 @@ class RPN_CLIP_Prompter_Region(BaseModule):
 
         self.with_clip_img_backbone = False
         if img_backbone['type'] == 'CLIPModel':
+            if rank == 0:
+                print('build img backbone')
             clip_model = build_backbone(img_backbone).model
             self.img_backbone = clip_model.visual.eval()
             self.with_clip_img_backbone = True
@@ -96,18 +100,25 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                 print()
 
         if text_encoder['type'] == 'CLIPModel':
+            if rank == 0:
+                print('build text backbone')
             clip_model = build_backbone(text_encoder).model
             self.text_encoder = build_backbone(
                 dict(type='TextEncoder', clip_model=clip_model)
             )
             self.logit_scale = nn.Parameter(clip_model.logit_scale.data)
 
+        clip_model = build_backbone(text_encoder).model
         prompt_learner.update(dict(attribute_list=atts, clip_model=clip_model))
+        if rank == 0:
+            print('build prompt_learner')
         self.prompt_learner = build_backbone(prompt_learner)
         # self.tokenized_prompts = self.prompt_learner.tokenized_prompts
 
         if img_neck is not None:
             load_ckpt_from = img_neck.pop('load_ckpt_from', None)
+            if rank == 0:
+                print('build neck')
             self.img_neck = build_neck(img_neck)
             if load_ckpt_from is not None:
                 state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
@@ -115,7 +126,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                 for k, v in state_dict.items():
                     k = k.replace('neck.', '')
                     new_dict[k] = v
-                rank, world_size = get_dist_info()
+
                 missing_keys, unexpected_keys = self.img_neck.load_state_dict(new_dict, strict=False)
                 if rank == 0:
                     print('load img_neck: ')
@@ -124,15 +135,19 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                     print()
 
         if att_head is not None:
+            if rank == 0:
+                print('build attribute head')
             self.att_head = build_head(att_head)
 
         if rpn_head is not None:
             rpn_train_cfg = train_cfg.rpn if train_cfg is not None else None
             rpn_head_ = rpn_head.copy()
             rpn_head_.update(train_cfg=rpn_train_cfg, test_cfg=test_cfg.rpn)
+            print('build rpn head')
             self.rpn_head = build_head(rpn_head_)
 
         head['attribute_index_file'] = attribute_index_file
+        print('build head')
         self.head = build_head(head)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
