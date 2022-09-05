@@ -118,6 +118,7 @@ class RPNAttributeDataset(Dataset):
             dataset_types = {'coco': 0, 'vaw': 1}
             flag_dataset = [dataset_types[x] for x in flag_dataset]
             self.flag_dataset = np.array(flag_dataset, dtype=np.int)
+            self.img_ids.pop(153703)
 
         print('data len: ', len(self))
         self.error_list = set()
