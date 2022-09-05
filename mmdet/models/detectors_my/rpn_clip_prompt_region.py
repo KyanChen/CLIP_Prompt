@@ -107,11 +107,10 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                 dict(type='TextEncoder', clip_model=clip_model)
             )
             self.logit_scale = nn.Parameter(clip_model.logit_scale.data)
-
-        clip_model = build_backbone(text_encoder).model
-        prompt_learner.update(dict(attribute_list=atts, clip_model=clip_model))
         if rank == 0:
             print('build prompt_learner')
+        clip_model = build_backbone(text_encoder).model
+        prompt_learner.update(dict(attribute_list=atts, clip_model=clip_model))
         self.prompt_learner = build_backbone(prompt_learner)
         # self.tokenized_prompts = self.prompt_learner.tokenized_prompts
 
