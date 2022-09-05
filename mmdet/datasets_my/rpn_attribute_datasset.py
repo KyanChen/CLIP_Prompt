@@ -54,6 +54,8 @@ class RPNAttributeDataset(Dataset):
             self.kd_pipeline = kd_pipeline
 
         self.data_root = data_root
+        import pdb
+        pdb.set_trace()
         if test_mode:
             id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
             self.id2images = id2images_vaw
