@@ -23,7 +23,8 @@ class CLIPModel(BaseModule):
             raise KeyError(f'invalid backbone_name {backbone_name} for CLIPModel')
 
         assert precision in ["fp16", "fp32", "amp"]
-
+        import pdb
+        pdb.set_trace()
         url = _MODELS[backbone_name]
         if load_ckpt_from is None:
             load_ckpt_from = _download(url)

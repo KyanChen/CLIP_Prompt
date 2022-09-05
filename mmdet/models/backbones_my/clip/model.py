@@ -464,7 +464,8 @@ def build_model(state_dict: dict, with_attn=True, out_indices=(1, 2, 3, 4)):
         context_length, vocab_size, transformer_width, transformer_heads, transformer_layers, with_attn,
         out_indices
     )
-
+    import pdb
+    pdb.set_trace()
     for key in ["input_resolution", "context_length", "vocab_size"]:
         if key in state_dict:
             del state_dict[key]
