@@ -526,7 +526,8 @@ class RPNAttributeDataset(Dataset):
                  ):
         if self.test_rpn:
             return self.evaluate_rpn(results)
-
+        import pdb
+        pdb.set_trace()
         if isinstance(results[0], type(np.array(0))):
             results = np.concatenate(results, axis=0)
         else:
