@@ -475,8 +475,6 @@ def build_model(state_dict: dict, with_attn=True, out_indices=(1, 2, 3, 4)):
     #         del state_dict[key]
     convert_weights(model)
     missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
-    import pdb
-    pdb.set_trace()
     rank, world_size = get_dist_info()
     if rank == 0:
         print(f'load clip model missing_keys:{missing_keys} \t unexpected_keys: {unexpected_keys}')

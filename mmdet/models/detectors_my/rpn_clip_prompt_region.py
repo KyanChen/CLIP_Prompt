@@ -67,15 +67,16 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             self.kd_logit_scale = nn.Parameter(model_tmp.logit_scale.data)
             self.kd_img_align = nn.Linear(1024, 1024)
 
-        if 'CLIPModel' in [img_backbone['type'], text_encoder['type']]:
-            if img_backbone['type'] == 'CLIPModel':
-                clip_config = img_backbone
-            else:
-                clip_config = text_encoder
-            clip_model = build_backbone(clip_config).model
+        # if 'CLIPModel' in [img_backbone['type'], text_encoder['type']]:
+        #     if img_backbone['type'] == 'CLIPModel':
+        #         clip_config = img_backbone
+        #     else:
+        #         clip_config = text_encoder
+        #     clip_model = build_backbone(clip_config).model
 
         self.with_clip_img_backbone = False
         if img_backbone['type'] == 'CLIPModel':
+            clip_model = build_backbone(img_backbone).model
             self.img_backbone = clip_model.visual.eval()
             self.with_clip_img_backbone = True
         else:
@@ -95,6 +96,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                 print()
 
         if text_encoder['type'] == 'CLIPModel':
+            clip_model = build_backbone(text_encoder).model
             self.text_encoder = build_backbone(
                 dict(type='TextEncoder', clip_model=clip_model)
             )
@@ -113,12 +115,13 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                 for k, v in state_dict.items():
                     k = k.replace('neck.', '')
                     new_dict[k] = v
-
+                rank, world_size = get_dist_info()
                 missing_keys, unexpected_keys = self.img_neck.load_state_dict(new_dict, strict=False)
-                print('load img_neck: ')
-                print('missing_keys: ', missing_keys)
-                print('unexpected_keys: ', unexpected_keys)
-                print()
+                if rank == 0:
+                    print('load img_neck: ')
+                    print('missing_keys: ', missing_keys)
+                    print('unexpected_keys: ', unexpected_keys)
+                    print()
 
         if att_head is not None:
             self.att_head = build_head(att_head)

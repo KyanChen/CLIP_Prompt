@@ -206,7 +206,7 @@ class PromptAttributes(BaseModule):
             print(f"Number of all-shared prompt (tokens): {n_prompt_vec}")
             print(f"Number of type-shared prompt (tokens): {n_prompt_type}")
             print('generated context: ', self.generated_context)
-            print('pos emb: ', pos_emb)
+            print('is pos emb: ', pos_emb)
             print('att position: ', att_position)
             print('with att type: ', self.with_att_type)
 
@@ -250,8 +250,10 @@ class PromptAttributes(BaseModule):
 
         if load_ckpt_from is not None:
             state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
-            ctx_data = state_dict['prompt_learner.ctx']
-            self.ctx.data.copy_(ctx_data)
+            prompt_vectors = state_dict['prompt_learner.prompt_vectors']
+            if rank == 0:
+                print(f'load prompt vectors from {load_ckpt_from}')
+            self.prompt_vectors.data.copy_(prompt_vectors)
 
         # prompt_context, eot_index = self.rearrange_context(**prompt_config)
         # self.register_buffer("prompt_context", prompt_context)  # SOS
