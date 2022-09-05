@@ -332,7 +332,7 @@ data = dict(
         ),
         test_mode=True,
         # pipeline=test_pipeline
-        test_rpn=True,
+        test_rpn=False,
         pipeline=test_rpn_pipeline
     )
 )
