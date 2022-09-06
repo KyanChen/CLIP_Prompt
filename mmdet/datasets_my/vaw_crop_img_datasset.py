@@ -280,6 +280,8 @@ class VAWCropDataset(Dataset):
                  per_class_out_file=None,
                  is_logit=True
                  ):
+        import pdb
+        pdb.set_trace()
         results = np.array(results)
         if self.test_instance_datasets:
             np.save('x.npy', results)
