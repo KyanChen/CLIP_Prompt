@@ -178,8 +178,6 @@ class VAWCropDataset(Dataset):
         else:
             try:
                 labels = np.ones(len(self.att2id.keys())) * 2
-                import pdb
-                pdb.set_trace()
                 if hasattr(self, 'pred_labels'):
                     thresh_low = 0.1
                     thresh_high = 0.9
