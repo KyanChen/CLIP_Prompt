@@ -188,6 +188,7 @@ class VAWCropDataset(Dataset):
             results = self.pipeline(results)
         except Exception as e:
             print(f'idx: {idx}')
+            print(f'img_id: {img_id}')
         # import pdb
         # pdb.set_trace()
         return results
