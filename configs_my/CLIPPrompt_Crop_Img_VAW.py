@@ -166,7 +166,7 @@ data = dict(
         samples_per_gpu=samples_per_gpu,
         type=dataset_type,
         data_root=data_root,
-        dataset_split='test',
+        dataset_split='train',
         # attribute_index_file=dict(
         #     file=data_root+'/VAW/common2common_att2id.json',
         #     att_group='common1'
@@ -178,8 +178,8 @@ data = dict(
         test_mode=True,
         open_category=False,
         dataset_names='vaw',
-        save_label=False,
-        load_label='EXP20220903_0_epoch_20.npy',
+        save_label='EXP20220903_0_epoch_20_vaw_train_rare.npy',
+        load_label=None,
         pipeline=test_pipeline
     )
 )
