@@ -283,15 +283,13 @@ class VAWCropDataset(Dataset):
         import pdb
         pdb.set_trace()
         results = np.array(results)
-        if self.test_instance_datasets:
-            np.save('x.npy', results)
-            return None
         preds = torch.from_numpy(results)
+        if self.test_instance_datasets:
+            torch.save('x.pkl', preds)
+            return None
         gts = self.get_labels()
         gts = torch.from_numpy(gts)
         assert preds.shape[-1] == gts.shape[-1]
-        # import pdb
-        # pdb.set_trace()
 
         output = cal_metrics(self.data_root + '/VAW',
                              preds, gts,
