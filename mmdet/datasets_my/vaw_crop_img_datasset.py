@@ -63,7 +63,7 @@ class VAWCropDataset(Dataset):
                         for item in v:
                             item['img_id'] = k
                             self.instances.append(item)
-                    # self.instances.pop(74197)
+                    self.instances.pop(13)
                     # self.instances.pop(171246)
                     # self.instances.pop(171245)
                 else:
