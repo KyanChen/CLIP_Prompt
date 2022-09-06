@@ -60,7 +60,7 @@ class VAWCropDataset(Dataset):
                 id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
                 self.id2images.update(id2images_vaw)
                 self.id2instances.update(id2instances_vaw)
-                self.id2instances.pop('vaw_713545')
+                self.id2instances.pop('vaw_713545', None)
 
             self.instances = []
             for k, v in self.id2instances.items():
