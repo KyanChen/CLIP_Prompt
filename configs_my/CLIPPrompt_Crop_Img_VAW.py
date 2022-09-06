@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=20)
+checkpoint_config = dict(interval=1)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -133,7 +133,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 32
+samples_per_gpu = 256
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -141,7 +141,7 @@ data = dict(
     train=dict(
         type=dataset_type,
         data_root=data_root,
-        dataset_split='test',
+        dataset_split='train',
         # attribute_index_file=attribute_index_file,
         attribute_index_file=dict(
             file=data_root+'/VAW/common2rare_att2id.json',
@@ -149,7 +149,7 @@ data = dict(
         ),
         dataset_names='vaw',
         save_label=False,
-        load_label='EXP20220903_0_epoch_20.npy',
+        load_label='EXP20220903_0_epoch_20_vaw_train_rare.npy',
         test_mode=False,
         open_category=False,
         pipeline=train_pipeline),
@@ -200,7 +200,7 @@ optimizer = dict(
     # momentum=0.9,
     # weight_decay=0.0005,
     type='AdamW',
-    lr=1e-4,
+    lr=1e-5,
     weight_decay=0.0005
 )
 #
@@ -237,8 +237,8 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=60)
-evaluation = dict(interval=5, metric='mAP')
+runner = dict(type='EpochBasedRunner', max_epochs=5)
+evaluation = dict(interval=1, metric='mAP')
 
-load_from = None
+load_from = 'results/EXP20220903_0/epoch_20.pth'
 resume_from = None
