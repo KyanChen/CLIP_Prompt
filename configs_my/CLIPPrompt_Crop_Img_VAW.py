@@ -133,11 +133,11 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 2
+samples_per_gpu = 32
 data = dict(
     samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=0,
-    persistent_workers=False,
+    workers_per_gpu=8,
+    persistent_workers=True,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -170,7 +170,7 @@ data = dict(
         ),
         test_mode=True,
         open_category=False,
-        test_all_instances=True,
+        test_instance_datasets='vaw',
         pipeline=test_pipeline
     )
 )
