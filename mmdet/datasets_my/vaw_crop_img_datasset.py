@@ -180,7 +180,7 @@ class VAWCropDataset(Dataset):
                 labels = np.ones(len(self.att2id.keys())) * 2
                 if hasattr(self, 'pred_labels'):
                     thresh_low = 0.1
-                    thresh_high = 0.5
+                    thresh_high = 0.45
                     thresh_topk = 3
                     pred_label = torch.from_numpy(self.pred_labels[idx])
                     idx_tmp = torch.nonzero(pred_label < thresh_low)[:, 0]
