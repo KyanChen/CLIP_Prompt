@@ -64,7 +64,7 @@ class VAWCropDataset(Dataset):
                             item['img_id'] = k
                             self.instances.append(item)
                     self.instances.pop(13)
-                    # self.instances.pop(171246)
+                    self.instances.pop(212577)
                     # self.instances.pop(171245)
                 else:
                     self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
