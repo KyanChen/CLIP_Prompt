@@ -59,8 +59,6 @@ class VAWCropDataset(Dataset):
                     self.id2instances.update(id2instances_coco)
                     self.id2instances.update(id2instances_vaw)
                     self.instances = []
-                    import pdb
-                    pdb.set_trace()
                     for k, v in self.id2instances.items():
                         for item in v:
                             item['img_id'] = k
@@ -194,6 +192,8 @@ class VAWCropDataset(Dataset):
         return results
 
     def __getitem__(self, idx):
+        import pdb
+        pdb.set_trace()
         if self.test_all_instances:
             return self.get_test_instance(idx)
         if idx in self.error_list and not self.test_mode:
