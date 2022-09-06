@@ -192,8 +192,6 @@ class VAWCropDataset(Dataset):
         return results
 
     def __getitem__(self, idx):
-        import pdb
-        pdb.set_trace()
         if self.test_all_instances:
             return self.get_test_instance(idx)
         if idx in self.error_list and not self.test_mode:
