@@ -13,6 +13,7 @@ import imagesize
 import mmcv
 import numpy as np
 import torch
+from mmcv.runner import get_dist_info
 
 from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
@@ -32,7 +33,8 @@ class VAWCropDataset(Dataset):
                  attribute_index_file=None,
                  test_mode=False,
                  open_category=True,
-                 test_instance_datasets='coco',
+                 dataset_names='vaw',
+                 load_label=None,
                  file_client_args=dict(backend='disk')
                  ):
 
@@ -41,49 +43,31 @@ class VAWCropDataset(Dataset):
         self.test_mode = test_mode
         self.pipeline = Compose(pipeline)
         self.data_root = data_root
-        self.test_instance_datasets = test_instance_datasets
+        self.dataset_names = dataset_names
         if open_category:
             print('open_category: ', open_category)
             self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json", 'val.json', 'test.json'])
             self.instances = self.split_instance_by_category(pattern=pattern)
         else:
-            if dataset_split == 'train':
-                self.id2images = {}
-                self.id2instances = {}
-                self.instances = []
-                if 'coco' in self.test_instance_datasets:
-                    id2images_coco, id2instances_coco = self.read_data_coco(dataset_split)
-                    self.id2images.update(id2images_coco)
-                    self.id2instances.update(id2instances_coco)
-                if 'vaw' in self.test_instance_datasets:
-                    id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
-                    self.id2images.update(id2images_vaw)
-                    self.id2instances.update(id2instances_vaw)
-                    self.id2instances.pop('vaw_713545')
+            self.id2images = {}
+            self.id2instances = {}
 
-                if self.test_instance_datasets:
-                    for k, v in self.id2instances.items():
-                        for item in v:
-                            item['img_id'] = k
-                            self.instances.append(item)
-                    # self.instances.pop(74197)
-                else:
-                    self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
-                    self.instances.pop(74197)
-                    self.instances.pop(171246)
-                    self.instances.pop(171245)
-            elif dataset_split == 'val':
-                self.instances, self.img_instances_pair = self.read_data(['val.json'])
-            elif dataset_split == 'test':
-                self.instances, self.id2instances = self.read_data(['test.json'])
+            if 'coco' in self.dataset_names:
+                id2images_coco, id2instances_coco = self.read_data_coco(dataset_split)
+                self.id2images.update(id2images_coco)
+                self.id2instances.update(id2instances_coco)
+            if 'vaw' in self.dataset_names:
+                id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
+                self.id2images.update(id2images_vaw)
+                self.id2instances.update(id2instances_vaw)
+                self.id2instances.pop('vaw_713545')
 
-        # self.instances = self.instances[:20]
-
-        print('num instances: ', len(self.instances))
-        print('data len: ', len(self.instances))
-        self.error_list = set()
-        self.img_ids = list(self.id2instances.keys())
-
+            self.instances = []
+            for k, v in self.id2instances.items():
+                for item in v:
+                    item['img_id'] = k
+                    self.instances.append(item)
+        rank, world_size = get_dist_info()
         self.attribute_index_file = attribute_index_file
         if isinstance(attribute_index_file, dict):
             file = attribute_index_file['file']
@@ -108,7 +92,14 @@ class VAWCropDataset(Dataset):
         self.att2id = {k: v-min(self.att2id.values()) for k, v in self.att2id.items()}
 
         self.flag = np.zeros(len(self), dtype=int)
-        print('num_att: ', len(self.att2id))
+        if rank == 0:
+            print('data len: ', len(self))
+            print('num_att: ', len(self.att2id))
+        self.error_list = set()
+        self.load_label = load_label
+        if load_label:
+            self.pred_labels = np.load(load_label)
+            assert len(self) == len(self.pred_labels)
 
     def read_data_coco(self, pattern):
         json_file = 'instances_train2017' if pattern == 'train' else 'instances_val2017'
@@ -144,16 +135,6 @@ class VAWCropDataset(Dataset):
             id2images[img_id] = img_info
         return id2images, id2instances
 
-    def read_data(self, json_file_list):
-        json_data = [json.load(open(self.data_root + '/VAW/' + x)) for x in json_file_list]
-        instances = []
-        [instances.extend(x) for x in json_data]
-        img_instances_pair = {}
-        for instance in instances:
-            img_id = instance['image_id']
-            img_instances_pair[img_id] = img_instances_pair.get(img_id, []) + [instance]
-        return instances, img_instances_pair
-
     def split_instance_by_category(self, pattern='train'):
         categories = json.load(open(self.data_root + '/VAW/' + 'category_instances_split.json'))[f'{pattern}_category']
         categories = [x[0] for x in categories]
@@ -166,7 +147,9 @@ class VAWCropDataset(Dataset):
     def __len__(self):
         return len(self.instances)
 
-    def get_test_instance(self, idx):
+    def __getitem__(self, idx):
+        if idx in self.error_list and not self.test_mode:
+            idx = np.random.randint(0, len(self))
         instance = self.instances[idx]
         img_id = instance['img_id']
         img_info = self.id2images[img_id]
@@ -185,65 +168,42 @@ class VAWCropDataset(Dataset):
         key = 'bbox' if data_set == 'coco' else 'instance_bbox'
         x, y, w, h = instance[key]
         results['crop_box'] = np.array([x, y, x + w, y + h])
-        try:
-            results = self.pipeline(results)
-        except Exception as e:
-            print(f'idx: {idx}')
-            print(f'img_id: {img_id}')
-        # import pdb
-        # pdb.set_trace()
-        return results
-
-    def __getitem__(self, idx):
-        if self.test_instance_datasets:
-            return self.get_test_instance(idx)
-        if idx in self.error_list and not self.test_mode:
-            idx = np.random.randint(0, len(self))
-        instance = self.instances[idx]
-        results = {}
-        '''
-        "image_id": "2373241",
-        "instance_id": "2373241004",
-        "instance_bbox": [0.0, 182.5, 500.16666666666663, 148.5],
-        "instance_polygon": [[[432.5, 214.16666666666669], [425.8333333333333, 194.16666666666666], [447.5, 190.0], [461.6666666666667, 187.5], [464.1666666666667, 182.5], [499.16666666666663, 183.33333333333331], [499.16666666666663, 330.0], [3.3333333333333335, 330.0], [0.0, 253.33333333333334], [43.333333333333336, 245.0], [60.833333333333336, 273.3333333333333], [80.0, 293.3333333333333], [107.5, 307.5], [133.33333333333334, 309.16666666666663], [169.16666666666666, 295.8333333333333], [190.83333333333331, 274.1666666666667], [203.33333333333334, 252.5], [225.0, 260.0], [236.66666666666666, 254.16666666666666], [260.0, 254.16666666666666], [288.3333333333333, 253.33333333333334], [287.5, 257.5], [271.6666666666667, 265.0], [324.1666666666667, 281.6666666666667], [369.16666666666663, 274.1666666666667], [337.5, 261.6666666666667], [338.3333333333333, 257.5], [355.0, 261.6666666666667], [357.5, 257.5], [339.1666666666667, 255.0], [337.5, 240.83333333333334], [348.3333333333333, 238.33333333333334], [359.1666666666667, 248.33333333333331], [377.5, 251.66666666666666], [397.5, 248.33333333333331], [408.3333333333333, 236.66666666666666], [418.3333333333333, 220.83333333333331], [427.5, 217.5], [434.16666666666663, 215.0]]],
-        "object_name": "floor",
-        "positive_attributes": ["tiled", "gray", "light colored"],
-        "negative_attributes": ["multicolored", "maroon", "weathered", "speckled", "carpeted"]
-        '''
-        results['img_prefix'] = os.path.abspath(self.data_root) + '/VG/VG_100K'
-        results['img_info'] = {}
-        results['img_info']['filename'] = f'{instance["image_id"]}.jpg'
-
-        x, y, w, h = instance["instance_bbox"]
-        results['crop_box'] = np.array([x, y, x + w, y + h])
         if self.test_mode:
             try:
                 results = self.pipeline(results)
             except Exception as e:
-                print(e)
-                print(idx)
+                print(f'idx: {idx}')
+                print(f'img_id: {img_id}')
         else:
             try:
-                positive_attributes = instance["positive_attributes"]
-                negative_attributes = instance["negative_attributes"]
                 labels = np.ones(len(self.att2id.keys())) * 2
-                for att in positive_attributes:
-                    att_id = self.att2id.get(att, None)
-                    if att_id is not None:
-                        labels[att_id] = 1
-                for att in negative_attributes:
-                    att_id = self.att2id.get(att, None)
-                    if att_id is not None:
-                        labels[att_id] = 0
+                if hasattr(self, 'pred_labels'):
+                    thresh_low = 0.1
+                    thresh_high = 0.9
+                    thresh_topk = 3
+                    pred_label = torch.from_numpy(self.pred_labels[idx])
+                    idx_tmp = torch.nonzero(pred_label < thresh_low)[:, 0]
+                    labels[idx_tmp] = 0
+                    idx_tmp = torch.nonzero(pred_label > thresh_high)[:, 0]
+                    labels[idx_tmp] = 1
+                else:
+                    positive_attributes = instance["positive_attributes"]
+                    negative_attributes = instance["negative_attributes"]
+                    for att in positive_attributes:
+                        att_id = self.att2id.get(att, None)
+                        if att_id is not None:
+                            labels[att_id] = 1
+                    for att in negative_attributes:
+                        att_id = self.att2id.get(att, None)
+                        if att_id is not None:
+                            labels[att_id] = 0
                 results['gt_labels'] = labels.astype(np.int)
                 results = self.pipeline(results)
             except Exception as e:
-                print(e)
                 self.error_list.add(idx)
-                self.error_list.add(results['img_info']['filename'])
+                self.error_list.add(img_id)
                 print(self.error_list)
-                if not self.test_mode:
-                    results = self.__getitem__(np.random.randint(0, len(self)))
+                results = self.__getitem__(np.random.randint(0, len(self)))
 
         # img = results['img']
         # img_metas = results['img_metas'].data
@@ -280,11 +240,9 @@ class VAWCropDataset(Dataset):
                  per_class_out_file=None,
                  is_logit=True
                  ):
-        import pdb
-        pdb.set_trace()
         results = np.array(results)
         preds = torch.from_numpy(results)
-        if self.test_instance_datasets:
+        if self.load_label:
             np.save('EXP20220903_0_epoch_20.npy', preds.data.cpu().float().sigmoid().numpy())
             return None
         gts = self.get_labels()

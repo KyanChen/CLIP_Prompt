@@ -170,7 +170,8 @@ data = dict(
         ),
         test_mode=True,
         open_category=False,
-        test_instance_datasets=None,
+        dataset_names='vaw',
+        load_label=None,
         pipeline=test_pipeline
     )
 )

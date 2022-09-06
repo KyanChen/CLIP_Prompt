@@ -54,6 +54,10 @@ plt_loss = torch.tensor(plt_loss).numpy()
 plt.plot(plt_loss)
 plt.show()
 
+torch.save(rnn, 'rnn.pth')
+torch.save(fc, 'fc.pth')
+rnn = torch.load('rnn.pth')
+fc = torch.load('fc.pth')
 rnn = rnn.eval()
 for input, output in val_set:
     input = input.unsqueeze(0)
