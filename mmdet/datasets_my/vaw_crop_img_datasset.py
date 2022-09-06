@@ -35,6 +35,7 @@ class VAWCropDataset(Dataset):
                  open_category=True,
                  dataset_names='vaw',
                  load_label=None,
+                 save_label=False,
                  file_client_args=dict(backend='disk')
                  ):
 
@@ -96,7 +97,7 @@ class VAWCropDataset(Dataset):
             print('data len: ', len(self))
             print('num_att: ', len(self.att2id))
         self.error_list = set()
-        self.load_label = load_label
+        self.save_label = save_label
         if load_label:
             self.pred_labels = np.load(load_label)
             assert len(self) == len(self.pred_labels)
@@ -242,9 +243,8 @@ class VAWCropDataset(Dataset):
                  ):
         results = np.array(results)
         preds = torch.from_numpy(results)
-        if self.load_label:
-            np.save('EXP20220903_0_epoch_20.npy', preds.data.cpu().float().sigmoid().numpy())
-            return None
+        if self.save_label:
+            np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
         gts = self.get_labels()
         gts = torch.from_numpy(gts)
         assert preds.shape[-1] == gts.shape[-1]

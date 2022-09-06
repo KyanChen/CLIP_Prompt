@@ -171,6 +171,7 @@ data = dict(
         test_mode=True,
         open_category=False,
         dataset_names='vaw',
+        save_label='EXP20220903_0_epoch_20.npy',
         load_label=None,
         pipeline=test_pipeline
     )
