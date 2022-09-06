@@ -57,6 +57,7 @@ class VAWCropDataset(Dataset):
                 id2images_coco, id2instances_coco = self.read_data_coco(dataset_split)
                 self.id2images.update(id2images_coco)
                 self.id2instances.update(id2instances_coco)
+                self.id2instances.pop('coco_200365', None)
             if 'vaw' in self.dataset_names:
                 id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
                 self.id2images.update(id2images_vaw)
