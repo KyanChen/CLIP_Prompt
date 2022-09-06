@@ -285,7 +285,7 @@ class VAWCropDataset(Dataset):
         results = np.array(results)
         preds = torch.from_numpy(results)
         if self.test_instance_datasets:
-            torch.save('x.pkl', preds)
+            np.save('x.npy', preds.data.cpu().float().sigmoid().numpy())
             return None
         gts = self.get_labels()
         gts = torch.from_numpy(gts)
