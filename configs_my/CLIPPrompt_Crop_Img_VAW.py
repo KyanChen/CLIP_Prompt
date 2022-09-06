@@ -178,7 +178,7 @@ data = dict(
         ),
         test_mode=True,
         open_category=False,
-        dataset_names='vaw+coco',
+        dataset_names='coco',
         save_label='EXP20220903_0_epoch_20_vaw_coco_train_rare.npy',
         load_label=None,
         pipeline=test_pipeline
