@@ -17,7 +17,6 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer, LayerNorm
 import warnings
 warnings.filterwarnings('once')
 
-
 @HEADS.register_module()
 class PromptHead(BaseModule):
     def __init__(self,
