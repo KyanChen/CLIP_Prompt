@@ -90,7 +90,7 @@ model = dict(
         re_weight_alpha=0.25,
         re_weight_gamma=2,
         re_weight_beta=0.995,
-        balance_unk=0.15,
+        balance_unk=0.01,  # finetune
         # balance_unk=0.15
     )
 )
