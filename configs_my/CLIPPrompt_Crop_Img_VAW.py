@@ -148,7 +148,7 @@ data = dict(
             file=data_root+'/VAW/common2rare_att2id.json',
             att_group='rare'
         ),
-        dataset_names='vaw',
+        dataset_names='vaw+coco',
         save_label=False,
         load_label='EXP20220903_0_epoch_20_vaw_train_rare.npy',
         test_mode=False,
