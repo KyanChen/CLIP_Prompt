@@ -39,7 +39,7 @@ model = dict(
         'img_neck',
         'rpn_head',
         'att_head',
-        'prompt_learner',
+        # 'prompt_learner',
         'logit_scale', 'head',
         'kd_img_align', 'kd_logit_scale',
     ],
@@ -291,7 +291,7 @@ test_rpn_pipeline = [
 ]
 
 # find_unused_parameters = True
-samples_per_gpu = 28
+samples_per_gpu = 32
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -366,7 +366,7 @@ optimizer = dict(
         'img_neck': {},
         'rpn_head': {},
         'att_head': {},
-        'prompt_learner': {},
+        # 'prompt_learner': {},
         'logit_scale': {}, 'head': {},
         'kd_img_align': {}, 'kd_logit_scale': {}
         },
@@ -398,5 +398,5 @@ runner = dict(type='EpochBasedRunner', max_epochs=60)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = None
-# resume_from = 'results/EXP20220818_0/latest.pth'
-resume_from = None
+resume_from = 'results/EXP20220905_0/latest.pth'
+# resume_from = None
