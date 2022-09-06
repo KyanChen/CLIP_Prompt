@@ -189,6 +189,8 @@ class VAWCropDataset(Dataset):
         except Exception as e:
             print(e)
             print(idx)
+        import pdb
+        pdb.set_trace()
         return results
 
     def __getitem__(self, idx):
@@ -251,8 +253,6 @@ class VAWCropDataset(Dataset):
         #
         # os.makedirs('results/tmp', exist_ok=True)
         # cv2.imwrite('results/tmp' + f'/x{idx}.jpg', img)
-        import pdb
-        pdb.set_trace()
         return results
 
     def get_labels(self):
