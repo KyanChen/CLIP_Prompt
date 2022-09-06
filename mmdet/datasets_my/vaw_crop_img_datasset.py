@@ -32,7 +32,7 @@ class VAWCropDataset(Dataset):
                  attribute_index_file=None,
                  test_mode=False,
                  open_category=True,
-                 test_all_instances=False,
+                 test_instance_datasets='coco',
                  file_client_args=dict(backend='disk')
                  ):
 
@@ -41,31 +41,31 @@ class VAWCropDataset(Dataset):
         self.test_mode = test_mode
         self.pipeline = Compose(pipeline)
         self.data_root = data_root
-        self.test_all_instances = test_all_instances
+        self.test_instance_datasets = test_instance_datasets
         if open_category:
             print('open_category: ', open_category)
             self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json", 'val.json', 'test.json'])
             self.instances = self.split_instance_by_category(pattern=pattern)
         else:
             if dataset_split == 'train':
-                if self.test_all_instances:
+                self.id2images = {}
+                self.id2instances = {}
+                self.instances = []
+                if 'coco' in self.test_instance_datasets:
                     id2images_coco, id2instances_coco = self.read_data_coco(dataset_split)
-                    id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
-                    self.id2images = {}
                     self.id2images.update(id2images_coco)
-                    self.id2images.update(id2images_vaw)
-
-                    self.id2instances = {}
                     self.id2instances.update(id2instances_coco)
+                if 'vaw' in self.test_instance_datasets:
+                    id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
+                    self.id2images.update(id2images_vaw)
                     self.id2instances.update(id2instances_vaw)
-                    self.instances = []
+
+                if self.test_instance_datasets:
                     for k, v in self.id2instances.items():
                         for item in v:
                             item['img_id'] = k
                             self.instances.append(item)
-                    self.instances.pop(13)
-                    self.instances.pop(212577)
-                    # self.instances.pop(171245)
+                    # self.instances.pop(74197)
                 else:
                     self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
                     self.instances.pop(74197)
@@ -193,7 +193,7 @@ class VAWCropDataset(Dataset):
         return results
 
     def __getitem__(self, idx):
-        if self.test_all_instances:
+        if self.test_instance_datasets:
             return self.get_test_instance(idx)
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
@@ -279,7 +279,7 @@ class VAWCropDataset(Dataset):
                  is_logit=True
                  ):
         results = np.array(results)
-        if self.test_all_instances:
+        if self.test_instance_datasets:
             np.save('x.npy', results)
             return None
         preds = torch.from_numpy(results)

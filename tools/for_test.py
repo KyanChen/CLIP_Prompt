@@ -17,18 +17,20 @@ x1 = x1/max(x1)
 x2 = x2/max(x2)
 x3 = x3/max(x3)
 y = y/max(y)
-y = y + 0.2*(torch.rand(len(y))-0.5)
+y = y + 0.1*(torch.rand(len(y))-0.5)
 
-train_set = []
+data_set = []
 for i in range(1, len(x1)):
     input_tmp = torch.tensor([[x1[i-1], x2[i-1], x3[i-1]], [x1[i], x2[i], x3[i]]])
-    train_set.append((input_tmp, y[i]))
+    data_set.append((input_tmp, y[i]))
 batch_size = 10
 
-optimizer = torch.optim.SGD([{'params': rnn.parameters()}, {'params': fc.parameters()}], lr=1, momentum=0.9)
-
+optimizer = torch.optim.SGD([{'params': rnn.parameters()}, {'params': fc.parameters()}], lr=1e-3, momentum=0.9)
+random.shuffle(data_set)
+train_set = data_set[:-100]
+val_set = data_set[-100:]
 plt_loss = []
-for i_epoch in range(30):
+for i_epoch in range(50):
     random.shuffle(train_set)
     losses = []
     for batch_id in range(len(train_set)//batch_size):
@@ -51,3 +53,10 @@ plt_loss = torch.tensor(plt_loss).numpy()
 
 plt.plot(plt_loss)
 plt.show()
+
+rnn = rnn.eval()
+for input, output in val_set:
+    input = input.unsqueeze(0)
+    o, h = rnn(input)
+    o = fc(o[:, -1, :])
+    print(o, '/', output)
