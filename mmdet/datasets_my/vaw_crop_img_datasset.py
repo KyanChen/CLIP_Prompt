@@ -189,8 +189,8 @@ class VAWCropDataset(Dataset):
         except Exception as e:
             print(e)
             print(idx)
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         return results
 
     def __getitem__(self, idx):
