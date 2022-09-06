@@ -14,6 +14,8 @@ from mmdet.datasets_my.evaluate_tools import cal_metrics
 import torch.nn.functional as F
 from torch import nn
 from torch.nn import TransformerEncoder, TransformerEncoderLayer, LayerNorm
+import warnings
+warnings.filterwarnings('once')
 
 
 @HEADS.register_module()
