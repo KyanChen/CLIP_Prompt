@@ -159,7 +159,7 @@ data = dict(
         samples_per_gpu=samples_per_gpu,
         type=dataset_type,
         data_root=data_root,
-        dataset_split='train',
+        dataset_split='test',
         # attribute_index_file=dict(
         #     file=data_root+'/VAW/common2common_att2id.json',
         #     att_group='common1'
@@ -170,7 +170,7 @@ data = dict(
         ),
         test_mode=True,
         open_category=False,
-        test_all_instances=True,
+        test_all_instances=False,
         pipeline=test_pipeline
     )
 )
