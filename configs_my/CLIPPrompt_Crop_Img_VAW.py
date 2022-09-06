@@ -170,6 +170,7 @@ data = dict(
         ),
         test_mode=True,
         open_category=False,
+        test_all_instances=False,
         pipeline=test_pipeline
     )
 )

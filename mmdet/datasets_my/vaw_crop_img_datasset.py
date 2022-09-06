@@ -9,6 +9,7 @@ import warnings
 from collections import OrderedDict, defaultdict
 
 import cv2
+import imagesize
 import mmcv
 import numpy as np
 import torch
@@ -31,34 +32,56 @@ class VAWCropDataset(Dataset):
                  attribute_index_file=None,
                  test_mode=False,
                  open_category=True,
+                 test_all_instances=False,
                  file_client_args=dict(backend='disk')
                  ):
 
         assert dataset_split in ['train', 'val', 'test']
+        self.dataset_split = dataset_split
         self.test_mode = test_mode
         self.pipeline = Compose(pipeline)
         self.data_root = data_root
+        self.test_all_instances = test_all_instances
         if open_category:
             print('open_category: ', open_category)
             self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json", 'val.json', 'test.json'])
             self.instances = self.split_instance_by_category(pattern=pattern)
         else:
             if dataset_split == 'train':
-                self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
-                self.instances.pop(74197)
-                self.instances.pop(171246)
-                self.instances.pop(171245)
+                if self.test_all_instances:
+                    id2images_coco, id2instances_coco = self.read_data_coco(dataset_split)
+                    id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
+                    self.id2images = {}
+                    self.id2images.update(id2images_coco)
+                    self.id2images.update(id2images_vaw)
+
+                    self.id2instances = {}
+                    self.id2instances.update(id2instances_coco)
+                    self.id2instances.update(id2instances_vaw)
+                    self.instances = []
+                    for k, v in self.id2instances.items():
+                        for item in v:
+                            item['img_id'] = k
+                            self.instances.append(item)
+                    # self.instances.pop(74197)
+                    # self.instances.pop(171246)
+                    # self.instances.pop(171245)
+                else:
+                    self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json"])
+                    self.instances.pop(74197)
+                    self.instances.pop(171246)
+                    self.instances.pop(171245)
             elif dataset_split == 'val':
                 self.instances, self.img_instances_pair = self.read_data(['val.json'])
             elif dataset_split == 'test':
-                self.instances, self.img_instances_pair = self.read_data(['test.json'])
+                self.instances, self.id2instances = self.read_data(['test.json'])
 
         # self.instances = self.instances[:20]
 
         print('num instances: ', len(self.instances))
         print('data len: ', len(self.instances))
         self.error_list = set()
-        self.img_ids = list(self.img_instances_pair.keys())
+        self.img_ids = list(self.id2instances.keys())
 
         self.attribute_index_file = attribute_index_file
         if isinstance(attribute_index_file, dict):
@@ -86,6 +109,40 @@ class VAWCropDataset(Dataset):
         self.flag = np.zeros(len(self), dtype=int)
         print('num_att: ', len(self.att2id))
 
+    def read_data_coco(self, pattern):
+        json_file = 'instances_train2017' if pattern == 'train' else 'instances_val2017'
+        # json_file = 'lvis_v1_train' if pattern == 'train' else 'instances_val2017'
+        json_data = json.load(open(self.data_root + f'/COCO/annotations/{json_file}.json', 'r'))
+        id2images = {}
+        id2instances = {}
+        for data in json_data['images']:
+            img_id = 'coco_' + str(data['id'])
+            data['file_name'] = f'{data["id"]:012d}.jpg'
+            id2images[img_id] = data
+        for data in json_data['annotations']:
+            img_id = 'coco_' + str(data['image_id'])
+            id2instances[img_id] = id2instances.get(img_id, []) + [data]
+        return id2images, id2instances
+
+    def read_data_vaw(self, pattern):
+        json_files = ['train_part1', 'train_part2'] if pattern == 'train' else [f'{pattern}']
+        json_data = [json.load(open(self.data_root + '/VAW/' + f'{x}.json', 'r')) for x in json_files]
+        instances = []
+        [instances.extend(x) for x in json_data]
+        id2images = {}
+        id2instances = {}
+        for instance in instances:
+            img_id = 'vaw_' + str(instance['image_id'])
+            id2instances[img_id] = id2instances.get(img_id, []) + [instance]
+        for img_id in id2instances.keys():
+            img_info = {'file_name': f'{img_id.split("_")[-1] + ".jpg"}'}
+            img_path = os.path.abspath(self.data_root) + '/VG/VG_100K/' + img_info['file_name']
+            w, h = imagesize.get(img_path)
+            img_info['width'] = w
+            img_info['height'] = h
+            id2images[img_id] = img_info
+        return id2images, id2instances
+
     def read_data(self, json_file_list):
         json_data = [json.load(open(self.data_root + '/VAW/' + x)) for x in json_file_list]
         instances = []
@@ -108,7 +165,35 @@ class VAWCropDataset(Dataset):
     def __len__(self):
         return len(self.instances)
 
+    def get_test_instance(self, idx):
+        instance = self.instances[idx]
+        img_id = instance['img_id']
+        img_info = self.id2images[img_id]
+
+        data_set = img_id.split('_')[0]
+        if data_set == 'coco':
+            prefix_path = f'/COCO/{self.dataset_split}2017'
+        elif data_set == 'vaw':
+            prefix_path = f'/VG/VG_100K'
+        else:
+            raise NameError
+        results = {}
+        results['img_prefix'] = os.path.abspath(self.data_root) + prefix_path
+        results['img_info'] = {}
+        results['img_info']['filename'] = img_info['file_name']
+        key = 'bbox' if data_set == 'coco' else 'instance_bbox'
+        x, y, w, h = instance[key]
+        results['crop_box'] = np.array([x, y, x + w, y + h])
+        try:
+            results = self.pipeline(results)
+        except Exception as e:
+            print(e)
+            print(idx)
+        return results
+
     def __getitem__(self, idx):
+        if self.test_all_instances:
+            return self.get_test_instance(idx)
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
         instance = self.instances[idx]
@@ -194,6 +279,9 @@ class VAWCropDataset(Dataset):
                  is_logit=True
                  ):
         results = np.array(results)
+        if self.test_all_instances:
+            np.save('x.npy', results)
+            return None
         preds = torch.from_numpy(results)
         gts = self.get_labels()
         gts = torch.from_numpy(gts)
