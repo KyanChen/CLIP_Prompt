@@ -180,13 +180,15 @@ class VAWCropDataset(Dataset):
                 labels = np.ones(len(self.att2id.keys())) * 2
                 if hasattr(self, 'pred_labels'):
                     thresh_low = 0.1
-                    thresh_high = 0.7
-                    thresh_topk = 3
+                    thresh_high = 0.5
+                    thresh_topk = 2
                     pred_label = torch.from_numpy(self.pred_labels[idx])
                     idx_tmp = torch.nonzero(pred_label < thresh_low)[:, 0]
                     labels[idx_tmp] = 0
                     idx_tmp = torch.nonzero(pred_label > thresh_high)[:, 0]
                     labels[idx_tmp] = 1
+                    # values, idx_tmp = torch.topk(pred_label, k=thresh_topk)
+                    # labels[idx_tmp] = 1
                 else:
                     positive_attributes = instance["positive_attributes"]
                     negative_attributes = instance["negative_attributes"]
