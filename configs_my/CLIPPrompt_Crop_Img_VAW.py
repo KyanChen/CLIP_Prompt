@@ -149,7 +149,7 @@ data = dict(
         ),
         dataset_names='vaw',
         save_label=False,
-        load_label='EXP20220903_0_epoch_20_vaw_train_rare.npy',
+        # load_label='EXP20220903_0_epoch_20_vaw_train_rare.npy',
         test_mode=False,
         open_category=False,
         pipeline=train_pipeline),
