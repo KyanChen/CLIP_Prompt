@@ -237,7 +237,7 @@ lr_config = None
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=5)
+runner = dict(type='EpochBasedRunner', max_epochs=10)
 evaluation = dict(interval=1, metric='mAP')
 
 load_from = 'results/EXP20220903_0/epoch_20.pth'
