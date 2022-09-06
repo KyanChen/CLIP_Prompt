@@ -90,7 +90,7 @@ model = dict(
         re_weight_alpha=0.25,
         re_weight_gamma=2,
         re_weight_beta=0.995,
-        balance_unk=0.01,  # finetune
+        balance_unk=0.05,  # finetune
         # balance_unk=0.15
     )
 )
@@ -134,7 +134,7 @@ test_pipeline = [
     )
 ]
 
-samples_per_gpu = 256
+samples_per_gpu = 512
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -197,7 +197,7 @@ optimizer = dict(
                'bbox_head': {}, 'logit_scale': {}
                },
     type='SGD',
-    lr=1e-4,
+    lr=1e-3,
     # momentum=0.9,
     weight_decay=0.0005,
     # type='AdamW',
