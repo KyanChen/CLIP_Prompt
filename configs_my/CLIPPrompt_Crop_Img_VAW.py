@@ -141,8 +141,15 @@ data = dict(
     train=dict(
         type=dataset_type,
         data_root=data_root,
-        dataset_split='train',
-        attribute_index_file=attribute_index_file,
+        dataset_split='test',
+        # attribute_index_file=attribute_index_file,
+        attribute_index_file=dict(
+            file=data_root+'/VAW/common2rare_att2id.json',
+            att_group='rare'
+        ),
+        dataset_names='vaw',
+        save_label=False,
+        load_label='EXP20220903_0_epoch_20.npy',
         test_mode=False,
         open_category=False,
         pipeline=train_pipeline),
