@@ -184,7 +184,10 @@ class VAWCropDataset(Dataset):
         key = 'bbox' if data_set == 'coco' else 'instance_bbox'
         x, y, w, h = instance[key]
         results['crop_box'] = np.array([x, y, x + w, y + h])
-        results = self.pipeline(results)
+        try:
+            results = self.pipeline(results)
+        except Exception as e:
+            print(f'idx: {idx}')
         # import pdb
         # pdb.set_trace()
         return results
