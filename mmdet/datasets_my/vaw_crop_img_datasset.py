@@ -1,3 +1,4 @@
+import glob
 import json
 import logging
 import os
@@ -74,6 +75,11 @@ class VAWCropDataset(Dataset):
                 for item in v:
                     item['img_id'] = k
                     self.instances.append(item)
+
+            if 'generated' in self.dataset_names:
+                self.instances = glob.glob(self.data_root + '/gen_imgs/*.jpg')
+                self.instances = [x for x in self.instances if os.path.getsize(x) > 20*1024]
+
         rank, world_size = get_dist_info()
         self.attribute_index_file = attribute_index_file
         if isinstance(attribute_index_file, dict):
@@ -154,7 +160,24 @@ class VAWCropDataset(Dataset):
     def __len__(self):
         return len(self.instances)
 
+    def get_generated_sample(self, idx):
+        instance = self.instances[idx]
+        results = {}
+        results['img_prefix'] = ''
+        results['img_info'] = {}
+        results['img_info']['filename'] = instance
+        labels = np.ones(len(self.att2id.keys())) * 2
+        att = ' '.join(os.path.basename(instance).split('_')[:-2])
+        att_id = self.att2id.get(att, None)
+        labels[att_id] = 1
+        results['gt_labels'] = labels.astype(np.int)
+        results = self.pipeline(results)
+        return results
+
     def __getitem__(self, idx):
+        if self.dataset_names == 'generated':
+            return self.get_generated_sample(idx)
+
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
         instance = self.instances[idx]

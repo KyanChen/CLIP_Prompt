@@ -90,7 +90,7 @@ model = dict(
         re_weight_alpha=0.25,
         re_weight_gamma=2,
         re_weight_beta=0.995,
-        balance_unk=0.01,  # finetune
+        balance_unk=0.15,  # finetune
         # balance_unk=0.15
     )
 )
@@ -108,6 +108,18 @@ train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
     dict(type='ScaleCrop', scale_range=[0.0, 0.3]),
     dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
+    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(type='Resize', img_scale=img_scale, keep_ratio=True),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='Pad', size=img_scale, center_pad=True),
+    dict(type='ImageToTensor', keys=['img']),
+    dict(type='ToTensor', keys=['gt_labels']),
+    dict(type='Collect', keys=['img', 'gt_labels'])
+]
+
+train_generated_pipeline = [
+    dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
+    dict(type='RandomCrop', crop_size=[0.7, 0.7], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=img_scale, keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
@@ -148,9 +160,9 @@ data = dict(
             file=data_root+'/VAW/common2rare_att2id.json',
             att_group='rare'
         ),
-        dataset_names='coco',
+        dataset_names='generated',
         save_label=False,
-        load_label='EXP20220903_0_epoch_20_coco_train_rare.npy',
+        load_label=None,
         test_mode=False,
         open_category=False,
         pipeline=train_pipeline),
@@ -197,7 +209,7 @@ optimizer = dict(
                'bbox_head': {}, 'logit_scale': {}
                },
     type='SGD',
-    lr=1e-3,
+    lr=1e-4,
     # momentum=0.9,
     weight_decay=0.0005,
     # type='AdamW',
