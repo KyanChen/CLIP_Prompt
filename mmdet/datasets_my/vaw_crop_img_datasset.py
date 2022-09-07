@@ -171,7 +171,7 @@ class VAWCropDataset(Dataset):
         att_id = self.att2id.get(att, None)
         labels[att_id] = 1
         if hasattr(self, 'pred_labels'):
-            thresh_low = 0.1
+            thresh_low = 0.08
             thresh_high = 0.5
             thresh_topk = 3
             pred_label = torch.from_numpy(self.pred_labels[idx])
