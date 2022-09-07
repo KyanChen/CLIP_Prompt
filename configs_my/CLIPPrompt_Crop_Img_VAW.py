@@ -165,7 +165,9 @@ data = dict(
         load_label=None,
         test_mode=False,
         open_category=False,
-        pipeline=train_pipeline),
+        # pipeline=train_pipeline
+        pipeline=train_generated_pipeline
+    ),
     val=dict(
         samples_per_gpu=samples_per_gpu,
         type=dataset_type,
