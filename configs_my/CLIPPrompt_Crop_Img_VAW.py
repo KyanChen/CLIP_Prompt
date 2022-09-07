@@ -146,6 +146,21 @@ test_pipeline = [
     )
 ]
 
+test_generated_pipeline = [
+    dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
+    dict(type='MultiScaleFlipAug',
+         img_scale=img_scale,
+         flip=False,
+         transforms=[
+            dict(type='Resize', img_scale=img_scale, keep_ratio=True),
+            dict(type='Normalize', **img_norm_cfg),
+            dict(type='Pad', size=img_scale, center_pad=True),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ]
+    )
+]
+
 samples_per_gpu = 512
 data = dict(
     samples_per_gpu=samples_per_gpu,
@@ -192,10 +207,11 @@ data = dict(
         ),
         test_mode=True,
         open_category=False,
-        dataset_names='coco',
-        save_label='EXP20220903_0_epoch_20_vaw_coco_train_rare.npy',
+        dataset_names='generated',
+        save_label='EXP20220903_0_epoch_20_generated_train_rare.npy',
         load_label=None,
-        pipeline=test_pipeline
+        # pipeline=test_pipeline
+        pipeline=test_generated_pipeline
     )
 )
 
