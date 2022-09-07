@@ -210,13 +210,13 @@ optimizer = dict(
                'text_encoder': {'lr_mult': 0.1},
                'bbox_head': {}, 'logit_scale': {}
                },
-    type='SGD',
-    lr=1e-4,
-    # momentum=0.9,
-    weight_decay=0.0005,
-    # type='AdamW',
-    # lr=1e-5,
-    # weight_decay=0.0005
+    # type='SGD',
+    # lr=1e-4,
+    # # momentum=0.9,
+    # weight_decay=0.0005,
+    type='AdamW',
+    lr=1e-5,
+    weight_decay=0.0005
 )
 #
 # # optimizer
