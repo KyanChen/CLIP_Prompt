@@ -28,7 +28,7 @@ auto_scale_lr = dict(enable=False, base_batch_size=16)
 data_root = '/data/kyanchen/prompt/data'
 attribute_index_file = dict(
     file=data_root+'/VAW/common2rare_att2id.json',
-    att_group='common'
+    att_group='rare'
 )
 model = dict(
     type='RPN_CLIP_Prompter_Region',
@@ -318,7 +318,7 @@ data = dict(
         pipeline=test_pipeline
     ),
     test=dict(
-        samples_per_gpu=12,
+        samples_per_gpu=32,
         type=dataset_type,
         data_root=data_root,
         dataset_split='test',
@@ -328,7 +328,7 @@ data = dict(
         # ),
         attribute_index_file=dict(
             file=data_root + '/VAW/common2rare_att2id.json',
-            att_group='common'
+            att_group='rare'
         ),
         test_mode=True,
         pipeline=test_pipeline
