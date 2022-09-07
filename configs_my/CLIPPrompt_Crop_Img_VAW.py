@@ -90,7 +90,7 @@ model = dict(
         re_weight_alpha=0.25,
         re_weight_gamma=2,
         re_weight_beta=0.995,
-        balance_unk=1,  # finetune
+        balance_unk=0.2,  # finetune
         # balance_unk=0.15
     )
 )
@@ -177,7 +177,7 @@ data = dict(
         ),
         dataset_names='generated',
         save_label=False,
-        load_label=None,
+        load_label='EXP20220903_0_epoch_20_generated_train_rare.npy',
         test_mode=False,
         open_category=False,
         # pipeline=train_pipeline

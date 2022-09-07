@@ -170,6 +170,20 @@ class VAWCropDataset(Dataset):
         att = ' '.join(os.path.basename(instance).split('_')[:-2])
         att_id = self.att2id.get(att, None)
         labels[att_id] = 1
+        if hasattr(self, 'pred_labels'):
+            thresh_low = 0.1
+            thresh_high = 0.5
+            thresh_topk = 3
+            pred_label = torch.from_numpy(self.pred_labels[idx])
+            idx_tmp = torch.nonzero(pred_label < thresh_low)[:, 0]
+            labels[idx_tmp] = 0
+            # values, idx_tmp = torch.topk(-pred_label, k=thresh_topk)
+            # labels[idx_tmp] = 0
+            # idx_tmp = torch.nonzero(pred_label > thresh_high)[:, 0]
+            # labels[idx_tmp] = 1
+            # values, idx_tmp = torch.topk(pred_label, k=thresh_topk)
+            # labels[idx_tmp] = 1
+
         results['gt_labels'] = labels.astype(np.int)
         results = self.pipeline(results)
         return results
