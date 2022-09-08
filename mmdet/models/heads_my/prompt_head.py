@@ -116,14 +116,14 @@ class PromptHead(BaseModule):
         # loss_pos = loss_pos.mean()
         # loss_neg = loss_neg.mean()
 
-        # loss_pos_neg = F.binary_cross_entropy_with_logits(
-        #     cls_scores_flatten[~unk_mask], gt_labels_flatten[~unk_mask], weight=total_rew[~unk_mask], reduction='mean')
+        loss_pos_neg = F.binary_cross_entropy_with_logits(
+            cls_scores_flatten[~unk_mask], gt_labels_flatten[~unk_mask], weight=total_rew[~unk_mask], reduction='mean')
 
-        loss_pos = F.binary_cross_entropy_with_logits(
-            cls_scores_flatten[pos_mask], gt_labels_flatten[pos_mask], weight=total_rew[pos_mask], reduction='mean')
-        loss_neg = F.binary_cross_entropy_with_logits(
-            cls_scores_flatten[neg_mask], gt_labels_flatten[neg_mask], weight=total_rew[neg_mask], reduction='mean')
-        loss_pos_neg = loss_pos + 4 * loss_neg
+        # loss_pos = F.binary_cross_entropy_with_logits(
+        #     cls_scores_flatten[pos_mask], gt_labels_flatten[pos_mask], weight=total_rew[pos_mask], reduction='mean')
+        # loss_neg = F.binary_cross_entropy_with_logits(
+        #     cls_scores_flatten[neg_mask], gt_labels_flatten[neg_mask], weight=total_rew[neg_mask], reduction='mean')
+        # loss_pos_neg = loss_pos + 4 * loss_neg
 
         pred_unk = cls_scores_flatten[unk_mask]
         gt_labels_unk = pred_unk.new_zeros(pred_unk.size())
