@@ -178,7 +178,7 @@ test_generated_pipeline = [
     )
 ]
 
-samples_per_gpu = 1024
+samples_per_gpu = 512
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -236,9 +236,6 @@ data = dict(
 # optimizer
 optimizer = dict(
     constructor='SubModelConstructor',
-    # sub_model='prompt_learner',
-    # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
-    # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
     sub_model={'prompt_category_learner': {},
                # 'image_encoder': {'lr_mult': 0.1},
                'text_encoder': {'lr_mult': 0.1},
