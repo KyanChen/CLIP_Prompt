@@ -158,8 +158,10 @@ class PromptHead(BaseModule):
 
         # bce_loss_unk = F.binary_cross_entropy(pred_unk, gt_labels_unk, reduction='mean')
         # bce_loss = loss_pos + loss_neg + self.balance_unk * bce_loss_unk
-
-        bce_loss_unk = F.binary_cross_entropy_with_logits(pred_unk, gt_labels_unk, reduction='mean')
+        if len(pred_unk) == 0:
+            bce_loss_unk = torch.tensor(0.).to(loss_pos_neg.device)
+        else:
+            bce_loss_unk = F.binary_cross_entropy_with_logits(pred_unk, gt_labels_unk, reduction='mean')
         bce_loss = loss_pos_neg + self.balance_unk * bce_loss_unk
 
         return bce_loss
@@ -175,7 +177,8 @@ class PromptHead(BaseModule):
 
         losses = {}
         losses['loss_s_ce'] = loss_s_ce
-
+        import pdb
+        pdb.set_trace()
         if 'img_crop_features' in kwargs and self.kd_model_loss:
             img_crop_features = kwargs.get('img_crop_features', None)
             proposal_features = kwargs.get('boxes_feats', None)
