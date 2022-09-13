@@ -177,8 +177,10 @@ class PromptHead(BaseModule):
 
         losses = {}
         losses['loss_s_ce'] = loss_s_ce
+
         import pdb
         pdb.set_trace()
+
         if 'img_crop_features' in kwargs and self.kd_model_loss:
             img_crop_features = kwargs.get('img_crop_features', None)
             proposal_features = kwargs.get('boxes_feats', None)
@@ -234,9 +236,9 @@ class PromptHead(BaseModule):
             print(e)
             att_acc = torch.tensor(0., dtype=torch.float32)
         if len(self.category2id):
-            pred_logits = cls_scores[len(self.att2id):]
+            pred_logits = cls_scores[:, len(self.att2id):]
             pred_label = torch.argmax(pred_logits, dim=-1)
-            cate_acc = torch.sum(gt_labels[:, len(self.att2id):][..., pred_label] == 1) / BS
+            cate_acc = torch.sum(gt_labels[:, len(self.att2id):][torch.arange(len(pred_logits)), pred_label] == 1) / len(pred_logits)
             losses['cate_acc'] = cate_acc
         if len(self.att2id):
             att_acc = att_acc.to(loss_s_ce.device)
