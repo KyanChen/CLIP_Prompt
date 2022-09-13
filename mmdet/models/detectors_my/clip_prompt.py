@@ -28,8 +28,7 @@ class CLIP_Prompter(BaseDetector):
                  pretrained=None,
                  init_cfg=None):
         super(CLIP_Prompter, self).__init__(init_cfg)
-        import pdb
-        pdb.set_trace()
+
         self.att2id = {}
         if 'att_file' in attribute_index_file.keys():
             file = attribute_index_file['att_file']
@@ -101,6 +100,9 @@ class CLIP_Prompter(BaseDetector):
                 dict(attribute_list=list(self.category2id.keys()), clip_model=clip_model)
             )
             self.prompt_category_learner = build_backbone(prompt_category_learner)
+
+        import pdb
+        pdb.set_trace()
 
         # if prompt_learner_weights:
         #     state_dict = torch.load(prompt_learner_weights, map_location="cpu")
