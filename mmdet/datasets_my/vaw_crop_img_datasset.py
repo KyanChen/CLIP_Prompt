@@ -204,8 +204,6 @@ class VAWCropDataset(Dataset):
         return results
 
     def __getitem__(self, idx):
-        import pdb
-        pdb.set_trace()
         if self.dataset_names == 'generated':
             return self.get_generated_sample(idx)
 
@@ -250,9 +248,11 @@ class VAWCropDataset(Dataset):
                         att_id = self.att2id.get(att, None)
                         if att_id is not None:
                             labels[att_id] = 0
+                import pdb
+                pdb.set_trace()
                 if data_set == 'coco':
                     category = instance['name']
-                    category_id = self.category2id2id.get(category, None)
+                    category_id = self.category2id.get(category, None)
                     if category_id is not None:
                         labels[category_id+len(self.att2id)] = 1
                 results['gt_labels'] = labels.astype(np.int)
@@ -295,7 +295,7 @@ class VAWCropDataset(Dataset):
                         labels[att_id] = 0
             if data_set == 'coco':
                 category = instance['name']
-                category_id = self.category2id2id.get(category, None)
+                category_id = self.category2id.get(category, None)
                 if category_id is not None:
                     labels[category_id + len(self.att2id)] = 1
             np_gt_labels.append(labels.astype(np.int))
