@@ -50,7 +50,7 @@ model = dict(
     # classname_path=data_root+'/VAW/attribute_index.json',
     attribute_index_file=attribute_index_file,
     need_train_names=[
-        'prompt_learner',
+        'prompt_category_learner',
         # 'image_encoder',
         'text_encoder',
         'bbox_head', 'logit_scale'
@@ -239,7 +239,7 @@ optimizer = dict(
     # sub_model='prompt_learner',
     # need_train_names = ['prompt_learner', 'text_encoder', 'bbox_head', 'logit_scale']
     # sub_model={'prompt_learner': {}, 'image_encoder': {'lr_mult': 0.1}},
-    sub_model={'prompt_learner': {},
+    sub_model={'prompt_category_learner': {},
                # 'image_encoder': {'lr_mult': 0.1},
                'text_encoder': {'lr_mult': 0.1},
                'bbox_head': {}, 'logit_scale': {}
