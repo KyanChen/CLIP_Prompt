@@ -79,8 +79,6 @@ class VAWCropDataset(Dataset):
                 for item in v:
                     item['img_id'] = k
                     self.instances.append(item)
-            if not test_mode:
-                self.instances = self.filter_instance(self.instances)
 
             if 'generated' in self.dataset_names:
                 self.instances = glob.glob(self.data_root + '/gen_imgs/*.jpg')
@@ -121,6 +119,8 @@ class VAWCropDataset(Dataset):
         self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
         self.category2id = {k: v - min(self.category2id.values()) for k, v in self.category2id.items()}
 
+        if not test_mode:
+            self.instances = self.filter_instance(self.instances)
         self.flag = np.zeros(len(self), dtype=int)
         if rank == 0:
             print('data len: ', len(self))
