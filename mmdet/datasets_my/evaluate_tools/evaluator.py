@@ -22,7 +22,7 @@ def top_K_values(array):
 class Evaluator(object):
     def __init__(
         self,
-        fpath_attr2idx,
+        attribute_index_file,
         fpath_attr_type,
         fpath_attr_parent_type,
         fpath_attr_headtail,
@@ -32,36 +32,30 @@ class Evaluator(object):
         """Initializes evaluator for attribute prediction on VAW dataset.
 
         Args:
-        - fpath_attr2idx: path to attribute class index file.
+        - fpath_att2id: path to attribute class index file.
         - fpath_attr_type: path to attribute type file.
         - fpath_attr_headtail: path to attribute head/mid/tail categorization file.
         - threshold: positive/negative threshold (for Accuracy metric).
         - exclude_atts: any attribute classes to be excluded from evaluation.
         """
 
-         # Read file that maps from id to attribute name.
-        if isinstance(fpath_attr2idx, dict):
-            file = fpath_attr2idx['file']
+        self.att2id = {}
+        if 'att_file' in attribute_index_file.keys():
+            file = attribute_index_file['att_file']
             att2id = json.load(open(file, 'r'))
-            att_group = fpath_attr2idx['att_group']
-            if 'common2common' in file:
-                if att_group in ['common1', 'common2']:
-                    self.attr2idx = att2id[att_group]
-                elif att_group == 'all':
-                    self.attr2idx = {}
-                    self.attr2idx.update(att2id['common1'])
-                    self.attr2idx.update(att2id['common2'])
-            elif 'common2rare' in file:
-                if att_group in ['common', 'rare']:
-                    self.attr2idx = att2id[att_group]
-                elif att_group == 'all':
-                    self.attr2idx = {}
-                    self.attr2idx.update(att2id['common'])
-                    self.attr2idx.update(att2id['rare'])
-        else:
-            self.attr2idx = json.load(open(fpath_attr2idx, 'r'))
-        self.attr2idx = {k: v - min(self.attr2idx.values()) for k, v in self.attr2idx.items()}
-        self.idx2attr = {v: k for k, v in self.attr2idx.items()}
+            att_group = attribute_index_file['att_group']
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.att2id = att2id[att_group]
+            elif att_group == 'common1+common2':
+                self.att2id.update(att2id['common1'])
+                self.att2id.update(att2id['common2'])
+            elif att_group == 'common+rare':
+                self.att2id.update(att2id['common'])
+                self.att2id.update(att2id['rare'])
+            else:
+                raise NameError
+        self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
+        self.idx2attr = {v: k for k, v in self.att2id.items()}
 
         # Read file that shows metadata of attributes (e.g., "plaid" is pattern).
         with open(fpath_attr_type, 'r') as f:
@@ -73,12 +67,12 @@ class Evaluator(object):
         with open(fpath_attr_headtail, 'r') as f:
             self.attribute_head_tail = json.load(f)
 
-        self.n_class = len(self.attr2idx)
+        self.n_class = len(self.att2id)
         self.exclude_atts = exclude_atts
         self.threshold = threshold
 
         # Cache metric score for each class.
-        self.score = {} # key: i_class -> value: all metrics.
+        self.score = {}  # key: i_class -> value: all metrics.
         self.score_topk = {}
 
     def _clear_cache(self):

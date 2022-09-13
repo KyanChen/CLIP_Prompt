@@ -46,6 +46,8 @@ class VAWCropDataset(Dataset):
         self.pipeline = Compose(pipeline)
         self.data_root = data_root
         self.dataset_names = dataset_names
+        import pdb
+        pdb.set_trace()
         if open_category:
             print('open_category: ', open_category)
             self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json", 'val.json', 'test.json'])
@@ -82,33 +84,46 @@ class VAWCropDataset(Dataset):
 
         rank, world_size = get_dist_info()
         self.attribute_index_file = attribute_index_file
-        if isinstance(attribute_index_file, dict):
-            file = attribute_index_file['file']
+        self.att2id = {}
+        if 'att_file' in attribute_index_file.keys():
+            file = attribute_index_file['att_file']
             att2id = json.load(open(file, 'r'))
             att_group = attribute_index_file['att_group']
-            if 'common2common' in file:
-                if att_group in ['common1', 'common2']:
-                    self.att2id = att2id[att_group]
-                elif att_group == 'all':
-                    self.att2id = {}
-                    self.att2id.update(att2id['common1'])
-                    self.att2id.update(att2id['common2'])
-            elif 'common2rare' in file:
-                if att_group in ['common', 'rare']:
-                    self.att2id = att2id[att_group]
-                elif att_group == 'all':
-                    self.att2id = {}
-                    self.att2id.update(att2id['common'])
-                    self.att2id.update(att2id['rare'])
-        else:
-            self.att2id = json.load(open(attribute_index_file, 'r'))
-        self.att2id = {k: v-min(self.att2id.values()) for k, v in self.att2id.items()}
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.att2id = att2id[att_group]
+            elif att_group == 'common1+common2':
+                self.att2id.update(att2id['common1'])
+                self.att2id.update(att2id['common2'])
+            elif att_group == 'common+rare':
+                self.att2id.update(att2id['common'])
+                self.att2id.update(att2id['rare'])
+            else:
+                raise NameError
+        self.category2id = {}
+        if 'category_file' in attribute_index_file.keys():
+            file = attribute_index_file['category_file']
+            category2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['category_group']
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.category2id = category2id[att_group]
+            elif att_group == 'common1+common2':
+                self.category2id.update(category2id['common1'])
+                self.category2id.update(category2id['common2'])
+            elif att_group == 'common+rare':
+                self.category2id.update(category2id['common'])
+                self.category2id.update(category2id['rare'])
+            else:
+                raise NameError
+        self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
+        self.category2id = {k: v - min(self.category2id.values()) for k, v in self.category2id.items()}
 
         self.flag = np.zeros(len(self), dtype=int)
         if rank == 0:
             print('data len: ', len(self))
             print('num_att: ', len(self.att2id))
+            print('num_category: ', len(self.category2id))
         self.error_list = set()
+
         self.save_label = save_label
         if load_label:
             self.pred_labels = np.load(load_label)
@@ -118,6 +133,7 @@ class VAWCropDataset(Dataset):
         json_file = 'instances_train2017' if pattern == 'train' else 'instances_val2017'
         # json_file = 'lvis_v1_train' if pattern == 'train' else 'instances_val2017'
         json_data = json.load(open(self.data_root + f'/COCO/annotations/{json_file}.json', 'r'))
+        id2name = {x['id']: x['name'] for x in json_data['categories']}
         id2images = {}
         id2instances = {}
         for data in json_data['images']:
@@ -126,6 +142,7 @@ class VAWCropDataset(Dataset):
             id2images[img_id] = data
         for data in json_data['annotations']:
             img_id = 'coco_' + str(data['image_id'])
+            data['name'] = id2name[data['category_id']]
             id2instances[img_id] = id2instances.get(img_id, []) + [data]
         return id2images, id2instances
 
@@ -220,21 +237,9 @@ class VAWCropDataset(Dataset):
                 print(f'img_id: {img_id}')
         else:
             try:
-                labels = np.ones(len(self.att2id.keys())) * 2
-                if hasattr(self, 'pred_labels'):
-                    thresh_low = 0.1
-                    thresh_high = 0.5
-                    thresh_topk = 3
-                    pred_label = torch.from_numpy(self.pred_labels[idx])
-                    idx_tmp = torch.nonzero(pred_label < thresh_low)[:, 0]
-                    labels[idx_tmp] = 0
-                    values, idx_tmp = torch.topk(-pred_label, k=thresh_topk)
-                    labels[idx_tmp] = 0
-                    idx_tmp = torch.nonzero(pred_label > thresh_high)[:, 0]
-                    labels[idx_tmp] = 1
-                    values, idx_tmp = torch.topk(pred_label, k=thresh_topk)
-                    labels[idx_tmp] = 1
-                else:
+                labels = np.ones(len(self.att2id)+len(self.category2id)) * 2
+                labels[len(self.att2id):] = 0
+                if data_set == 'vaw':
                     positive_attributes = instance["positive_attributes"]
                     negative_attributes = instance["negative_attributes"]
                     for att in positive_attributes:
@@ -245,6 +250,11 @@ class VAWCropDataset(Dataset):
                         att_id = self.att2id.get(att, None)
                         if att_id is not None:
                             labels[att_id] = 0
+                if data_set == 'coco':
+                    category = instance['name']
+                    category_id = self.category2id2id.get(category, None)
+                    if category_id is not None:
+                        labels[category_id+len(self.att2id)] = 1
                 results['gt_labels'] = labels.astype(np.int)
                 results = self.pipeline(results)
             except Exception as e:
@@ -266,18 +276,28 @@ class VAWCropDataset(Dataset):
 
     def get_labels(self):
         np_gt_labels = []
-        for results in self.instances:
-            positive_attributes = results['positive_attributes']
-            negative_attributes = results['negative_attributes']
-            labels = np.ones(len(self.att2id.keys())) * 2
-            for att in positive_attributes:
-                att_id = self.att2id.get(att, None)
-                if att_id is not None:
-                    labels[att_id] = 1
-            for att in negative_attributes:
-                att_id = self.att2id.get(att, None)
-                if att_id is not None:
-                    labels[att_id] = 0
+        for instance in self.instances:
+            labels = np.ones(len(self.att2id) + len(self.category2id)) * 2
+            labels[-len(self.category2id):] = 0
+            img_id = instance['img_id']
+            img_info = self.id2images[img_id]
+            data_set = img_id.split('_')[0]
+            if data_set == 'vaw':
+                positive_attributes = instance["positive_attributes"]
+                negative_attributes = instance["negative_attributes"]
+                for att in positive_attributes:
+                    att_id = self.att2id.get(att, None)
+                    if att_id is not None:
+                        labels[att_id] = 1
+                for att in negative_attributes:
+                    att_id = self.att2id.get(att, None)
+                    if att_id is not None:
+                        labels[att_id] = 0
+            if data_set == 'coco':
+                category = instance['name']
+                category_id = self.category2id2id.get(category, None)
+                if category_id is not None:
+                    labels[category_id + len(self.att2id)] = 1
             np_gt_labels.append(labels.astype(np.int))
         return np.stack(np_gt_labels, axis=0)
 
@@ -290,10 +310,16 @@ class VAWCropDataset(Dataset):
                  ):
         results = np.array(results)
         preds = torch.from_numpy(results)
-        if self.save_label:
-            np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
         gts = self.get_labels()
         gts = torch.from_numpy(gts)
+        if len(self.category2id):
+            pred_logits = preds[-len(self.category2id):]
+            pred_label = torch.argmax(pred_logits, dim=-1)
+            cate_acc = torch.sum(gts[:, len(self.att2id):][..., pred_label] == 1) / len(pred_label)
+            return cate_acc
+
+        if self.save_label:
+            np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
         assert preds.shape[-1] == gts.shape[-1]
 
         output = cal_metrics(self.data_root + '/VAW',

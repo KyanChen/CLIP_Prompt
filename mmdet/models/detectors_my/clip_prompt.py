@@ -15,7 +15,8 @@ class CLIP_Prompter(BaseDetector):
                  attribute_index_file,
                  need_train_names,
                  backbone,
-                 prompt_learner,
+                 prompt_att_learner=None,
+                 prompt_category_learner=None,
                  img_encoder=None,
                  prompt_learner_weights='',
                  img_proj_head=False,
@@ -27,32 +28,38 @@ class CLIP_Prompter(BaseDetector):
                  pretrained=None,
                  init_cfg=None):
         super(CLIP_Prompter, self).__init__(init_cfg)
-        if pretrained:
-            warnings.warn('DeprecationWarning: pretrained is deprecated, '
-                          'please use "init_cfg" instead')
-            backbone.pretrained = pretrained
-        if isinstance(attribute_index_file, dict):
-            file = attribute_index_file['file']
+        self.att2id = {}
+        if 'att_file' in attribute_index_file.keys():
+            file = attribute_index_file['att_file']
             att2id = json.load(open(file, 'r'))
             att_group = attribute_index_file['att_group']
-            if 'common2common' in file:
-                if att_group in ['common1', 'common2']:
-                    self.att2id = att2id[att_group]
-                elif att_group == 'all':
-                    self.att2id = {}
-                    self.att2id.update(att2id['common1'])
-                    self.att2id.update(att2id['common2'])
-            elif 'common2rare' in file:
-                if att_group in ['common', 'rare']:
-                    self.att2id = att2id[att_group]
-                elif att_group == 'all':
-                    self.att2id = {}
-                    self.att2id.update(att2id['common'])
-                    self.att2id.update(att2id['rare'])
-        else:
-            self.att2id = json.load(open(attribute_index_file, 'r'))
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.att2id = att2id[att_group]
+            elif att_group == 'common1+common2':
+                self.att2id.update(att2id['common1'])
+                self.att2id.update(att2id['common2'])
+            elif att_group == 'common+rare':
+                self.att2id.update(att2id['common'])
+                self.att2id.update(att2id['rare'])
+            else:
+                raise NameError
+        self.category2id = {}
+        if 'category_file' in attribute_index_file.keys():
+            file = attribute_index_file['category_file']
+            category2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['category_group']
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.category2id = category2id[att_group]
+            elif att_group == 'common1+common2':
+                self.category2id.update(category2id['common1'])
+                self.category2id.update(category2id['common2'])
+            elif att_group == 'common+rare':
+                self.category2id.update(category2id['common'])
+                self.category2id.update(category2id['rare'])
+            else:
+                raise NameError
         self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
-        atts = list(self.att2id.keys())
+        self.category2id = {k: v - min(self.category2id.values()) for k, v in self.category2id.items()}
 
         clip_model = build_backbone(backbone).model
         if img_encoder is None:
@@ -80,8 +87,18 @@ class CLIP_Prompter(BaseDetector):
             )
         )
 
-        prompt_learner.update(dict(attribute_list=atts, clip_model=clip_model))
-        self.prompt_learner = build_backbone(prompt_learner)
+        if prompt_att_learner is not None:
+            assert len(self.att2id)
+            prompt_att_learner.update(
+                dict(attribute_list=list(self.att2id.keys()), clip_model=clip_model)
+            )
+            self.prompt_att_learner = build_backbone(prompt_att_learner)
+        if prompt_category_learner is not None:
+            assert len(self.category2id)
+            prompt_category_learner.update(
+                dict(attribute_list=list(self.category2id.keys()), clip_model=clip_model)
+            )
+            self.prompt_category_learner = build_backbone(prompt_category_learner)
 
         # if prompt_learner_weights:
         #     state_dict = torch.load(prompt_learner_weights, map_location="cpu")
@@ -105,7 +122,7 @@ class CLIP_Prompter(BaseDetector):
         if rank == 0:
             print('img_proj_head: ', img_proj_head)
             print('text_proj_head: ', text_proj_head)
-            print("Turning off gradients in both the image and the text encoder")
+
         for name, param in self.named_parameters():
             flag = False
             for need_train_name in self.need_train_names:
@@ -167,14 +184,23 @@ class CLIP_Prompter(BaseDetector):
         # pdb.set_trace()
         # tokenized_prompts = self.tokenized_prompts
         # text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
+        text_features = []
+        if hasattr(self, 'prompt_att_learner'):
+            prompt_context, eot_index = self.prompt_att_learner()  # 620x77x512
+            text_features_att = self.text_encoder(prompt_context, eot_index)
+            text_features.append(text_features_att)
 
-        prompt_context, eot_index = self.prompt_learner()  # 620x77x512
-        text_features = self.text_encoder(prompt_context, eot_index)
+        if hasattr(self, 'prompt_category_learner'):
+            prompt_context, eot_index = self.prompt_category_learner()  # 620x77x512
+            text_features_cate = self.text_encoder(prompt_context, eot_index)
+            text_features.append(text_features_cate)
+        text_features = torch.cat(text_features, dim=0)
 
         if hasattr(self, 'img_proj_head'):
             image_features = getattr(self, 'img_proj_head')(image_features)
         if hasattr(self, 'text_proj_head'):
             text_features = getattr(self, 'text_proj_head')(text_features)
+
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
@@ -220,8 +246,17 @@ class CLIP_Prompter(BaseDetector):
     def simple_test(self, img, img_metas, rescale=False):
         image_features, last_f_map, f_maps = self.image_encoder(img)  # 2x1024
 
-        prompt_context, eot_index = self.prompt_learner()  # 620x77x512
-        text_features = self.text_encoder(prompt_context, eot_index)
+        text_features = []
+        if hasattr(self, 'prompt_att_learner'):
+            prompt_context, eot_index = self.prompt_att_learner()  # 620x77x512
+            text_features_att = self.text_encoder(prompt_context, eot_index)
+            text_features.append(text_features_att)
+
+        if hasattr(self, 'prompt_category_learner'):
+            prompt_context, eot_index = self.prompt_category_learner()  # 620x77x512
+            text_features_cate = self.text_encoder(prompt_context, eot_index)
+            text_features.append(text_features_cate)
+        text_features = torch.cat(text_features, dim=0)
 
         # prompt_context = self.prompt_learner()  # 620x77x512
         # text_features = self.text_encoder(prompt_context, self.tokenized_prompts)

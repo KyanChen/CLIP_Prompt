@@ -162,7 +162,7 @@ class PromptAttributes(BaseModule):
                      n_prompt=16,
                      is_att_specific=False,
                      att_position='mid',
-                     with_att_type=False,
+                     att2type=None,
                      context_length=77,
                      n_prompt_type=8,
                      generated_context=False,
@@ -178,7 +178,7 @@ class PromptAttributes(BaseModule):
         n_prompt_vec = prompt_config.get('n_prompt', 16)
         att_position = prompt_config.get('att_position', 16)
         is_att_specific = prompt_config.get('is_att_specific', False)
-        self.with_att_type = prompt_config.get('with_att_type', False)
+        self.att2type = prompt_config.get('att2type', None)
         n_prompt_type = prompt_config.get('n_prompt_type', None)
         self.generated_context = prompt_config.get('generated_context', False)
         pos_emb = prompt_config.get('pos_emb', False)
@@ -190,8 +190,7 @@ class PromptAttributes(BaseModule):
             nn.init.normal_(prompt_vectors, std=0.02)
         if n_prompt_type and not self.generated_context:
             assert n_prompt_type == n_prompt_vec
-            file = '/data/kyanchen/prompt/data/VAW/att2types.json'
-            att2types = json.load(open(file, 'r'))
+            att2types = json.load(open(self.att2type, 'r'))
             id2type = att2types['id2type']
             prompt_vectors = torch.empty(1+len(id2type), n_prompt_vec, word_dim, dtype=torch.float32)
             nn.init.normal_(prompt_vectors, std=0.02)
@@ -208,16 +207,15 @@ class PromptAttributes(BaseModule):
             print('generated context: ', self.generated_context)
             print('is pos emb: ', pos_emb)
             print('att position: ', att_position)
-            print('with att type: ', self.with_att_type)
+            print('att type: ', self.att2type)
 
         # self.ctx = nn.Parameter(prompt_vectors)  # to be optimized
         self.prompt_vectors = nn.Parameter(prompt_vectors)
         sot_token = torch.tensor([_tokenizer.encoder["<|startoftext|>"]], dtype=torch.long)
         eot_token = torch.tensor([_tokenizer.encoder["<|endoftext|>"]], dtype=torch.long)
         pad_token = torch.tensor([0], dtype=torch.long)
-        if self.with_att_type:
-            file = '/data/kyanchen/prompt/data/VAW/att2types.json'
-            att2types = json.load(open(file, 'r'))
+        if self.att2type is not None:
+            att2types = json.load(open(self.att2type, 'r'))
             id2type = att2types['id2type']
             att2typeid = att2types['att2typeid']
             att_type_list = [id2type[str(att2typeid[attribute])] for attribute in attribute_list]
@@ -286,12 +284,12 @@ class PromptAttributes(BaseModule):
             context_length=77,
             is_att_specific=False,
             att_position='mid',
-            with_att_type=False,
+            att2type=None,
             n_prompt_type=None,
             *args,
             **kwargs
     ):
-        if with_att_type:
+        if att2type is not None:
             self.type_embeddings = [x.to(self.prompt_vectors.device) for x in self.type_embeddings]
             assert att_position == 'mid'
 
@@ -328,7 +326,7 @@ class PromptAttributes(BaseModule):
                     rearranged_context_tmp.append(type_shared_part_2)
                     rearranged_context_tmp.append(all_shared_part_2)
                     rearranged_context_tmp.append(self.eot_embedding)
-                elif with_att_type:
+                elif att2type is not None:
                     n_part = len(prompt_vectors) // 3
                     part_1 = prompt_vectors[:n_part]
                     part_2 = prompt_vectors[n_part:n_part * 2]

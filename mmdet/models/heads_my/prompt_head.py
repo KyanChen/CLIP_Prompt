@@ -20,12 +20,14 @@ warnings.filterwarnings('ignore')
 @HEADS.register_module()
 class PromptHead(BaseModule):
     def __init__(self,
-                 data_root='',
-                 attribute_index_file='attribute_index.json',
+                 attr_freq_file=None,
+                 category_freq_file=None,
+                 attribute_index_file=None,
                  train_cfg=None,
                  test_cfg=None,
                  init_cfg=None,
-                 re_weight_alpha=0.2,  # 0.2:68, 0.4:67
+                 re_weight_different_att=0.2,  # 0.2:68, 0.4:67
+                 re_weight_category=1,
                  re_weight_gamma=2,
                  re_weight_beta=0.995,  # 越小，加权越弱
                  balance_unk=0.1,
@@ -33,52 +35,69 @@ class PromptHead(BaseModule):
                  balance_kd=0.1
                  ):
         super(PromptHead, self).__init__(init_cfg)
-        self.data_root = data_root
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
-        attr_freq = json.load(open(data_root + '/VAW/attr_freq_wo_sort.json', 'r'))
 
         self.attribute_index_file = attribute_index_file
-        if isinstance(attribute_index_file, dict):
-            file = attribute_index_file['file']
+        self.att2id = {}
+        if 'att_file' in attribute_index_file.keys():
+            file = attribute_index_file['att_file']
             att2id = json.load(open(file, 'r'))
             att_group = attribute_index_file['att_group']
-            if 'common2common' in file:
-                if att_group in ['common1', 'common2']:
-                    self.att2id = att2id[att_group]
-                elif att_group == 'all':
-                    self.att2id = {}
-                    self.att2id.update(att2id['common1'])
-                    self.att2id.update(att2id['common2'])
-            elif 'common2rare' in file:
-                if att_group in ['common', 'rare']:
-                    self.att2id = att2id[att_group]
-                elif att_group == 'all':
-                    self.att2id = {}
-                    self.att2id.update(att2id['common'])
-                    self.att2id.update(att2id['rare'])
-        else:
-            self.att2id = json.load(open(attribute_index_file, 'r'))
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.att2id = att2id[att_group]
+            elif att_group == 'common1+common2':
+                self.att2id.update(att2id['common1'])
+                self.att2id.update(att2id['common2'])
+            elif att_group == 'common+rare':
+                self.att2id.update(att2id['common'])
+                self.att2id.update(att2id['rare'])
+            else:
+                raise NameError
+        self.category2id = {}
+        if 'category_file' in attribute_index_file.keys():
+            file = attribute_index_file['category_file']
+            category2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['category_group']
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.category2id = category2id[att_group]
+            elif att_group == 'common1+common2':
+                self.category2id.update(category2id['common1'])
+                self.category2id.update(category2id['common2'])
+            elif att_group == 'common+rare':
+                self.category2id.update(category2id['common'])
+                self.category2id.update(category2id['rare'])
+            else:
+                raise NameError
         self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
+        self.category2id = {k: v - min(self.category2id.values()) for k, v in self.category2id.items()}
+
+        if attr_freq_file is not None:
+            attr_freq = json.load(open(attr_freq_file, 'r'))
+            self.reweight_att_frac = self.reweight_att(attr_freq)
+        if category_freq_file is not None:
+            category_freq = json.load(open(category_freq_file, 'r'))
+            self.reweight_cate_frac = self.reweight_att(category_freq)
 
         self.re_weight_gamma = re_weight_gamma
         self.re_weight_beta = re_weight_beta
-        self.re_weight_alpha = re_weight_alpha
-        self.reweight_att_frac = self.reweight_att(attr_freq)
+        self.re_weight_different_att = re_weight_different_att
+        self.re_weight_category = re_weight_category
+
         self.balance_unk = balance_unk
         self.kd_model_loss = kd_model_loss
         self.balance_kd = balance_kd
 
-    def reweight_att(self, attr_freq):
+    def reweight_att(self, attr_freq, att2id):
         refine_attr_freq = {}
         idx_pre = -1
-        for att, idx in self.att2id.items():
+        for att, idx in att2id.items():
             assert idx > idx_pre
             idx_pre = idx
             refine_attr_freq[att] = attr_freq[att]
 
-        pos_rew = torch.from_numpy(np.array([v['pos'] for k, v in refine_attr_freq.items()], dtype=np.float32))
-        neg_rew = torch.from_numpy(np.array([v['neg'] for k, v in refine_attr_freq.items()], dtype=np.float32))
+        # pos_rew = torch.from_numpy(np.array([v['pos'] for k, v in refine_attr_freq.items()], dtype=np.float32))
+        # neg_rew = torch.from_numpy(np.array([v['neg'] for k, v in refine_attr_freq.items()], dtype=np.float32))
         total_rew_bak = torch.from_numpy(np.array([v['total'] for k, v in refine_attr_freq.items()], dtype=np.float32))
 
         # total_rew = 99 * (total_rew_bak - total_rew_bak.min()) / (total_rew_bak.max() - total_rew_bak.min()) + 1
@@ -86,7 +105,7 @@ class PromptHead(BaseModule):
         # total_rew = (1 - self.re_weight_beta) / total_rew
         # total_rew = 620 * total_rew / total_rew.sum()
 
-        total_rew = 1 / torch.pow(total_rew_bak, self.re_weight_alpha)
+        total_rew = 1 / torch.pow(total_rew_bak, self.re_weight_different_att)
         total_rew = len(refine_attr_freq) * total_rew / total_rew.sum()
         # import pdb
         # pdb.set_trace()
@@ -99,7 +118,14 @@ class PromptHead(BaseModule):
         cls_scores_flatten = rearrange(cls_scores, 'B N -> (B N)')
         gt_labels_flatten = rearrange(gt_labels, 'B N -> (B N)')
         gt_labels_flatten = gt_labels_flatten.float()
-        total_rew = self.reweight_att_frac.to(gt_labels_flatten.device)
+        total_rew = []
+        if hasattr(self, 'reweight_att_frac') and len(self.att2id):
+            total_rew_att = self.reweight_att_frac.to(gt_labels_flatten.device)
+            total_rew.append(total_rew_att)
+        if hasattr(self, 'reweight_cate_frac') and len(self.category2id):
+            total_rew_cate = self.re_weight_category * self.reweight_cate_frac.to(gt_labels_flatten.device)
+            total_rew.append(total_rew_cate)
+        total_rew = torch.cat(total_rew, dim=0)
         total_rew = repeat(total_rew, 'N -> (B N)', B=BS)
 
         pos_mask = gt_labels_flatten == 1
@@ -192,18 +218,24 @@ class PromptHead(BaseModule):
                 raise NotImplementedError
 
         try:
-            acc = cal_metrics(f'{self.data_root}/VAW',
-                              cls_scores, gt_labels,
-                              fpath_attribute_index=self.attribute_index_file,
-                              is_logit=True).float()
+            if len(self.att2id):
+                att_acc = cal_metrics(
+                    f'../attributes/VAW',
+                    cls_scores[:len(self.att2id)], gt_labels[:len(self.att2id)],
+                    fpath_attribute_index=self.attribute_index_file,
+                    is_logit=True).float()
             # acc = cal_metrics(f'{self.data_root}/VAW', kd_logits, gt_labels, is_logit=True).float()
         except Exception as e:
             print(e)
-            acc = torch.tensor(0., dtype=torch.float32)
-        # acc = acc.to(kd_logits.device)
-        acc = acc.to(loss_s_ce.device)
-
-        losses['acc'] = acc
+            att_acc = torch.tensor(0., dtype=torch.float32)
+        if len(self.category2id):
+            pred_logits = cls_scores[len(self.att2id):]
+            pred_label = torch.argmax(pred_logits, dim=-1)
+            cate_acc = torch.sum(gt_labels[:, len(self.att2id):][..., pred_label] == 1) / BS
+            losses['cate_acc'] = cate_acc
+        if len(self.att2id):
+            att_acc = att_acc.to(loss_s_ce.device)
+            losses['att_acc'] = att_acc
         return losses
 
     def forward_train(self,

@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=1)
+checkpoint_config = dict(interval=10)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -35,8 +35,10 @@ data_root = '/data/kyanchen/prompt/data'
 # )
 
 attribute_index_file = dict(
-    file=data_root+'/VAW/common2rare_att2id.json',
-    att_group='rare'
+    # att_file='../attributes/VAW/common2rare_att2id.json',
+    # att_group='rare',
+    category_file='../attributes/COCO/common2common_category2id.json',
+    category_group='common1',
 )
 
 # attribute_index_file = dict(
@@ -70,13 +72,26 @@ model = dict(
     #     c_specific=False,
     #     class_token_position='end'
     # ),
-    prompt_learner=dict(
+    # prompt_att_learner=dict(
+    #     type='PromptAttributes',
+    #     prompt_config=dict(
+    #         n_prompt=30,
+    #         is_att_specific=False,
+    #         att_position='mid',
+    #         with_att_type=True,
+    #         context_length=77,
+    #         n_prompt_type=None,
+    #         generated_context=False,
+    #         pos_emb=False,
+    #     ),
+    # ),
+    prompt_category_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
             n_prompt=30,
             is_att_specific=False,
             att_position='mid',
-            with_att_type=True,
+            att2type='../attributes/COCO/category2types.json',
             context_length=77,
             n_prompt_type=None,
             generated_context=False,
@@ -86,12 +101,14 @@ model = dict(
     neck=None,
     bbox_head=dict(
         type='PromptHead',
-        data_root=data_root,
-        re_weight_alpha=0.25,
+        attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
+        category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
+        re_weight_different_att=0.25,
+        re_weight_category=1,
         re_weight_gamma=2,
         re_weight_beta=0.995,
-        balance_unk=0.2,  # finetune
-        # balance_unk=0.15
+        # balance_unk=0.2,  # finetune
+        balance_unk=0.15
     )
 )
 img_scale = (224, 224)  # (224, 224) (288, 288) (336, 336), (384, 384) (448, 448)
@@ -161,27 +178,27 @@ test_generated_pipeline = [
     )
 ]
 
-samples_per_gpu = 512
+samples_per_gpu = 64
 data = dict(
     samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=8,
-    persistent_workers=True,
+    workers_per_gpu=0,
+    persistent_workers=False,
     train=dict(
         type=dataset_type,
         data_root=data_root,
         dataset_split='train',
-        # attribute_index_file=attribute_index_file,
-        attribute_index_file=dict(
-            file=data_root+'/VAW/common2rare_att2id.json',
-            att_group='rare'
-        ),
-        dataset_names='generated',
+        attribute_index_file=attribute_index_file,
+        # attribute_index_file=dict(
+        #     file=data_root+'/VAW/common2rare_att2id.json',
+        #     att_group='rare'
+        # ),
+        dataset_names='coco',
         save_label=False,
-        load_label='EXP20220903_0_epoch_20_generated_train_rare.npy',
+        load_label=None,
         test_mode=False,
         open_category=False,
-        # pipeline=train_pipeline
-        pipeline=train_generated_pipeline
+        pipeline=train_pipeline
+        # pipeline=train_generated_pipeline
     ),
     val=dict(
         samples_per_gpu=samples_per_gpu,
@@ -189,6 +206,7 @@ data = dict(
         data_root=data_root,
         dataset_split='test',
         attribute_index_file=attribute_index_file,
+        dataset_names='coco',
         test_mode=True,
         open_category=False,
         pipeline=test_pipeline),
@@ -231,7 +249,7 @@ optimizer = dict(
     # # momentum=0.9,
     # weight_decay=0.0005,
     type='AdamW',
-    lr=1e-5,
+    lr=1e-4,
     weight_decay=0.0005
 )
 #
@@ -247,16 +265,16 @@ optimizer = dict(
 
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
-# lr_config = dict(
-#     policy='step',
-#     warmup='linear',
-#     warmup_iters=2000,
-#     warmup_ratio=0.1,
-#     # gamma=0.5,
-#     # step=[50, 80],
-#     step=[30, 45]
-# )
-lr_config = None
+lr_config = dict(
+    policy='step',
+    warmup='linear',
+    warmup_iters=2000,
+    warmup_ratio=0.1,
+    # gamma=0.5,
+    # step=[50, 80],
+    step=[30, 45]
+)
+# lr_config = None
 # lr_config = dict(
 #     policy='CosineAnnealing',
 #     by_epoch=False,
@@ -267,8 +285,9 @@ lr_config = None
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=10)
-evaluation = dict(interval=1, metric='mAP')
+runner = dict(type='EpochBasedRunner', max_epochs=60)
+evaluation = dict(interval=5, metric='mAP')
 
-load_from = 'results/EXP20220903_0/epoch_20.pth'
+# load_from = 'results/EXP20220903_0/epoch_20.pth'
+load_from = None
 resume_from = None
