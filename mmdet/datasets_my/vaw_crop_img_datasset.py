@@ -46,8 +46,6 @@ class VAWCropDataset(Dataset):
         self.pipeline = Compose(pipeline)
         self.data_root = data_root
         self.dataset_names = dataset_names
-        import pdb
-        pdb.set_trace()
         if open_category:
             print('open_category: ', open_category)
             self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json", 'val.json', 'test.json'])
@@ -206,6 +204,8 @@ class VAWCropDataset(Dataset):
         return results
 
     def __getitem__(self, idx):
+        import pdb
+        pdb.set_trace()
         if self.dataset_names == 'generated':
             return self.get_generated_sample(idx)
 
