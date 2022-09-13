@@ -76,10 +76,10 @@ class PromptHead(BaseModule):
 
         self.re_weight_different_att = re_weight_different_att
 
-        if attr_freq_file is not None:
+        if attr_freq_file is not None and len(self.att2id):
             attr_freq = json.load(open(attr_freq_file, 'r'))
             self.reweight_att_frac = self.reweight_att(attr_freq, self.att2id)
-        if category_freq_file is not None:
+        if category_freq_file is not None and len(self.category2id):
             category_freq = json.load(open(category_freq_file, 'r'))
             self.reweight_cate_frac = self.reweight_att(category_freq, self.category2id)
 
