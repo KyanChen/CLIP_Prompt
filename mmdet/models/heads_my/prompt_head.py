@@ -35,8 +35,6 @@ class PromptHead(BaseModule):
                  balance_kd=0.1
                  ):
         super(PromptHead, self).__init__(init_cfg)
-        import pdb
-        pdb.set_trace()
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 

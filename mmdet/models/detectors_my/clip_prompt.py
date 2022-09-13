@@ -101,9 +101,6 @@ class CLIP_Prompter(BaseDetector):
             )
             self.prompt_category_learner = build_backbone(prompt_category_learner)
 
-        import pdb
-        pdb.set_trace()
-
         # if prompt_learner_weights:
         #     state_dict = torch.load(prompt_learner_weights, map_location="cpu")
         #     self.prompt_learner.load_state_dict(state_dict)
@@ -182,10 +179,9 @@ class CLIP_Prompter(BaseDetector):
           gt_bboxes_ignore=None
     ):
         image_features, last_f_map, f_maps = self.image_encoder(img)  # 2x1024
-
+        import pdb
+        pdb.set_trace()
         # prompts = self.prompt_learner()  # 620x77x512
-        # import pdb
-        # pdb.set_trace()
         # tokenized_prompts = self.tokenized_prompts
         # text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
         text_features = []
