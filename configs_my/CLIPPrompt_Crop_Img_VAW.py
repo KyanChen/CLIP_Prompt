@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=10)
+checkpoint_config = dict(interval=5)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -178,11 +178,11 @@ test_generated_pipeline = [
     )
 ]
 
-samples_per_gpu = 64
+samples_per_gpu = 512
 data = dict(
     samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=0,
-    persistent_workers=False,
+    workers_per_gpu=8,
+    persistent_workers=True,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -272,7 +272,7 @@ lr_config = dict(
     warmup_ratio=0.1,
     # gamma=0.5,
     # step=[50, 80],
-    step=[30, 45]
+    step=[30, 40]
 )
 # lr_config = None
 # lr_config = dict(
@@ -285,8 +285,8 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=60)
-evaluation = dict(interval=5, metric='mAP')
+runner = dict(type='EpochBasedRunner', max_epochs=50)
+evaluation = dict(interval=100, metric='mAP')
 
 # load_from = 'results/EXP20220903_0/epoch_20.pth'
 load_from = None
