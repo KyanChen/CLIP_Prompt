@@ -65,7 +65,8 @@ class VAWCropDataset(Dataset):
                 self.id2instances.pop('coco_340038', None)
                 # self.id2instances.pop('coco_147195', None)
                 # self.id2instances.pop('coco_247306', None)
-                # self.id2instances.pop('coco_438629', None)
+                self.id2instances.pop('coco_438629', None)
+                self.id2instances.pop('coco_284932', None)
 
             if 'vaw' in self.dataset_names:
                 id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)

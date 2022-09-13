@@ -178,10 +178,10 @@ test_generated_pipeline = [
     )
 ]
 
-samples_per_gpu = 512
+samples_per_gpu = 1024
 data = dict(
     samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=8,
+    workers_per_gpu=4,
     persistent_workers=True,
     train=dict(
         type=dataset_type,
