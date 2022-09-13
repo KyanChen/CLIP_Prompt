@@ -72,6 +72,8 @@ class PromptHead(BaseModule):
         self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
         self.category2id = {k: v - min(self.category2id.values()) for k, v in self.category2id.items()}
 
+        self.re_weight_different_att = re_weight_different_att
+
         if attr_freq_file is not None:
             attr_freq = json.load(open(attr_freq_file, 'r'))
             self.reweight_att_frac = self.reweight_att(attr_freq, self.att2id)
@@ -81,7 +83,7 @@ class PromptHead(BaseModule):
 
         self.re_weight_gamma = re_weight_gamma
         self.re_weight_beta = re_weight_beta
-        self.re_weight_different_att = re_weight_different_att
+
         self.re_weight_category = re_weight_category
 
         self.balance_unk = balance_unk
