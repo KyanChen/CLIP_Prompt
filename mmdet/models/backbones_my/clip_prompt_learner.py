@@ -171,8 +171,6 @@ class PromptAttributes(BaseModule):
                  load_ckpt_from=None
                  ):
         super(PromptAttributes, self).__init__()
-        import pdb
-        pdb.set_trace()
         self.prompt_config = prompt_config
         n_att = len(attribute_list)
         word_dim = clip_model.ln_final.weight.shape[0]
