@@ -225,7 +225,7 @@ class PromptHead(BaseModule):
             if len(self.att2id):
                 att_acc = cal_metrics(
                     f'../attributes/VAW',
-                    cls_scores[:len(self.att2id)], gt_labels[:len(self.att2id)],
+                    cls_scores[:, len(self.att2id)].detach(), gt_labels[:, len(self.att2id)].detach(),
                     fpath_attribute_index=self.attribute_index_file,
                     is_logit=True).float()
             # acc = cal_metrics(f'{self.data_root}/VAW', kd_logits, gt_labels, is_logit=True).float()
@@ -233,7 +233,7 @@ class PromptHead(BaseModule):
             print(e)
             att_acc = torch.tensor(0., dtype=torch.float32)
         if len(self.category2id):
-            pred_logits = cls_scores[:, len(self.att2id):]
+            pred_logits = cls_scores[:, len(self.att2id):].detach()
             pred_label = torch.argmax(pred_logits, dim=-1)
             cate_acc = torch.sum(gt_labels[:, len(self.att2id):][torch.arange(len(pred_logits)), pred_label] == 1) / len(pred_logits)
             losses['cate_acc'] = cate_acc
