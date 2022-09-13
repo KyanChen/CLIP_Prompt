@@ -248,8 +248,6 @@ class VAWCropDataset(Dataset):
                         att_id = self.att2id.get(att, None)
                         if att_id is not None:
                             labels[att_id] = 0
-                import pdb
-                pdb.set_trace()
                 if data_set == 'coco':
                     category = instance['name']
                     category_id = self.category2id.get(category, None)

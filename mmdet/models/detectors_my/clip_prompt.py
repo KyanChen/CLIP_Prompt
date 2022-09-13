@@ -28,6 +28,8 @@ class CLIP_Prompter(BaseDetector):
                  pretrained=None,
                  init_cfg=None):
         super(CLIP_Prompter, self).__init__(init_cfg)
+        import pdb
+        pdb.set_trace()
         self.att2id = {}
         if 'att_file' in attribute_index_file.keys():
             file = attribute_index_file['att_file']
