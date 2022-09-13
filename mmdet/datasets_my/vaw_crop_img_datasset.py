@@ -79,6 +79,8 @@ class VAWCropDataset(Dataset):
                 for item in v:
                     item['img_id'] = k
                     self.instances.append(item)
+            if not test_mode:
+                self.instances = self.filter_instance(self.instances)
 
             if 'generated' in self.dataset_names:
                 self.instances = glob.glob(self.data_root + '/gen_imgs/*.jpg')
@@ -130,6 +132,20 @@ class VAWCropDataset(Dataset):
         if load_label:
             self.pred_labels = np.load(load_label)
             assert len(self) == len(self.pred_labels)
+
+    def filter_instance(self, instances):
+        return_instances = []
+        for instance in instances:
+            img_id = instance['img_id']
+            data_set = img_id.split('_')[0]
+            if data_set == 'coco':
+                category = instance['name']
+                category_id = self.category2id.get(category, None)
+                if category_id is not None:
+                    return_instances.append(instance)
+            elif data_set == 'vaw':
+                return_instances.append(instance)
+        return return_instances
 
     def read_data_coco(self, pattern):
         json_file = 'instances_train2017' if pattern == 'train' else 'instances_val2017'
