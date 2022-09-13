@@ -123,8 +123,8 @@ img_norm_cfg = dict(
 
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
-    dict(type='ScaleCrop', scale_range=[0.0, 0.4]),
-    dict(type='RandomCrop', crop_size=[0.7, 0.7], crop_type='relative_range'),
+    dict(type='ScaleCrop', scale_range=[0.0, 0.3]),
+    dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=img_scale, keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
@@ -178,7 +178,7 @@ test_generated_pipeline = [
     )
 ]
 
-samples_per_gpu = 1024
+samples_per_gpu = 512
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
