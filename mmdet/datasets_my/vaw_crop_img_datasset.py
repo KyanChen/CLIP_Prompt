@@ -356,7 +356,7 @@ class VAWCropDataset(Dataset):
             return_all=True,
             return_evaluator=per_class_out_file,
             is_logit=is_logit
-        ).float()
+        )
 
         if per_class_out_file:
             scores_overall, scores_per_class, scores_overall_topk, scores_per_class_topk, evaluator = output
