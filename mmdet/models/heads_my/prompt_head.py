@@ -225,7 +225,7 @@ class PromptHead(BaseModule):
             if len(self.att2id):
                 att_acc = cal_metrics(
                     f'../attributes/VAW',
-                    cls_scores[:, len(self.att2id)].detach(), gt_labels[:, len(self.att2id)].detach(),
+                    cls_scores[:, :len(self.att2id)].detach(), gt_labels[:, :len(self.att2id)].detach(),
                     fpath_attribute_index=self.attribute_index_file,
                     is_logit=True).float()
             # acc = cal_metrics(f'{self.data_root}/VAW', kd_logits, gt_labels, is_logit=True).float()

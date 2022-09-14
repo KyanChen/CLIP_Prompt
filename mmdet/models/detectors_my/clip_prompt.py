@@ -194,8 +194,8 @@ class CLIP_Prompter(BaseDetector):
             text_features_cate = self.text_encoder(prompt_context, eot_index)
             text_features.append(text_features_cate)
         text_features = torch.cat(text_features, dim=0)
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         if hasattr(self, 'img_proj_head'):
             image_features = getattr(self, 'img_proj_head')(image_features)
         if hasattr(self, 'text_proj_head'):
