@@ -10,10 +10,8 @@ types = list(set([x["type"] for x in type_data]))
 for idx in range(len(types)):
     att2types['id2type'][idx] = types[idx]
 for item in type_data:
-    names = item["name"].split(':')[-1].split('/')
-    for name in names:
-        att_name = item["name"].split(':')[0]+':'+name
-        att2types['att2typeid'][att_name] = types.index(item['type'])
+    names = item["name"]
+    att2types['att2typeid'][names] = types.index(item['type'])
 att2types['num_category'] = len(att2types['att2typeid'])
 att2types['num_type'] = len(att2types['id2type'])
 json.dump(att2types, open(save_path+'/att2types.json', 'w'), indent=4)

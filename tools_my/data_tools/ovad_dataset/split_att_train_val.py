@@ -19,9 +19,7 @@ json.dump(common2common, open(save_path+'/common2common_category2id.json', 'w'),
 data = json.load(open(file_path))['attributes']
 common2common = {'common1': {}, 'common2': {}}
 for idx, item in enumerate(data):
-    names = item["name"].split(':')[-1].split('/')  # : "cleanliness:clean/neat",
-    for name in names:
-        common2common['common1'].update({item["name"].split(':')[0]+':'+name: idx})
+    common2common['common1'].update({item["name"]: idx})
 common2common['common1_len'] = len(common2common['common1'])
 common2common['common2_len'] = len(common2common['common2'])
 

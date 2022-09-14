@@ -185,12 +185,12 @@ class CLIP_Prompter(BaseDetector):
         # text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
         text_features = []
         if hasattr(self, 'prompt_att_learner'):
-            prompt_context, eot_index = self.prompt_att_learner()  # 620x77x512
+            prompt_context, eot_index, att_group_member_num = self.prompt_att_learner()  # 620x77x512
             text_features_att = self.text_encoder(prompt_context, eot_index)
             text_features.append(text_features_att)
 
         if hasattr(self, 'prompt_category_learner'):
-            prompt_context, eot_index = self.prompt_category_learner()  # 620x77x512
+            prompt_context, eot_index, cate_group_member_num = self.prompt_category_learner()  # 620x77x512
             text_features_cate = self.text_encoder(prompt_context, eot_index)
             text_features.append(text_features_cate)
         text_features = torch.cat(text_features, dim=0)
@@ -206,6 +206,13 @@ class CLIP_Prompter(BaseDetector):
 
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()  # 2x620
+
+        if hasattr(self, 'prompt_att_learner'):
+            att_logit, cate_logit = logits[:, :len(text_features_att)], logits[:, len(text_features_att):]
+            split_att_group_logits = att_logit.split(att_group_member_num, dim=-1)
+            att_logit = [torch.mean(x, dim=-1, keepdim=True) for x in split_att_group_logits]
+            att_logit = torch.cat(att_logit, dim=-1)
+            logits = torch.cat((att_logit, cate_logit), dim=-1)
 
         losses = self.bbox_head.forward_train(logits, img_metas, gt_labels)
 
@@ -248,12 +255,12 @@ class CLIP_Prompter(BaseDetector):
 
         text_features = []
         if hasattr(self, 'prompt_att_learner'):
-            prompt_context, eot_index = self.prompt_att_learner()  # 620x77x512
+            prompt_context, eot_index, att_group_member_num = self.prompt_att_learner()  # 620x77x512
             text_features_att = self.text_encoder(prompt_context, eot_index)
             text_features.append(text_features_att)
 
         if hasattr(self, 'prompt_category_learner'):
-            prompt_context, eot_index = self.prompt_category_learner()  # 620x77x512
+            prompt_context, eot_index, cate_group_member_num = self.prompt_category_learner()  # 620x77x512
             text_features_cate = self.text_encoder(prompt_context, eot_index)
             text_features.append(text_features_cate)
         text_features = torch.cat(text_features, dim=0)
@@ -270,6 +277,12 @@ class CLIP_Prompter(BaseDetector):
 
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()  # 2x620
+        if hasattr(self, 'prompt_att_learner'):
+            att_logit, cate_logit = logits[:, :len(text_features_att)], logits[:, len(text_features_att):]
+            split_att_group_logits = att_logit.split(att_group_member_num, dim=-1)
+            att_logit = [torch.max(x, dim=-1, keepdim=True)[0] for x in split_att_group_logits]
+            att_logit = torch.cat(att_logit, dim=-1)
+            logits = torch.cat((att_logit, cate_logit), dim=-1)
 
         pred = list(logits.detach().cpu().numpy())
         return pred

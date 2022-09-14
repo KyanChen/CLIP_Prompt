@@ -218,12 +218,20 @@ class PromptAttributes(BaseModule):
             att2types = json.load(open(self.att2type, 'r'))
             id2type = att2types['id2type']
             att2typeid = att2types['att2typeid']
-            att_type_list = [id2type[str(att2typeid[attribute])] for attribute in attribute_list]
+            att_type_list = []
+            for attribute in attribute_list:
+                att_group_member_num = len(attribute.split(':')[-1].split('/'))
+                att_type_list += [id2type[str(att2typeid[attribute])]] * att_group_member_num
             att_type_list = [att_type.replace("_", " ") for att_type in att_type_list]
             type_tokens = [torch.tensor(_tokenizer.encode(att_type)) for att_type in att_type_list]
             self.type_embeddings = [clip_model.token_embedding(x).detach() for x in type_tokens]
 
-        attribute_list = [attribute.replace("_", " ") for attribute in attribute_list]
+        # attribute_list = [attribute.replace("_", " ") for attribute in attribute_list]
+        attribute_list = [attribute.split(':')[-1].split('/') for attribute in attribute_list]
+        self.att_group_member_num = [len(x) for x in attribute_list]
+        attribute_list = [t.replace("_", " ") for x in attribute_list for t in x]
+        if rank == 0:
+            print('att group total: ', len(attribute_list))
         attribute_tokens = [torch.tensor(_tokenizer.encode(attribute)) for attribute in attribute_list]
         self.register_buffer('sot_embedding', clip_model.token_embedding(sot_token).detach())
         self.register_buffer('eot_embedding', clip_model.token_embedding(eot_token).detach())
@@ -449,4 +457,4 @@ class PromptAttributes(BaseModule):
             prompt_context, eot_index = self.rearrange_generated_context(prompt, **self.prompt_config)
         else:
             prompt_context, eot_index = self.rearrange_context(**self.prompt_config)
-        return prompt_context, eot_index
+        return prompt_context, eot_index, self.att_group_member_num

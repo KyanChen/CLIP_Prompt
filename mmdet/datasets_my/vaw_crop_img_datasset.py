@@ -74,6 +74,11 @@ class VAWCropDataset(Dataset):
                 self.id2instances.update(id2instances_vaw)
                 self.id2instances.pop('vaw_713545', None)
 
+            if 'ovad' in self.dataset_names:
+                id2images_ovad, id2instances_ovad = self.read_data_ovad(dataset_split)
+                self.id2images.update(id2images_ovad)
+                self.id2instances.update(id2instances_ovad)
+
             self.instances = []
             for k, v in self.id2instances.items():
                 for item in v:
@@ -184,6 +189,38 @@ class VAWCropDataset(Dataset):
             id2images[img_id] = img_info
         return id2images, id2instances
 
+    def read_data_ovad(self, pattern):
+        json_data = json.load(open('../attributes/OVAD/ovad1200_licence.json', 'r'))
+        instances = json_data['annotations']
+        categoryid2name = {x['id']: x['name'] for x in json_data['categories']}
+        attributeid2name = {x['id']: x for x in json_data['attributes']}
+        id2images = {}
+        id2instances = {}
+        for instance in instances:
+            img_id = 'ovad_' + str(instance['image_id'])
+            instance['name'] = categoryid2name[instance['category_id']]
+            instance['positive_attributes'] = []
+            instance['negative_attributes'] = []
+            for idx, att_ann in enumerate(instance['att_vec']):
+                '''
+                % 1 = positive attribute
+                % 0 = negative attribute
+                % -1 = ignore attribute
+                '''
+                if att_ann in [0, 1]:
+                    att = attributeid2name[idx]['name']
+                    if att_ann == 1:
+                        instance['positive_attributes'] += [att]
+                    else:
+                        instance['negative_attributes'] += [att]
+            id2instances[img_id] = id2instances.get(img_id, []) + [instance]
+
+        for data in json_data['images']:
+            img_id = 'coco_' + str(data['id'])
+            id2images[img_id] = data
+
+        return id2images, id2instances
+
     def split_instance_by_category(self, pattern='train'):
         categories = json.load(open(self.data_root + '/VAW/' + 'category_instances_split.json'))[f'{pattern}_category']
         categories = [x[0] for x in categories]
@@ -241,6 +278,9 @@ class VAWCropDataset(Dataset):
         elif data_set == 'vaw':
             prefix_path = f'/VG/VG_100K'
             data_set_type = 1
+        elif data_set == 'ovad':
+            data_set_type = 0
+            prefix_path = f'/COCO/{self.dataset_split}2017'
         else:
             raise NameError
         results = {}
@@ -248,7 +288,7 @@ class VAWCropDataset(Dataset):
         results['img_prefix'] = os.path.abspath(self.data_root) + prefix_path
         results['img_info'] = {}
         results['img_info']['filename'] = img_info['file_name']
-        key = 'bbox' if data_set == 'coco' else 'instance_bbox'
+        key = 'bbox' if data_set in ['coco', 'ovad'] else 'instance_bbox'
         x, y, w, h = instance[key]
         results['crop_box'] = np.array([x, y, x + w, y + h])
         if self.test_mode:
@@ -304,7 +344,7 @@ class VAWCropDataset(Dataset):
             img_id = instance['img_id']
             img_info = self.id2images[img_id]
             data_set = img_id.split('_')[0]
-            if data_set == 'vaw':
+            if data_set in ['vaw', 'ovad']:
                 positive_attributes = instance["positive_attributes"]
                 negative_attributes = instance["negative_attributes"]
                 for att in positive_attributes:
@@ -350,8 +390,9 @@ class VAWCropDataset(Dataset):
         if not len(self.att2id):
             return result_metrics
 
+        dataset_name = self.attribute_index_file['att_file'].split('/')[-2]
         output = cal_metrics(
-            f'../attributes/VAW',
+            f'../attributes/{dataset_name}',
             preds[:, :len(self.att2id)], gts[:, :len(self.att2id)],
             fpath_attribute_index=self.attribute_index_file,
             return_all=True,

@@ -37,6 +37,8 @@ data_root = '/data/kyanchen/prompt/data'
 attribute_index_file = dict(
     att_file='../attributes/VAW/common2common_att2id.json',
     att_group='common2',
+    # att_file='../attributes/OVAD/common2common_att2id.json',
+    # att_group='common1',
     # category_file='../attributes/COCO/common2common_category2id.json',
     # category_group='common1',
 )
@@ -219,6 +221,8 @@ data = dict(
         attribute_index_file=dict(
             att_file='../attributes/VAW/common2common_att2id.json',
             att_group='common2',
+            # att_file='../attributes/OVAD/common2common_att2id.json',
+            # att_group='common1',
         ),
         # attribute_index_file=dict(
         #     file=data_root+'/VAW/common2rare_att2id.json',
