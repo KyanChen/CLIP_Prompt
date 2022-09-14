@@ -216,7 +216,7 @@ class VAWCropDataset(Dataset):
             id2instances[img_id] = id2instances.get(img_id, []) + [instance]
 
         for data in json_data['images']:
-            img_id = 'coco_' + str(data['id'])
+            img_id = 'ovad_' + str(data['id'])
             id2images[img_id] = data
 
         return id2images, id2instances
