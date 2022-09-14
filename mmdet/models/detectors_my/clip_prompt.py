@@ -173,10 +173,11 @@ class CLIP_Prompter(BaseDetector):
 
     def forward_train(
             self,
-          img,
-          img_metas,
-          gt_labels,
-          gt_bboxes_ignore=None
+            img,
+            img_metas,
+            gt_labels,
+            gt_bboxes_ignore=None,
+            **kwargs
     ):
         image_features, last_f_map, f_maps = self.image_encoder(img)  # 2x1024
         # prompts = self.prompt_learner()  # 620x77x512

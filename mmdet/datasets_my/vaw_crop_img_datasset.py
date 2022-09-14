@@ -235,12 +235,15 @@ class VAWCropDataset(Dataset):
 
         data_set = img_id.split('_')[0]
         if data_set == 'coco':
+            data_set_type = 0
             prefix_path = f'/COCO/{self.dataset_split}2017'
         elif data_set == 'vaw':
             prefix_path = f'/VG/VG_100K'
+            data_set_type = 1
         else:
             raise NameError
         results = {}
+        results['data_set_type'] = data_set_type
         results['img_prefix'] = os.path.abspath(self.data_root) + prefix_path
         results['img_info'] = {}
         results['img_info']['filename'] = img_info['file_name']

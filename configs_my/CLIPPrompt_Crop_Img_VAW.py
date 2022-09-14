@@ -132,7 +132,7 @@ train_pipeline = [
     dict(type='Pad', size=img_scale, center_pad=True),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['gt_labels']),
-    dict(type='Collect', keys=['img', 'gt_labels'])
+    dict(type='Collect', keys=['img', 'gt_labels', 'data_set_type'])
 ]
 
 train_generated_pipeline = [
