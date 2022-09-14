@@ -349,9 +349,11 @@ class VAWCropDataset(Dataset):
 
         if not len(self.att2id):
             return result_metrics
+        import pdb
+        pdb.set_trace()
         output = cal_metrics(
             f'../attributes/VAW',
-            preds[:, :len(self.att2id)].detach(), gts[:, :len(self.att2id)].detach(),
+            preds[:, :len(self.att2id)], gts[:, :len(self.att2id)],
             fpath_attribute_index=self.attribute_index_file,
             return_all=True,
             return_evaluator=per_class_out_file,
