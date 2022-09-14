@@ -212,25 +212,25 @@ data = dict(
         open_category=False,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=samples_per_gpu,
+        samples_per_gpu=128,
         type=dataset_type,
         data_root=data_root,
-        dataset_split='train',
-        # attribute_index_file=dict(
-        #     file=data_root+'/VAW/common2common_att2id.json',
-        #     att_group='common1'
-        # ),
+        dataset_split='test',
         attribute_index_file=dict(
-            file=data_root+'/VAW/common2rare_att2id.json',
-            att_group='rare'
+            att_file='../attributes/VAW/common2common_att2id.json',
+            att_group='common1',
         ),
+        # attribute_index_file=dict(
+        #     file=data_root+'/VAW/common2rare_att2id.json',
+        #     att_group='rare'
+        # ),
         test_mode=True,
         open_category=False,
-        dataset_names='generated',
-        save_label='EXP20220903_0_epoch_20_generated_train_rare.npy',
+        dataset_names='vaw',
+        save_label=False,
         load_label=None,
-        # pipeline=test_pipeline
-        pipeline=test_generated_pipeline
+        pipeline=test_pipeline
+        # pipeline=test_generated_pipeline
     )
 )
 

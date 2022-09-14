@@ -330,26 +330,33 @@ class VAWCropDataset(Dataset):
                  per_class_out_file=None,
                  is_logit=True
                  ):
+        result_metrics = OrderedDict()
         results = np.array(results)
         preds = torch.from_numpy(results)
         gts = self.get_labels()
         gts = torch.from_numpy(gts)
         if len(self.category2id):
-            pred_logits = preds[-len(self.category2id):]
+            pred_logits = preds[:, -len(self.category2id):]
             pred_label = torch.argmax(pred_logits, dim=-1)
-            cate_acc = torch.sum(gts[:, len(self.att2id):][..., pred_label] == 1) / len(pred_label)
-            return cate_acc
+            cate_acc = torch.sum(
+                gts[:, len(self.att2id):][torch.arange(len(pred_logits)), pred_label] == 1) / len(pred_logits)
+
+            result_metrics['cate_acc'] = cate_acc
 
         if self.save_label:
             np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
         assert preds.shape[-1] == gts.shape[-1]
 
-        output = cal_metrics(self.data_root + '/VAW',
-                             preds, gts,
-                             fpath_attribute_index=self.attribute_index_file,
-                             return_all=True,
-                             return_evaluator=per_class_out_file,
-                             is_logit=is_logit)
+        if not len(self.att2id):
+            return result_metrics
+        output = cal_metrics(
+            f'../attributes/VAW',
+            preds[:, :len(self.att2id)].detach(), gts[:, :len(self.att2id)].detach(),
+            fpath_attribute_index=self.attribute_index_file,
+            return_all=True,
+            return_evaluator=per_class_out_file,
+            is_logit=is_logit
+        ).float()
 
         if per_class_out_file:
             scores_overall, scores_per_class, scores_overall_topk, scores_per_class_topk, evaluator = output
@@ -358,13 +365,13 @@ class VAWCropDataset(Dataset):
 
         # CATEGORIES = ['all', 'head', 'medium', 'tail'] + \
         # list(evaluator.attribute_parent_type.keys())
-        results = OrderedDict()
+
         CATEGORIES = ['all']
 
         for category in CATEGORIES:
             print(f"----------{category.upper()}----------")
             print(f"mAP: {scores_per_class[category]['ap']:.4f}")
-            results['all_mAP'] = scores_per_class['all']['ap']
+            result_metrics['all_mAP'] = scores_per_class['all']['ap']
 
             print("Per-class (threshold 0.5):")
             for metric in ['recall', 'precision', 'f1', 'bacc']:
@@ -400,6 +407,6 @@ class VAWCropDataset(Dataset):
                             evaluator.get_score_class(i_class).n_pos,
                             evaluator.get_score_class(i_class).n_neg))
 
-        return results
+        return result_metrics
 
 
