@@ -169,7 +169,7 @@ class VAWCropDataset(Dataset):
         json_data = [json.load(open(self.data_root + '/VAW/' + f'{x}.json', 'r')) for x in json_files]
         instances = []
         [instances.extend(x) for x in json_data]
-        instances = instances[:1024]
+        # instances = instances[:1024]
         id2images = {}
         id2instances = {}
         for instance in instances:
