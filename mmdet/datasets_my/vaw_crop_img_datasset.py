@@ -299,6 +299,8 @@ class VAWCropDataset(Dataset):
     def get_labels(self):
         np_gt_labels = []
         for instance in self.instances:
+            import pdb
+            pdb.set_trace()
             labels = np.ones(len(self.att2id) + len(self.category2id)) * 2
             labels[-len(self.category2id):] = 0
             img_id = instance['img_id']
