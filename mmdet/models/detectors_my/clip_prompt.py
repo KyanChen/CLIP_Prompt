@@ -277,6 +277,8 @@ class CLIP_Prompter(BaseDetector):
 
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()  # 2x620
+        import pdb
+        pdb.set_trace()
         if hasattr(self, 'prompt_att_learner'):
             att_logit, cate_logit = logits[:, :len(text_features_att)], logits[:, len(text_features_att):]
             split_att_group_logits = att_logit.split(att_group_member_num, dim=-1)
