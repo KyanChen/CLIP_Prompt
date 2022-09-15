@@ -269,8 +269,8 @@ class VAWCropDataset(Dataset):
 
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         instance = self.instances[idx]
         img_id = instance['img_id']
         img_info = self.id2images[img_id]
