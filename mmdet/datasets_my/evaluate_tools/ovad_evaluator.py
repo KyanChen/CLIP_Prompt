@@ -288,8 +288,6 @@ class AttEvaluator(object):
                 pr_curve = {"p": precision, "r": recall, "t": thresholds}
                 assert not math.isnan(ap)
             else:
-                import pdb
-                pdb.set_trace()
                 ap = float("nan")
                 pr_curve = {"p": [], "r": [], "t": []}
 
