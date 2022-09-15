@@ -69,12 +69,14 @@ class VAWCropDataset(Dataset):
                 self.id2instances.pop('coco_284932', None)
 
             if 'vaw' in self.dataset_names:
+                assert dataset_split in ['train', 'test']
                 id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
                 self.id2images.update(id2images_vaw)
                 self.id2instances.update(id2instances_vaw)
                 self.id2instances.pop('vaw_713545', None)
 
             if 'ovad' in self.dataset_names:
+                assert dataset_split == 'val'
                 id2images_ovad, id2instances_ovad = self.read_data_ovad(dataset_split)
                 self.id2images.update(id2images_ovad)
                 self.id2instances.update(id2instances_ovad)
