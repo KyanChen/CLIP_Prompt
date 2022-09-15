@@ -8,6 +8,7 @@ import random
 import tempfile
 import warnings
 from collections import OrderedDict, defaultdict
+from pprint import pprint
 
 import cv2
 import imagesize
@@ -380,8 +381,6 @@ class VAWCropDataset(Dataset):
         gts = self.get_labels()
         gts = torch.from_numpy(gts)
         if len(self.category2id):
-            import pdb
-            pdb.set_trace()
             pred_logits = preds[:, -len(self.category2id):].sigmoid()
             gt_labels = gts[:, len(self.att2id):]
             pred_prob, pred_label = torch.max(pred_logits, dim=-1)
@@ -400,6 +399,7 @@ class VAWCropDataset(Dataset):
             result_metrics['cate_tn'] = tn
             result_metrics['cate_fp'] = fp
             result_metrics['cate_fn'] = fn
+            pprint(result_metrics)
 
         if self.save_label:
             np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
