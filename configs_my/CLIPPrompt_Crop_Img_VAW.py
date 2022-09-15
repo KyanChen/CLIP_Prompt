@@ -35,10 +35,10 @@ data_root = '/data/kyanchen/prompt/data'
 # )
 
 attribute_index_file = dict(
-    # att_file='../attributes/VAW/common2common_att2id.json',
-    # att_group='common2',
-    att_file='../attributes/OVAD/common2common_att2id.json',
-    att_group='common1',
+    att_file='../attributes/VAW/common2common_att2id.json',
+    att_group='common2',
+    # att_file='../attributes/OVAD/common2common_att2id.json',
+    # att_group='common1',
     # category_file='../attributes/COCO/common2common_category2id.json',
     # category_group='common1',
 )
@@ -78,11 +78,11 @@ model = dict(
     prompt_att_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
-            n_prompt=30,
+            n_prompt=0,
             is_att_specific=False,
             att_position='mid',
-            # att2type='../attributes/VAW/att2types.json',
-            att2type='../attributes/OVAD/att2types.json',
+            att2type='../attributes/VAW/att2types.json',
+            # att2type='../attributes/OVAD/att2types.json',
             context_length=77,
             n_prompt_type=None,
             generated_context=False,
@@ -218,12 +218,12 @@ data = dict(
         samples_per_gpu=128,
         type=dataset_type,
         data_root=data_root,
-        dataset_split='val',
+        dataset_split='test',
         attribute_index_file=dict(
-            # att_file='../attributes/VAW/common2common_att2id.json',
-            # att_group='common2',
-            att_file='../attributes/OVAD/common2common_att2id.json',
-            att_group='common1',
+            att_file='../attributes/VAW/common2common_att2id.json',
+            att_group='common2',
+            # att_file='../attributes/OVAD/common2common_att2id.json',
+            # att_group='common1',
         ),
         # attribute_index_file=dict(
         #     file=data_root+'/VAW/common2rare_att2id.json',
@@ -231,7 +231,7 @@ data = dict(
         # ),
         test_mode=True,
         open_category=False,
-        dataset_names='ovad',
+        dataset_names='vaw',
         save_label=False,
         load_label=None,
         pipeline=test_pipeline
