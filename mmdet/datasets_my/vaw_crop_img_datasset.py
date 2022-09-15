@@ -395,15 +395,30 @@ class VAWCropDataset(Dataset):
             return result_metrics
 
         dataset_name = self.attribute_index_file['att_file'].split('/')[-2]
+        top_k = 15 if dataset_name == 'VAW' else 8
+        import pdb
+        pdb.set_trace()
         output = cal_metrics(
-            f'../attributes/{dataset_name}',
-            preds[:, :len(self.att2id)], gts[:, :len(self.att2id)],
-            fpath_attribute_index=self.attribute_index_file,
-            return_all=True,
-            return_evaluator=per_class_out_file,
-            is_logit=is_logit
+            self.att2id,
+            dataset_name,
+            prefix_path=f'../attributes/{dataset_name}',
+            pred=preds[:, :len(self.att2id)],
+            gt_label=gts[:, :len(self.att2id)],
+            is_logit=True,
+            use_vaw=False,
+            top_k=top_k,
+            save_result=True
         )
+        return output
 
+        # output = cal_metrics(
+        #     f'../attributes/{dataset_name}',
+        #     preds[:, :len(self.att2id)], gts[:, :len(self.att2id)],
+        #     fpath_attribute_index=self.attribute_index_file,
+        #     return_all=True,
+        #     return_evaluator=per_class_out_file,
+        #     is_logit=is_logit
+        # )
         if per_class_out_file:
             scores_overall, scores_per_class, scores_overall_topk, scores_per_class_topk, evaluator = output
         else:
