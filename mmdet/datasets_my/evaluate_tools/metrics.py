@@ -19,9 +19,22 @@ def cal_metrics(
         save_result=False
 ):
     if not use_vaw:
+        attrs = list(attr2idx.keys())
         attr_type = json.load(open(prefix_path + '/attribute_types.json'))
+        for k, vs in attr_type.items():
+            true_vs = []
+            for v in vs:
+                if v in attrs:
+                    true_vs.append(v)
+            attr_type[k] = true_vs
         attr_parent_type = json.load(open(prefix_path + '/attribute_parent_types.json'))
         attribute_head_tail = json.load(open(prefix_path + '/head_tail.json'))
+        for k, vs in attribute_head_tail.items():
+            true_vs = []
+            for v in vs:
+                if v in attrs:
+                    true_vs.append(v)
+            attribute_head_tail[k] = true_vs
 
         evaluator = AttEvaluator(
             attr2idx,
