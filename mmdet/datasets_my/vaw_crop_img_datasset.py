@@ -396,13 +396,14 @@ class VAWCropDataset(Dataset):
             result_metrics['cate_recall'] = tp / (tp + fn)
             result_metrics['cate_acc'] = (tp + tn) / (tp + tn + fp + fn)
             result_metrics['cate_f1'] = 2 * result_metrics['cate_precision'] * result_metrics['cate_recall'] / (result_metrics['cate_precision'] + result_metrics['cate_recall'])
-            result_metrics['cate_tp'] = tp
-            result_metrics['cate_tn'] = tn
-            result_metrics['cate_fp'] = fp
-            result_metrics['cate_fn'] = fn
+            result_metrics['cate_num_tp'] = tp
+            result_metrics['cate_num_tn'] = tn
+            result_metrics['cate_num_fp'] = fp
+            result_metrics['cate_num_fn'] = fn
             print()
             for k, v in result_metrics.items():
-                print(k, '\t', f'{v.item():.4f}')
+                value = f'{v.item():.4f}' if 'num' in k else f'{v.item()}'
+                print(k, '\t', value)
 
         if self.save_label:
             np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
