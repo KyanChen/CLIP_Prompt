@@ -402,7 +402,7 @@ class VAWCropDataset(Dataset):
             result_metrics['cate_num_fn'] = fn
             print()
             for k, v in result_metrics.items():
-                value = f'{v.item():.4f}' if 'num' in k else f'{v.item()}'
+                value = f'{v.item():.4f}' if 'num' not in k else f'{v.item()}'
                 print(k, '\t', value)
 
         if self.save_label:
