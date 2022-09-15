@@ -399,7 +399,9 @@ class VAWCropDataset(Dataset):
             result_metrics['cate_tn'] = tn
             result_metrics['cate_fp'] = fp
             result_metrics['cate_fn'] = fn
-            pprint(result_metrics)
+            print()
+            for k, v in result_metrics.items():
+                print(k, '\t', v.data)
 
         if self.save_label:
             np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
