@@ -396,8 +396,6 @@ class VAWCropDataset(Dataset):
 
         dataset_name = self.attribute_index_file['att_file'].split('/')[-2]
         top_k = 15 if dataset_name == 'VAW' else 8
-        import pdb
-        pdb.set_trace()
         output = cal_metrics(
             self.att2id,
             dataset_name,
@@ -409,7 +407,7 @@ class VAWCropDataset(Dataset):
             top_k=top_k,
             save_result=True
         )
-        return output
+        return output['PC_ap/all']
 
         # output = cal_metrics(
         #     f'../attributes/{dataset_name}',

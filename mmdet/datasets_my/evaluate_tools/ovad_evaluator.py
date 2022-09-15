@@ -284,10 +284,12 @@ class AttEvaluator(object):
                 # print('gt_label', gt_label)
                 # print('pred', pred)
                 # print('ap', ap)
-                precision, recall, thresholes = precision_recall_curve(gt_label, pred)
-                pr_curve = {"p": precision, "r": recall, "t": thresholes}
+                precision, recall, thresholds = precision_recall_curve(gt_label, pred)
+                pr_curve = {"p": precision, "r": recall, "t": thresholds}
                 assert not math.isnan(ap)
             else:
+                import pdb
+                pdb.set_trace()
                 ap = float("nan")
                 pr_curve = {"p": [], "r": [], "t": []}
 
@@ -451,13 +453,13 @@ class AttEvaluator(object):
                 pred.copy(), gt_label.copy(), threshold_type="topk"
             )
         elif (
-            "threshole" in self.scores_overall.keys()
-            and "threshole" in self.scores_per_class.keys()
+            "threshold" in self.scores_overall.keys()
+            and "threshold" in self.scores_per_class.keys()
             and "topk" in self.scores_overall.keys()
             and "topk" in self.scores_per_class.keys()
         ):
-            scores_overall = self.scores_overall["threshole"]
-            scores_per_class = self.scores_per_class["threshole"]
+            scores_overall = self.scores_overall["threshold"]
+            scores_per_class = self.scores_per_class["threshold"]
             scores_overall_topk = self.scores_overall["topk"]
             scores_per_class_topk = self.scores_per_class["topk"]
         elif self.prediction is not None and self.ground_truth is not None:
