@@ -395,6 +395,7 @@ class VAWCropDataset(Dataset):
             result_metrics['cate_precision'] = tp / torch.sum(pred_pos_mask)
             result_metrics['cate_recall'] = tp / (tp + fn)
             result_metrics['cate_acc'] = (tp + tn) / (tp + tn + fp + fn)
+            result_metrics['cate_f1'] = 2 * result_metrics['cate_precision'] * result_metrics['cate_recall'] / (result_metrics['cate_precision'] + result_metrics['cate_recall'])
             result_metrics['cate_tp'] = tp
             result_metrics['cate_tn'] = tn
             result_metrics['cate_fp'] = fp
