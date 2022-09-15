@@ -380,12 +380,24 @@ class VAWCropDataset(Dataset):
         gts = self.get_labels()
         gts = torch.from_numpy(gts)
         if len(self.category2id):
-            pred_logits = preds[:, -len(self.category2id):]
-            pred_label = torch.argmax(pred_logits, dim=-1)
-            cate_acc = torch.sum(
-                gts[:, len(self.att2id):][torch.arange(len(pred_logits)), pred_label] == 1) / len(pred_logits)
+            pred_logits = preds[:, -len(self.category2id):].sigmoid()
+            gt_labels = gts[:, len(self.att2id):]
+            pred_prob, pred_label = torch.max(pred_logits, dim=-1)
+            pred_pos_mask = pred_prob > 0.5
+            pred_neg_mask = pred_prob <= 0.5
 
-            result_metrics['cate_acc'] = cate_acc
+            tp = torch.sum(gt_labels[pred_pos_mask][torch.arange(len(gt_labels[pred_pos_mask])), pred_label[pred_pos_mask]] == 1)
+            tn = torch.sum(torch.sum(gt_labels[pred_neg_mask], dim=-1) == 0)
+            fp = torch.sum(gt_labels[pred_pos_mask][torch.arange(len(gt_labels[pred_pos_mask])), pred_label[pred_pos_mask]] == 0)
+            fn = torch.sum(torch.sum(gt_labels[pred_neg_mask], dim=-1) == 1)
+
+            result_metrics['cate_precision'] = tp / len(pred_pos_mask)
+            result_metrics['cate_recall'] = tp / (tp + fn)
+            result_metrics['cate_acc'] = (tp + tn) / (tp + tn + fp + fn)
+            result_metrics['cate_tp'] = tp
+            result_metrics['cate_tn'] = tn
+            result_metrics['cate_fp'] = fp
+            result_metrics['cate_fn'] = fn
 
         if self.save_label:
             np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
