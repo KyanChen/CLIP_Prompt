@@ -338,16 +338,21 @@ class PromptAttributes(BaseModule):
                     rearranged_context_tmp.append(all_shared_part_2)
                     rearranged_context_tmp.append(self.eot_embedding)
                 elif att2type is not None:
-                    n_part = len(prompt_vectors) // 3
-                    part_1 = prompt_vectors[:n_part]
-                    part_2 = prompt_vectors[n_part:n_part * 2]
-                    part_3 = prompt_vectors[n_part * 2:]
-                    rearranged_context_tmp.append(part_1)
-                    rearranged_context_tmp.append(self.attribute_embeddings[i])
-                    rearranged_context_tmp.append(part_2)
-                    rearranged_context_tmp.append(self.type_embeddings[i])
-                    rearranged_context_tmp.append(part_3)
-                    rearranged_context_tmp.append(self.eot_embedding)
+                    if len(prompt_vectors):
+                        n_part = len(prompt_vectors) // 3
+                        part_1 = prompt_vectors[:n_part]
+                        part_2 = prompt_vectors[n_part:n_part * 2]
+                        part_3 = prompt_vectors[n_part * 2:]
+                        rearranged_context_tmp.append(part_1)
+                        rearranged_context_tmp.append(self.attribute_embeddings[i])
+                        rearranged_context_tmp.append(part_2)
+                        rearranged_context_tmp.append(self.type_embeddings[i])
+                        rearranged_context_tmp.append(part_3)
+                        rearranged_context_tmp.append(self.eot_embedding)
+                    else:
+                        rearranged_context_tmp.append(self.attribute_embeddings[i])
+                        rearranged_context_tmp.append(self.type_embeddings[i])
+                        rearranged_context_tmp.append(self.eot_embedding)
                 else:
                     n_part = len(prompt_vectors) // 2
                     part_1 = prompt_vectors[:n_part]
