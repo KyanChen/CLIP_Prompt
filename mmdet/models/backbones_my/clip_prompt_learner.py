@@ -210,7 +210,10 @@ class PromptAttributes(BaseModule):
             print('att type: ', self.att2type)
 
         # self.ctx = nn.Parameter(prompt_vectors)  # to be optimized
-        self.prompt_vectors = nn.Parameter(prompt_vectors)
+        if len(prompt_vectors):
+            self.prompt_vectors = nn.Parameter(prompt_vectors)
+        else:
+            self.prompt_vectors = prompt_vectors
         sot_token = torch.tensor([_tokenizer.encoder["<|startoftext|>"]], dtype=torch.long)
         eot_token = torch.tensor([_tokenizer.encoder["<|endoftext|>"]], dtype=torch.long)
         pad_token = torch.tensor([0], dtype=torch.long)
