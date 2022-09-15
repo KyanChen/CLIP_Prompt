@@ -80,4 +80,4 @@ for idx, item in enumerate(common2):
     common2common['common2'].update({item: idx+common2common['common1_len']})
 common2common['common2_len'] = len(common2common['common2'])
 
-json.dump(common2common, open(save_path+'/common2common_category2id.json', 'w'), indent=4)
+json.dump(common2common, open(save_path+'/common2common_category2id_48_17.json', 'w'), indent=4)
