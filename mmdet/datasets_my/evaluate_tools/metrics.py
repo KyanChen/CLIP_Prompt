@@ -28,6 +28,14 @@ def cal_metrics(
                     true_vs.append(v)
             attr_type[k] = true_vs
         attr_parent_type = json.load(open(prefix_path + '/attribute_parent_types.json'))
+        all_types = list(attr_type.keys())
+        for k, vs in attr_parent_type.items():
+            true_vs = []
+            for v in vs:
+                if v in all_types:
+                    true_vs.append(v)
+            attr_parent_type[k] = true_vs
+
         attribute_head_tail = json.load(open(prefix_path + '/head_tail.json'))
         for k, vs in attribute_head_tail.items():
             true_vs = []
