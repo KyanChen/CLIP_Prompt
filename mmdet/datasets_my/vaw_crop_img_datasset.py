@@ -402,7 +402,7 @@ class VAWCropDataset(Dataset):
             result_metrics['cate_fn'] = fn
             print()
             for k, v in result_metrics.items():
-                print(k, '\t', v.item())
+                print(k, '\t', f'{v.item():.4f}')
 
         if self.save_label:
             np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
