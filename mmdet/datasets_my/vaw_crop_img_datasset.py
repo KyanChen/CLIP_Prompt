@@ -317,13 +317,21 @@ class VAWCropDataset(Dataset):
         data_set = img_id.split('_')[0]
         if data_set == 'coco':
             data_set_type = 0
-            prefix_path = f'/COCO/{self.dataset_split}2017'
+            if self.dataset_split == 'test':
+                dataset_split = 'val'
+            else:
+                dataset_split = self.dataset_split
+            prefix_path = f'/COCO/{dataset_split}2017'
         elif data_set == 'vaw':
             prefix_path = f'/VG/VG_100K'
             data_set_type = 1
         elif data_set == 'ovad':
             data_set_type = 0
-            prefix_path = f'/COCO/{self.dataset_split}2017'
+            if self.dataset_split == 'test':
+                dataset_split = 'val'
+            else:
+                dataset_split = self.dataset_split
+            prefix_path = f'/COCO/{dataset_split}2017'
         elif data_set == 'ovadgen':
             data_set_type = 2
             prefix_path = f'/ovadgen'
