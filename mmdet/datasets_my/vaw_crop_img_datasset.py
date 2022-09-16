@@ -486,6 +486,7 @@ class VAWCropDataset(Dataset):
             for k, v in result_metrics.items():
                 value = f'{v.item():.4f}' if 'num' not in k else f'{v.item()}'
                 print(k, '\t', value)
+                result_metrics[k] = v.item()
 
         if self.save_label:
             np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
