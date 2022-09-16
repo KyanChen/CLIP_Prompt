@@ -416,6 +416,21 @@ class VAWCropDataset(Dataset):
             np_gt_labels.append(labels.astype(np.int))
         return np.stack(np_gt_labels, axis=0)
 
+    def get_data_set_type(self):
+        data_set_types = []
+        for instance in self.instances:
+            img_id = instance['img_id']
+            img_info = self.id2images[img_id]
+            data_set = img_id.split('_')[0]
+            if data_set == 'coco':
+                data_set_type = 0
+            elif data_set == 'vaw':
+                data_set_type = 1
+            else:
+                raise NameError
+            data_set_types.append(data_set_type)
+        return np.array(data_set_types)
+
     def evaluate(self,
                  results,
                  metric='mAP',
@@ -424,21 +439,31 @@ class VAWCropDataset(Dataset):
                  is_logit=True
                  ):
         result_metrics = OrderedDict()
+
         results = np.array(results)
         preds = torch.from_numpy(results)
-        gts = self.get_labels()
-        gts = torch.from_numpy(gts)
-        if len(self.category2id):
-            pred_logits = preds[:, -len(self.category2id):].sigmoid()
-            gt_labels = gts[:, len(self.att2id):]
-            pred_prob, pred_label = torch.max(pred_logits, dim=-1)
+        gt_labels = self.get_labels()
+        gt_labels = torch.from_numpy(gt_labels)
+
+        data_set_type = self.get_data_set_type()
+        data_set_type = torch.from_numpy(data_set_type)
+
+        cate_mask = data_set_type == 0
+        att_mask = data_set_type == 1
+        pred_att_logits = preds[att_mask][:, :len(self.att2id)]
+        pred_cate_logits = preds[cate_mask][:, len(self.att2id):]
+        gt_att = gt_labels[att_mask][:, :len(self.att2id)]
+        gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
+
+        if len(pred_cate_logits):
+            pred_prob, pred_label = torch.max(pred_cate_logits, dim=-1)
             pred_pos_mask = pred_prob > 0.5
             pred_neg_mask = pred_prob <= 0.5
 
-            tp = torch.sum(gt_labels[pred_pos_mask][torch.arange(len(gt_labels[pred_pos_mask])), pred_label[pred_pos_mask]] == 1)
-            tn = torch.sum(torch.sum(gt_labels[pred_neg_mask], dim=-1) == 0)
-            fp = torch.sum(gt_labels[pred_pos_mask][torch.arange(len(gt_labels[pred_pos_mask])), pred_label[pred_pos_mask]] == 0)
-            fn = torch.sum(torch.sum(gt_labels[pred_neg_mask], dim=-1) == 1)
+            tp = torch.sum(gt_cate[pred_pos_mask][torch.arange(len(gt_cate[pred_pos_mask])), pred_label[pred_pos_mask]] == 1)
+            tn = torch.sum(torch.sum(gt_cate[pred_neg_mask], dim=-1) == 0)
+            fp = torch.sum(gt_cate[pred_pos_mask][torch.arange(len(gt_cate[pred_pos_mask])), pred_label[pred_pos_mask]] == 0)
+            fn = torch.sum(torch.sum(gt_cate[pred_neg_mask], dim=-1) == 1)
 
             result_metrics['cate_precision'] = tp / torch.sum(pred_pos_mask)
             result_metrics['cate_recall'] = tp / (tp + fn)
@@ -455,7 +480,7 @@ class VAWCropDataset(Dataset):
 
         if self.save_label:
             np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
-        assert preds.shape[-1] == gts.shape[-1]
+        assert pred_att_logits.shape[-1] == gt_att.shape[-1]
 
         if not len(self.att2id):
             return result_metrics
@@ -467,8 +492,8 @@ class VAWCropDataset(Dataset):
             self.att2id,
             dataset_name,
             prefix_path=f'../attributes/{dataset_name}',
-            pred=preds[:, :len(self.att2id)],
-            gt_label=gts[:, :len(self.att2id)],
+            pred=pred_att_logits,
+            gt_label=gt_att,
             is_logit=True,
             use_vaw=False,
             top_k=top_k,
