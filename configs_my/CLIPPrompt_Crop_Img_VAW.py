@@ -197,7 +197,7 @@ data = dict(
         #     file=data_root+'/VAW/common2rare_att2id.json',
         #     att_group='rare'
         # ),
-        dataset_names='ovadgen',
+        dataset_names=['ovadgen'],
         save_label=False,
         load_label=None,
         test_mode=False,
