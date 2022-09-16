@@ -341,11 +341,12 @@ class VAWCropDataset(Dataset):
             x, y, w, h = instance[key]
             results['crop_box'] = np.array([x, y, x + w, y + h])
         if self.test_mode:
-            try:
-                results = self.pipeline(results)
-            except Exception as e:
-                print(f'idx: {idx}')
-                print(f'img_id: {img_id}')
+            results = self.pipeline(results)
+            # try:
+            #
+            # except Exception as e:
+            #     print(f'idx: {idx}')
+            #     print(f'img_id: {img_id}')
         else:
             try:
                 labels = np.ones(len(self.att2id)+len(self.category2id)) * 2
