@@ -15,6 +15,8 @@ import torch.nn.functional as F
 from torch import nn
 from torch.nn import TransformerEncoder, TransformerEncoderLayer, LayerNorm
 import warnings
+from torchmetrics.functional import precision_recall, f1_score, average_precision
+
 warnings.filterwarnings('ignore')
 
 @HEADS.register_module()
@@ -228,20 +230,45 @@ class PromptHead(BaseModule):
 
         try:
             if len(self.att2id):
-                att_acc = cal_metrics(
-                    f'../attributes/VAW',
-                    cls_scores[:, :len(self.att2id)].detach(), gt_labels[:, :len(self.att2id)].detach(),
-                    fpath_attribute_index=self.attribute_index_file,
-                    is_logit=True).float()
+                import pdb
+                pdb.set_trace()
+                pred_logits = cls_scores[:, :len(self.att2id)].detach().sigmoid()
+                gt_labels = gt_labels[:, :len(self.att2id)]
+                valid_mask = gt_labels < 2
+                pred_prob = pred_logits[valid_mask]
+                gt_label = gt_labels[valid_mask]
+                pr = precision_recall(pred_prob, gt_label)
+                losses['att_precision'] = pr[0]
+                losses['att_recall'] = pr[1]
+                f1 = f1_score(pred_prob, gt_label)
+                losses['att_f1'] = f1
+                ap = average_precision(pred_prob, gt_label, pos_label=1)
+                losses['ap'] = ap
+
             # acc = cal_metrics(f'{self.data_root}/VAW', kd_logits, gt_labels, is_logit=True).float()
         except Exception as e:
             print(e)
             att_acc = torch.tensor(0., dtype=torch.float32)
         if len(self.category2id):
-            pred_logits = cls_scores[:, len(self.att2id):].detach()
-            pred_label = torch.argmax(pred_logits, dim=-1)
-            cate_acc = torch.sum(gt_labels[:, len(self.att2id):][torch.arange(len(pred_logits)), pred_label] == 1) / len(pred_logits)
-            losses['cate_acc'] = cate_acc
+            pred_logits = cls_scores[:, -len(self.category2id):].detach().sigmoid()
+            gt_labels = gt_labels[:, len(self.att2id):]
+            pred_prob, pred_label = torch.max(pred_logits, dim=-1)
+            pred_pos_mask = pred_prob > 0.5
+            pred_neg_mask = pred_prob <= 0.5
+
+            tp = torch.sum(
+                gt_labels[pred_pos_mask][torch.arange(len(gt_labels[pred_pos_mask])), pred_label[pred_pos_mask]] == 1)
+            tn = torch.sum(torch.sum(gt_labels[pred_neg_mask], dim=-1) == 0)
+            fp = torch.sum(
+                gt_labels[pred_pos_mask][torch.arange(len(gt_labels[pred_pos_mask])), pred_label[pred_pos_mask]] == 0)
+            fn = torch.sum(torch.sum(gt_labels[pred_neg_mask], dim=-1) == 1)
+
+            losses['cate_precision'] = tp / torch.sum(pred_pos_mask)
+            losses['cate_recall'] = tp / (tp + fn)
+            losses['cate_acc'] = (tp + tn) / (tp + tn + fp + fn)
+            losses['cate_f1'] = 2 * losses['cate_precision'] * losses['cate_recall'] / (
+                        losses['cate_precision'] + losses['cate_recall'])
+
         if len(self.att2id):
             att_acc = att_acc.to(loss_s_ce.device)
             losses['att_acc'] = att_acc
