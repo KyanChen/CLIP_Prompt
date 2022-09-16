@@ -36,7 +36,7 @@ def parse_args():
         help='resume from the latest checkpoint automatically')
     parser.add_argument(
         '--no-validate',
-        default=True,
+        default=False,
         action='store_true',
         help='whether not to evaluate the checkpoint during training')
     parser.add_argument(

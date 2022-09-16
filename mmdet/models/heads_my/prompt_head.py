@@ -228,27 +228,20 @@ class PromptHead(BaseModule):
             else:
                 raise NotImplementedError
 
-        try:
-            if len(self.att2id):
-                import pdb
-                pdb.set_trace()
-                pred_logits = cls_scores[:, :len(self.att2id)].detach().sigmoid()
-                gt_labels = gt_labels[:, :len(self.att2id)]
-                valid_mask = gt_labels < 2
-                pred_prob = pred_logits[valid_mask]
-                gt_label = gt_labels[valid_mask]
-                pr = precision_recall(pred_prob, gt_label)
-                losses['att_precision'] = pr[0]
-                losses['att_recall'] = pr[1]
-                f1 = f1_score(pred_prob, gt_label)
-                losses['att_f1'] = f1
-                ap = average_precision(pred_prob, gt_label, pos_label=1)
-                losses['ap'] = ap
+        if len(self.att2id):
+            pred_logits = cls_scores[:, :len(self.att2id)].detach().sigmoid()
+            gt_labels = gt_labels[:, :len(self.att2id)]
+            valid_mask = gt_labels < 2
+            pred_prob = pred_logits[valid_mask]
+            gt_label = gt_labels[valid_mask]
+            pr = precision_recall(pred_prob, gt_label)
+            losses['att_precision'] = pr[0]
+            losses['att_recall'] = pr[1]
+            f1 = f1_score(pred_prob, gt_label)
+            losses['att_f1'] = f1
+            ap = average_precision(pred_prob, gt_label, pos_label=1)
+            losses['ap'] = ap
 
-            # acc = cal_metrics(f'{self.data_root}/VAW', kd_logits, gt_labels, is_logit=True).float()
-        except Exception as e:
-            print(e)
-            att_acc = torch.tensor(0., dtype=torch.float32)
         if len(self.category2id):
             pred_logits = cls_scores[:, -len(self.category2id):].detach().sigmoid()
             gt_labels = gt_labels[:, len(self.att2id):]
@@ -268,10 +261,6 @@ class PromptHead(BaseModule):
             losses['cate_acc'] = (tp + tn) / (tp + tn + fp + fn)
             losses['cate_f1'] = 2 * losses['cate_precision'] * losses['cate_recall'] / (
                         losses['cate_precision'] + losses['cate_recall'])
-
-        if len(self.att2id):
-            att_acc = att_acc.to(loss_s_ce.device)
-            losses['att_acc'] = att_acc
         return losses
 
     def forward_train(self,

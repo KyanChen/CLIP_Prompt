@@ -186,8 +186,8 @@ test_generated_pipeline = [
 samples_per_gpu = 512
 data = dict(
     samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=0,
-    persistent_workers=False,
+    workers_per_gpu=8,
+    persistent_workers=True,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -211,7 +211,7 @@ data = dict(
         data_root=data_root,
         dataset_split='test',
         attribute_index_file=attribute_index_file,
-        dataset_names='coco',
+        dataset_names=['ovad'],
         test_mode=True,
         open_category=False,
         pipeline=test_pipeline),
@@ -290,7 +290,7 @@ lr_config = dict(
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=50)
-evaluation = dict(interval=100, metric='mAP')
+evaluation = dict(interval=5, metric='mAP')
 
 # load_from = 'results/EXP20220903_0/epoch_20.pth'
 load_from = None
