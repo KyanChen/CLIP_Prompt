@@ -276,7 +276,7 @@ lr_config = dict(
     warmup_ratio=0.1,
     # gamma=0.5,
     # step=[50, 80],
-    step=[30, 40]
+    step=[35, 50]
 )
 # lr_config = None
 # lr_config = dict(
@@ -289,7 +289,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=50)
+runner = dict(type='EpochBasedRunner', max_epochs=60)
 evaluation = dict(interval=5, metric='mAP')
 
 # load_from = 'results/EXP20220903_0/epoch_20.pth'
