@@ -383,6 +383,8 @@ class VAWCropDataset(Dataset):
         if len(self.category2id):
             pred_logits = preds[:, -len(self.category2id):].sigmoid()
             gt_labels = gts[:, len(self.att2id):]
+            import pdb
+            pdb.set_trace()
             pred_prob, pred_label = torch.max(pred_logits, dim=-1)
             pred_pos_mask = pred_prob > 0.5
             pred_neg_mask = pred_prob <= 0.5
