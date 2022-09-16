@@ -274,7 +274,8 @@ class CLIP_Prompter(BaseDetector):
             text_features = getattr(self, 'text_proj_head')(text_features)
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-
+        import pdb
+        pdb.set_trace()
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()  # 2x620
         if hasattr(self, 'prompt_att_learner'):
