@@ -159,7 +159,7 @@ class VAWCropDataset(Dataset):
     def read_data_ovadgen(self, pattern):
         import pdb
         pdb.set_trace()
-        instances = glob.glob(self.data_root + '/ovad_gen/*.jpg')
+        instances = glob.glob(self.data_root + '/ovadgen/*.jpg')
         instances = [x for x in instances if os.path.getsize(x) > 25 * 1024]
 
         id2images = {}
