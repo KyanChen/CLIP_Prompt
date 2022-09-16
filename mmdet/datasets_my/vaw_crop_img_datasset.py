@@ -183,7 +183,8 @@ class VAWCropDataset(Dataset):
             target_atts = [x + ' ' + att_type for x in att_names.split('/')]
             target_atts = [x.replace(' ', '_') for x in target_atts]
             assert att_name in target_atts
-            instance['positive_attributes'] = []
+            instance['positive_attributes'] = [target_att]
+            instance['negative_attributes'] = []
             id2instances[img_id] = id2instances.get(img_id, []) + [instance]
 
         return id2images, id2instances
