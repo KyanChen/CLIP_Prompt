@@ -113,7 +113,7 @@ model = dict(
         re_weight_beta=0.995,
         # balance_unk=0.2,  # finetune
         # balance_unk=0.15,
-        balance_unk=2  # gen
+        balance_unk=1  # gen
     )
 )
 img_scale = (224, 224)  # (224, 224) (288, 288) (336, 336), (384, 384) (448, 448)
