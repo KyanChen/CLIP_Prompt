@@ -47,6 +47,41 @@ class VAWCropDataset(Dataset):
         self.pipeline = Compose(pipeline)
         self.data_root = data_root
         self.dataset_names = dataset_names
+
+        self.attribute_index_file = attribute_index_file
+        self.att2id = {}
+        if 'att_file' in attribute_index_file.keys():
+            file = attribute_index_file['att_file']
+            att2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['att_group']
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.att2id = att2id[att_group]
+            elif att_group == 'common1+common2':
+                self.att2id.update(att2id['common1'])
+                self.att2id.update(att2id['common2'])
+            elif att_group == 'common+rare':
+                self.att2id.update(att2id['common'])
+                self.att2id.update(att2id['rare'])
+            else:
+                raise NameError
+        self.category2id = {}
+        if 'category_file' in attribute_index_file.keys():
+            file = attribute_index_file['category_file']
+            category2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['category_group']
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.category2id = category2id[att_group]
+            elif att_group == 'common1+common2':
+                self.category2id.update(category2id['common1'])
+                self.category2id.update(category2id['common2'])
+            elif att_group == 'common+rare':
+                self.category2id.update(category2id['common'])
+                self.category2id.update(category2id['rare'])
+            else:
+                raise NameError
+        self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
+        self.category2id = {k: v - min(self.category2id.values()) for k, v in self.category2id.items()}
+
         if open_category:
             print('open_category: ', open_category)
             self.instances, self.img_instances_pair = self.read_data(["train_part1.json", "train_part2.json", 'val.json', 'test.json'])
@@ -94,39 +129,6 @@ class VAWCropDataset(Dataset):
                     self.instances.append(item)
 
         rank, world_size = get_dist_info()
-        self.attribute_index_file = attribute_index_file
-        self.att2id = {}
-        if 'att_file' in attribute_index_file.keys():
-            file = attribute_index_file['att_file']
-            att2id = json.load(open(file, 'r'))
-            att_group = attribute_index_file['att_group']
-            if att_group in ['common1', 'common2', 'common', 'rare']:
-                self.att2id = att2id[att_group]
-            elif att_group == 'common1+common2':
-                self.att2id.update(att2id['common1'])
-                self.att2id.update(att2id['common2'])
-            elif att_group == 'common+rare':
-                self.att2id.update(att2id['common'])
-                self.att2id.update(att2id['rare'])
-            else:
-                raise NameError
-        self.category2id = {}
-        if 'category_file' in attribute_index_file.keys():
-            file = attribute_index_file['category_file']
-            category2id = json.load(open(file, 'r'))
-            att_group = attribute_index_file['category_group']
-            if att_group in ['common1', 'common2', 'common', 'rare']:
-                self.category2id = category2id[att_group]
-            elif att_group == 'common1+common2':
-                self.category2id.update(category2id['common1'])
-                self.category2id.update(category2id['common2'])
-            elif att_group == 'common+rare':
-                self.category2id.update(category2id['common'])
-                self.category2id.update(category2id['rare'])
-            else:
-                raise NameError
-        self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
-        self.category2id = {k: v - min(self.category2id.values()) for k, v in self.category2id.items()}
 
         if not test_mode:
             self.instances = self.filter_instance(self.instances)
