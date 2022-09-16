@@ -121,12 +121,17 @@ class PromptHead(BaseModule):
         gt_labels_flatten = rearrange(gt_labels, 'B N -> (B N)')
         gt_labels_flatten = gt_labels_flatten.float()
         total_rew = []
-        if hasattr(self, 'reweight_att_frac') and len(self.att2id):
+
+        total_rew_att = torch.ones(len(self.att2id)).to(gt_labels_flatten.device)
+        if hasattr(self, 'reweight_att_frac'):
             total_rew_att = self.reweight_att_frac.to(gt_labels_flatten.device)
-            total_rew.append(total_rew_att)
-        if hasattr(self, 'reweight_cate_frac') and len(self.category2id):
+        total_rew.append(total_rew_att)
+
+        total_rew_cate = self.re_weight_category * torch.ones(len(self.category2id)).to(gt_labels_flatten.device)
+        if hasattr(self, 'reweight_cate_frac'):
             total_rew_cate = self.re_weight_category * self.reweight_cate_frac.to(gt_labels_flatten.device)
-            total_rew.append(total_rew_cate)
+        total_rew.append(total_rew_cate)
+
         total_rew = torch.cat(total_rew, dim=0)
         total_rew = repeat(total_rew, 'N -> (B N)', B=BS)
 
