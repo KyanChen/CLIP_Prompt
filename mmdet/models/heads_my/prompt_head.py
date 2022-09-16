@@ -268,7 +268,7 @@ class PromptHead(BaseModule):
             f1 = f1_score(pred_prob, gt_label)
             acces['att_f1'] = f1
             ap = average_precision(pred_prob, gt_label, pos_label=1)
-            acces['ap'] = ap
+            acces['att_ap'] = ap
 
         elif pattern == 'cate':
             pred_logits = cls_scores.detach().sigmoid()
