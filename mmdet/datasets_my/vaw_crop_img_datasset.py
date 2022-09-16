@@ -110,6 +110,7 @@ class VAWCropDataset(Dataset):
                 self.id2images.update(id2images_vaw)
                 self.id2instances.update(id2instances_vaw)
                 self.id2instances.pop('vaw_713545', None)
+                self.id2instances.pop('vaw_2369080', None)
 
             if 'ovad' in self.dataset_names:
                 assert dataset_split == 'val'
