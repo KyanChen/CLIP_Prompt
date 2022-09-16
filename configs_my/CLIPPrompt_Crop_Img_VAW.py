@@ -294,4 +294,4 @@ evaluation = dict(interval=5, metric='mAP')
 
 # load_from = 'results/EXP20220903_0/epoch_20.pth'
 load_from = None
-resume_from = None
+resume_from = 'results/EXP20220916_6/latest.pth'

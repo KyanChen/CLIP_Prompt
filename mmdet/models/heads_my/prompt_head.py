@@ -248,10 +248,10 @@ class PromptHead(BaseModule):
             if hasattr(self, 'reweight_cate_frac'):
                 total_rew_cate = self.re_weight_category * self.reweight_cate_frac.to(gt_labels.device)
             else:
-                total_rew_cate = self.re_weight_category * torch.ones(len(self.category2id)).to(gt_labels.device)
+                total_rew_cate = None
             cate_loss = self.get_classify_loss(pred_cate_logits, gt_cate, self.balance_unk, total_rew_cate)
-            losses['cate_bce_loss'] = cate_loss
-            losses.update(self.get_acc(pred_att_logits, gt_att, pattern='cate'))
+            losses['cate_bce_loss'] = cate_loss * self.re_weight_category
+            losses.update(self.get_acc(pred_cate_logits, gt_cate, pattern='cate'))
 
         return losses
 
