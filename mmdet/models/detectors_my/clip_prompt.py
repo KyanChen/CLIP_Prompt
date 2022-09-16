@@ -63,8 +63,6 @@ class CLIP_Prompter(BaseDetector):
         self.category2id = {k: v - min(self.category2id.values()) for k, v in self.category2id.items()}
 
         clip_model = build_backbone(backbone).model
-        import pdb
-        pdb.set_trace()
         if img_encoder is None:
             self.image_encoder = clip_model.visual
         else:

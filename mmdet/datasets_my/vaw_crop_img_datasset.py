@@ -82,15 +82,16 @@ class VAWCropDataset(Dataset):
                 self.id2images.update(id2images_ovad)
                 self.id2instances.update(id2instances_ovad)
 
+            if 'ovadgen' in self.dataset_names:
+                id2images_ovadgen, id2instances_ovadgen = self.read_data_ovadgen(dataset_split)
+                self.id2images.update(id2images_ovadgen)
+                self.id2instances.update(id2instances_ovadgen)
+
             self.instances = []
             for k, v in self.id2instances.items():
                 for item in v:
                     item['img_id'] = k
                     self.instances.append(item)
-
-            if 'generated' in self.dataset_names:
-                self.instances = glob.glob(self.data_root + '/gen_imgs/*.jpg')
-                self.instances = [x for x in self.instances if os.path.getsize(x) > 20*1024]
 
         rank, world_size = get_dist_info()
         self.attribute_index_file = attribute_index_file
@@ -154,6 +155,36 @@ class VAWCropDataset(Dataset):
             elif data_set == 'vaw':
                 return_instances.append(instance)
         return return_instances
+
+    def read_data_ovadgen(self, pattern):
+        import pdb
+        pdb.set_trace()
+        instances = glob.glob(self.data_root + '/ovad_gen/*.jpg')
+        instances = [x for x in instances if os.path.getsize(x) > 25 * 1024]
+
+        id2images = {}
+        id2instances = {}
+        for idx, data in enumerate(instances):
+            img_id = 'ovadgen_' + str(idx)
+            id2images[img_id] = {}
+            id2images[img_id]['file_name'] = os.path.basename(data)
+        id2att = {v: k for k, v in self.att2id.items()}
+        for idx, data in enumerate(instances):
+            img_id = 'ovadgen_' + str(idx)
+            instance = {}
+            img_name = os.path.basename(data)
+            id_att = img_name.split('_')[-2]
+            att_name = '_'.join(img_name.split('_')[:-2])
+            target_att = id2att[id_att]
+
+            att_type, att_names = target_att.split(':')
+            target_atts = [x + ' ' + att_type for x in att_names.split('/')]
+            target_atts = [x.replace(' ', '_') for x in target_atts]
+            assert att_name in target_atts
+            instance['positive_attributes'] = []
+            id2instances[img_id] = id2instances.get(img_id, []) + [instance]
+
+        return id2images, id2instances
 
     def read_data_coco(self, pattern):
         json_file = 'instances_train2017' if pattern == 'train' else 'instances_val2017'
