@@ -177,6 +177,7 @@ class CLIP_Prompter(BaseDetector):
             img_metas,
             gt_labels,
             gt_bboxes_ignore=None,
+            data_set_type=None,
             **kwargs
     ):
         image_features, last_f_map, f_maps = self.image_encoder(img)  # 2x1024
@@ -214,7 +215,7 @@ class CLIP_Prompter(BaseDetector):
             att_logit = torch.cat(att_logit, dim=-1)
             logits = torch.cat((att_logit, cate_logit), dim=-1)
 
-        losses = self.bbox_head.forward_train(logits, img_metas, gt_labels)
+        losses = self.bbox_head.forward_train(logits, img_metas, data_set_type, gt_labels)
 
         return losses
 

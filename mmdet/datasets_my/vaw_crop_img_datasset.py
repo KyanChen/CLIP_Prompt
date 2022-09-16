@@ -190,6 +190,8 @@ class VAWCropDataset(Dataset):
         return id2images, id2instances
 
     def read_data_coco(self, pattern):
+        if pattern == 'test':
+            pattern = 'val'
         json_file = 'instances_train2017' if pattern == 'train' else 'instances_val2017'
         # json_file = 'lvis_v1_train' if pattern == 'train' else 'instances_val2017'
         json_data = json.load(open(self.data_root + f'/COCO/annotations/{json_file}.json', 'r'))

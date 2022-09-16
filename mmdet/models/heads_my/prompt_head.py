@@ -115,28 +115,15 @@ class PromptHead(BaseModule):
         # pdb.set_trace()
         return total_rew
 
-    def get_classify_loss(self, cls_scores, gt_labels):
+    def get_classify_loss(self, cls_scores, gt_labels, balance_unk=1., reweight=None):
         # cls_scores: BxN
         # gt_labels: BxN
         BS = cls_scores.size(0)
         cls_scores_flatten = rearrange(cls_scores, 'B N -> (B N)')
         gt_labels_flatten = rearrange(gt_labels, 'B N -> (B N)')
         gt_labels_flatten = gt_labels_flatten.float()
-        total_rew = []
-
-        total_rew_att = torch.ones(len(self.att2id)).to(gt_labels_flatten.device)
-        if hasattr(self, 'reweight_att_frac'):
-            total_rew_att = self.reweight_att_frac.to(gt_labels_flatten.device)
-        total_rew.append(total_rew_att)
-
-        total_rew_cate = self.re_weight_category * torch.ones(len(self.category2id)).to(gt_labels_flatten.device)
-        if hasattr(self, 'reweight_cate_frac'):
-            total_rew_cate = self.re_weight_category * self.reweight_cate_frac.to(gt_labels_flatten.device)
-        total_rew.append(total_rew_cate)
-
-        total_rew = torch.cat(total_rew, dim=0)
-        total_rew = repeat(total_rew, 'N -> (B N)', B=BS)
-
+        if reweight is not None:
+            total_rew = repeat(reweight, 'N -> (B N)', B=BS)
         pos_mask = gt_labels_flatten == 1
         neg_mask = gt_labels_flatten == 0
         unk_mask = gt_labels_flatten == 2
@@ -150,9 +137,13 @@ class PromptHead(BaseModule):
         # # loss_neg = - total_rew[neg_mask] * torch.log(neg_pred)
         # loss_pos = loss_pos.mean()
         # loss_neg = loss_neg.mean()
-
+        if reweight is None:
+            pos_neg_rew = None
+        else:
+            pos_neg_rew = total_rew[~unk_mask]
         loss_pos_neg = F.binary_cross_entropy_with_logits(
-            cls_scores_flatten[~unk_mask], gt_labels_flatten[~unk_mask], weight=total_rew[~unk_mask], reduction='mean')
+            cls_scores_flatten[~unk_mask], gt_labels_flatten[~unk_mask], weight=pos_neg_rew,
+            reduction='mean')
 
         # loss_pos = F.binary_cross_entropy_with_logits(
         #     cls_scores_flatten[pos_mask], gt_labels_flatten[pos_mask], weight=total_rew[pos_mask], reduction='mean')
@@ -169,7 +160,7 @@ class PromptHead(BaseModule):
             bce_loss_unk = torch.tensor(0.).to(loss_pos_neg.device)
         else:
             bce_loss_unk = F.binary_cross_entropy_with_logits(pred_unk, gt_labels_unk, reduction='mean')
-        bce_loss = loss_pos_neg + self.balance_unk * bce_loss_unk
+        bce_loss = loss_pos_neg + balance_unk * bce_loss_unk
 
         return bce_loss
 
@@ -228,23 +219,59 @@ class PromptHead(BaseModule):
             else:
                 raise NotImplementedError
 
-        if len(self.att2id):
-            pred_logits = cls_scores[:, :len(self.att2id)].detach().sigmoid()
-            gt_labels = gt_labels[:, :len(self.att2id)]
+        return losses
+
+    def forward_train(self,
+                      x,
+                      img_metas,
+                      data_set_type,
+                      gt_labels,
+                      **kwargs):
+        losses = {}
+
+        cate_mask = data_set_type == 0
+        att_mask = data_set_type == 1
+        pred_att_logits = x[att_mask][:, :len(self.att2id)]
+        pred_cate_logits = x[cate_mask][:, len(self.att2id):]
+        gt_att = gt_labels[att_mask][:, :len(self.att2id)]
+        gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
+        if len(pred_att_logits):
+            if hasattr(self, 'reweight_att_frac'):
+                total_rew_att = self.reweight_att_frac.to(gt_labels.device)
+            else:
+                total_rew_att = None
+            att_loss = self.get_classify_loss(pred_att_logits, gt_att, self.balance_unk, total_rew_att)
+            losses['att_bce_loss'] = att_loss
+            losses.update(self.get_acc(pred_att_logits, gt_att, pattern='att'))
+
+        if len(pred_cate_logits):
+            if hasattr(self, 'reweight_cate_frac'):
+                total_rew_cate = self.re_weight_category * self.reweight_cate_frac.to(gt_labels.device)
+            else:
+                total_rew_cate = self.re_weight_category * torch.ones(len(self.category2id)).to(gt_labels.device)
+            cate_loss = self.get_classify_loss(pred_cate_logits, gt_cate, self.balance_unk, total_rew_cate)
+            losses['cate_bce_loss'] = cate_loss
+            losses.update(self.get_acc(pred_att_logits, gt_att, pattern='cate'))
+
+        return losses
+
+    def get_acc(self, cls_scores, gt_labels, pattern='att'):
+        acces = {}
+        if pattern == 'att':
+            pred_logits = cls_scores.detach().sigmoid()
             valid_mask = gt_labels < 2
             pred_prob = pred_logits[valid_mask]
             gt_label = gt_labels[valid_mask]
             pr = precision_recall(pred_prob, gt_label)
-            losses['att_precision'] = pr[0]
-            losses['att_recall'] = pr[1]
+            acces['att_precision'] = pr[0]
+            acces['att_recall'] = pr[1]
             f1 = f1_score(pred_prob, gt_label)
-            losses['att_f1'] = f1
+            acces['att_f1'] = f1
             ap = average_precision(pred_prob, gt_label, pos_label=1)
-            losses['ap'] = ap
+            acces['ap'] = ap
 
-        if len(self.category2id):
-            pred_logits = cls_scores[:, -len(self.category2id):].detach().sigmoid()
-            gt_labels = gt_labels[:, len(self.att2id):]
+        elif pattern == 'cate':
+            pred_logits = cls_scores.detach().sigmoid()
             pred_prob, pred_label = torch.max(pred_logits, dim=-1)
             pred_pos_mask = pred_prob > 0.5
             pred_neg_mask = pred_prob <= 0.5
@@ -256,21 +283,12 @@ class PromptHead(BaseModule):
                 gt_labels[pred_pos_mask][torch.arange(len(gt_labels[pred_pos_mask])), pred_label[pred_pos_mask]] == 0)
             fn = torch.sum(torch.sum(gt_labels[pred_neg_mask], dim=-1) == 1)
 
-            losses['cate_precision'] = tp / torch.sum(pred_pos_mask)
-            losses['cate_recall'] = tp / (tp + fn)
-            losses['cate_acc'] = (tp + tn) / (tp + tn + fp + fn)
-            losses['cate_f1'] = 2 * losses['cate_precision'] * losses['cate_recall'] / (
-                        losses['cate_precision'] + losses['cate_recall'])
-        return losses
-
-    def forward_train(self,
-                      x,
-                      img_metas,
-                      gt_labels,
-                      **kwargs):
-        losses = self.loss(x, gt_labels, img_metas, **kwargs)
-
-        return losses
+            acces['cate_precision'] = tp / torch.sum(pred_pos_mask)
+            acces['cate_recall'] = tp / (tp + fn)
+            acces['cate_acc'] = (tp + tn) / (tp + tn + fp + fn)
+            acces['cate_f1'] = 2 * acces['cate_precision'] * acces['cate_recall'] / (
+                        acces['cate_precision'] + acces['cate_recall'])
+        return acces
 
     def forward(self, feats):
         return feats
