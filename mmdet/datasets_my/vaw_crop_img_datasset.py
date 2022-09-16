@@ -465,7 +465,8 @@ class VAWCropDataset(Dataset):
             top_k=top_k,
             save_result=True
         )
-        return output['PC_ap/all']
+        result_metrics['att_ap_all'] = torch.tensor(output['PC_ap/all'])
+        return result_metrics
 
         # output = cal_metrics(
         #     f'../attributes/{dataset_name}',
