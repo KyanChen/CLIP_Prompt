@@ -489,6 +489,38 @@ class AttEvaluator(object):
             f"PC_@{self.top_k}": scores_per_class_topk,
         }
 
+        category = 'all'
+        print(f"----------{category.upper()}----------\n")
+        print(f"mAP: {scores_per_class[category]['ap']:.4f}\n")
+
+        print("Per-class (threshold {:.2f}):\n".format(self.threshold))
+        for metric in ["recall", "precision", "f1", "bacc"]:
+            if metric in scores_per_class[category]:
+                print(
+                    f"- {metric}: {scores_per_class[category][metric]:.4f}\n"
+                )
+
+        print("Per-class (top {}):\n".format(self.top_k))
+        for metric in ["recall", "precision", "f1"]:
+            if metric in scores_per_class_topk[category]:
+                print(
+                    f"- {metric}: {scores_per_class_topk[category][metric]:.4f}\n"
+                )
+
+        print("Overall (threshold {:.2f}):\n".format(self.threshold))
+        for metric in ["recall", "precision", "f1", "bacc"]:
+            if metric in scores_overall[category]:
+                print(
+                    f"- {metric}: {scores_overall[category][metric]:.4f}\n"
+                )
+
+        print("Overall (top {}):\n".format(self.top_k))
+        for metric in ["recall", "precision", "f1"]:
+            if metric in scores_overall_topk[category]:
+                print(
+                    f"- {metric}: {scores_overall_topk[category][metric]:.4f}\n"
+                )
+
         if output_file == "" and self.output_file != "":
             output_file = self.output_file
         if output_file != "":
