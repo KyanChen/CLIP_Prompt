@@ -363,7 +363,8 @@ class VAWCropDataset(Dataset):
                         labels[category_id+len(self.att2id)] = 1
                 results['gt_labels'] = labels.astype(np.int)
                 if 'gen' in data_set:
-                    results = self.pipeline(results, (1, ':'))
+                    results = self.pipeline(results, 0)
+                    results = self.pipeline(results, (2, ':'))
                 else:
                     results = self.pipeline(results)
             except Exception as e:
