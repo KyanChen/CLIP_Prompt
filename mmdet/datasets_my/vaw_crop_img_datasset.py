@@ -343,7 +343,7 @@ class VAWCropDataset(Dataset):
             # try:
             labels = np.ones(len(self.att2id)+len(self.category2id)) * 2
             labels[len(self.att2id):] = 0
-            if data_set == 'vaw' or 'ovadgen':
+            if data_set == 'vaw' or data_set == 'ovadgen':
                 positive_attributes = instance["positive_attributes"]
                 negative_attributes = instance["negative_attributes"]
                 for att in positive_attributes:
