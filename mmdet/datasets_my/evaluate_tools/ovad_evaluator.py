@@ -430,7 +430,7 @@ class AttEvaluator(object):
                     path_plot = os.path.join(
                         save_dir, "pr_curves_{}.png".format(subtype)
                     )
-                    print("Saving pr plot {}".format(path_plot))
+                    # print("Saving pr plot {}".format(path_plot))
                     plt.savefig(path_plot)
                 plt.close("all")
 
@@ -490,35 +490,34 @@ class AttEvaluator(object):
         }
 
         category = 'all'
-        print(f"----------{category.upper()}----------\n")
-        print(f"mAP: {scores_per_class[category]['ap']:.4f}\n")
-
-        print("Per-class (threshold {:.2f}):\n".format(self.threshold))
+        print(f"----------{category.upper()}----------")
+        print(f"mAP: {scores_per_class[category]['ap']:.4f}")
+        print("Per-class (threshold {:.2f}):".format(self.threshold))
         for metric in ["recall", "precision", "f1", "bacc"]:
             if metric in scores_per_class[category]:
                 print(
-                    f"- {metric}: {scores_per_class[category][metric]:.4f}\n"
+                    f"- {metric}: {scores_per_class[category][metric]:.4f}"
                 )
 
-        print("Per-class (top {}):\n".format(self.top_k))
+        print("Per-class (top {}):".format(self.top_k))
         for metric in ["recall", "precision", "f1"]:
             if metric in scores_per_class_topk[category]:
                 print(
-                    f"- {metric}: {scores_per_class_topk[category][metric]:.4f}\n"
+                    f"- {metric}: {scores_per_class_topk[category][metric]:.4f}"
                 )
 
-        print("Overall (threshold {:.2f}):\n".format(self.threshold))
+        print("Overall (threshold {:.2f}):".format(self.threshold))
         for metric in ["recall", "precision", "f1", "bacc"]:
             if metric in scores_overall[category]:
                 print(
-                    f"- {metric}: {scores_overall[category][metric]:.4f}\n"
+                    f"- {metric}: {scores_overall[category][metric]:.4f}"
                 )
 
-        print("Overall (top {}):\n".format(self.top_k))
+        print("Overall (top {}):".format(self.top_k))
         for metric in ["recall", "precision", "f1"]:
             if metric in scores_overall_topk[category]:
                 print(
-                    f"- {metric}: {scores_overall_topk[category][metric]:.4f}\n"
+                    f"- {metric}: {scores_overall_topk[category][metric]:.4f}"
                 )
 
         if output_file == "" and self.output_file != "":
@@ -935,7 +934,7 @@ def print_metric_table(att_evaluator, results):
         floatfmt=".3f",
         numalign="left",
     )
-    print("Per-att_group: \n" + table)
+    # print("Per-att_group: \n" + table)
     att_evaluator.logger.info("Per-att_group: \n" + table)
 
     return return_metrics
