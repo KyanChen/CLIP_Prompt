@@ -151,10 +151,12 @@ class VAWCropDataset(Dataset):
             data_set = img_id.split('_')[0]
             if data_set == 'coco':
                 category = instance['name']
-                category_id = self.category2id.get(category, None)
+                category_id = self.category2id.get(category, None)  # 未标注的该类别的应该去除
                 if category_id is not None:
                     return_instances.append(instance)
             elif data_set == 'vaw':
+                return_instances.append(instance)
+            elif data_set == 'ovadgen':
                 return_instances.append(instance)
         return return_instances
 
@@ -169,8 +171,6 @@ class VAWCropDataset(Dataset):
             id2images[img_id] = {}
             id2images[img_id]['file_name'] = os.path.basename(data)
         id2att = {v: k for k, v in self.att2id.items()}
-        import pdb
-        pdb.set_trace()
         for idx, data in enumerate(instances):
             img_id = 'ovadgen_' + str(idx)
             instance = {}
@@ -299,9 +299,6 @@ class VAWCropDataset(Dataset):
         return results
 
     def __getitem__(self, idx):
-        if self.dataset_names == 'generated':
-            return self.get_generated_sample(idx)
-
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
         # import pdb
@@ -320,6 +317,9 @@ class VAWCropDataset(Dataset):
         elif data_set == 'ovad':
             data_set_type = 0
             prefix_path = f'/COCO/{self.dataset_split}2017'
+        elif data_set == 'ovadgen':
+            data_set_type = 2
+            prefix_path = f'/ovadgen'
         else:
             raise NameError
         results = {}
@@ -327,9 +327,12 @@ class VAWCropDataset(Dataset):
         results['img_prefix'] = os.path.abspath(self.data_root) + prefix_path
         results['img_info'] = {}
         results['img_info']['filename'] = img_info['file_name']
-        key = 'bbox' if data_set in ['coco', 'ovad'] else 'instance_bbox'
-        x, y, w, h = instance[key]
-        results['crop_box'] = np.array([x, y, x + w, y + h])
+        if 'gen' in data_set:
+            pass
+        else:
+            key = 'bbox' if data_set in ['coco', 'ovad'] else 'instance_bbox'
+            x, y, w, h = instance[key]
+            results['crop_box'] = np.array([x, y, x + w, y + h])
         if self.test_mode:
             try:
                 results = self.pipeline(results)
@@ -340,7 +343,7 @@ class VAWCropDataset(Dataset):
             try:
                 labels = np.ones(len(self.att2id)+len(self.category2id)) * 2
                 labels[len(self.att2id):] = 0
-                if data_set == 'vaw':
+                if data_set == 'vaw' or 'ovadgen':
                     positive_attributes = instance["positive_attributes"]
                     negative_attributes = instance["negative_attributes"]
                     for att in positive_attributes:
@@ -357,7 +360,10 @@ class VAWCropDataset(Dataset):
                     if category_id is not None:
                         labels[category_id+len(self.att2id)] = 1
                 results['gt_labels'] = labels.astype(np.int)
-                results = self.pipeline(results)
+                if 'gen' in data_set:
+                    results = self.pipeline(results, (1, ':'))
+                else:
+                    results = self.pipeline(results)
             except Exception as e:
                 self.error_list.add(idx)
                 self.error_list.add(img_id)

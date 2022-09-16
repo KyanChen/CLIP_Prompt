@@ -40,7 +40,7 @@ class Compose:
             transforms = self.transforms
         elif isinstance(idx, int):
             transforms = self.transforms[idx:idx+1]
-        elif isinstance(idx, tuple):
+        elif isinstance(idx, tuple) or isinstance(idx, list):
             assert len(idx) == 2
             if idx[0] == ':':
                 transforms = self.transforms[: idx[1]]
