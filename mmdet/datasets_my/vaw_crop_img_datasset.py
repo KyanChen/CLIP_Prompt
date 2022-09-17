@@ -434,7 +434,7 @@ class VAWCropDataset(Dataset):
             data_set = img_id.split('_')[0]
             if data_set == 'coco':
                 data_set_type = 0
-            elif data_set == 'vaw':
+            elif data_set == 'vaw' or data_set == 'ovad':
                 data_set_type = 1
             else:
                 raise NameError
