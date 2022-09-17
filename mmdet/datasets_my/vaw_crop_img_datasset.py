@@ -334,7 +334,7 @@ class VAWCropDataset(Dataset):
                 dataset_split = self.dataset_split
             prefix_path = f'/COCO/{dataset_split}2017'
         elif data_set == 'ovadgen':
-            data_set_type = 2
+            data_set_type = 1
             prefix_path = f'/ovadgen'
         else:
             raise NameError
