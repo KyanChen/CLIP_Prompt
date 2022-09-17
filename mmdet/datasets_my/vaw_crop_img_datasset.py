@@ -134,7 +134,7 @@ class VAWCropDataset(Dataset):
         if not test_mode:
             self.instances = self.filter_instance(self.instances)
             flag_dataset = [x['img_id'].split('_')[0] for x in self.instances]
-            dataset_types = {'coco': 0, 'vaw': 1}
+            dataset_types = {'coco': 0, 'vaw': 1, 'ovadgen': 1}
             flag_dataset = [dataset_types[x] for x in flag_dataset]
             self.flag_dataset = np.array(flag_dataset, dtype=np.int)
 
