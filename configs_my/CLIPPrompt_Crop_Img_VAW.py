@@ -40,7 +40,7 @@ attribute_index_file = dict(
     att_file='../attributes/OVAD/common2common_att2id.json',
     att_group='common1',
     category_file='../attributes/COCO/common2common_category2id_48_17.json',
-    category_group='common2',
+    category_group='common1',
 )
 
 # attribute_index_file = dict(
@@ -52,7 +52,7 @@ model = dict(
     # classname_path=data_root+'/VAW/attribute_index.json',
     attribute_index_file=attribute_index_file,
     need_train_names=[
-        'prompt_category_learner',
+        # 'prompt_category_learner',
         'prompt_att_learner',
         # 'image_encoder',
         'text_encoder',
@@ -75,6 +75,7 @@ model = dict(
     #     c_specific=False,
     #     class_token_position='end'
     # ),
+    shared_prompt_vectors=True,
     prompt_att_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
@@ -243,7 +244,7 @@ optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
         'prompt_att_learner': {},
-        'prompt_category_learner': {},
+        # 'prompt_category_learner': {},
         # 'image_encoder': {'lr_mult': 0.1},
         'text_encoder': {'lr_mult': 0.1},
         'bbox_head': {}, 'logit_scale': {}

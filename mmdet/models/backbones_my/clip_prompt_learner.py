@@ -168,7 +168,8 @@ class PromptAttributes(BaseModule):
                      generated_context=False,
                      pos_emb=True,
                  ),
-                 load_ckpt_from=None
+                 load_ckpt_from=None,
+                 shared_prompt_vectors=None
                  ):
         super(PromptAttributes, self).__init__()
         self.prompt_config = prompt_config
@@ -182,12 +183,13 @@ class PromptAttributes(BaseModule):
         n_prompt_type = prompt_config.get('n_prompt_type', None)
         self.generated_context = prompt_config.get('generated_context', False)
         pos_emb = prompt_config.get('pos_emb', False)
-        if is_att_specific:
-            print("Initializing att-specific contexts")
-            prompt_vectors = torch.empty(n_att, n_prompt_vec, word_dim, dtype=torch.float32)
-        else:
-            prompt_vectors = torch.empty(n_prompt_vec, word_dim, dtype=torch.float32)
-            nn.init.normal_(prompt_vectors, std=0.02)
+        if shared_prompt_vectors is None:
+            if is_att_specific:
+                print("Initializing att-specific contexts")
+                prompt_vectors = torch.empty(n_att, n_prompt_vec, word_dim, dtype=torch.float32)
+            else:
+                prompt_vectors = torch.empty(n_prompt_vec, word_dim, dtype=torch.float32)
+                nn.init.normal_(prompt_vectors, std=0.02)
         if n_prompt_type and not self.generated_context:
             assert n_prompt_type == n_prompt_vec
             att2types = json.load(open(self.att2type, 'r'))
@@ -210,10 +212,13 @@ class PromptAttributes(BaseModule):
             print('att type: ', self.att2type)
 
         # self.ctx = nn.Parameter(prompt_vectors)  # to be optimized
-        if len(prompt_vectors):
-            self.prompt_vectors = nn.Parameter(prompt_vectors)
+        if shared_prompt_vectors:
+            self.prompt_vectors = shared_prompt_vectors
         else:
-            self.prompt_vectors = prompt_vectors
+            if len(prompt_vectors):
+                self.prompt_vectors = nn.Parameter(prompt_vectors)
+            else:
+                self.prompt_vectors = prompt_vectors
         sot_token = torch.tensor([_tokenizer.encoder["<|startoftext|>"]], dtype=torch.long)
         eot_token = torch.tensor([_tokenizer.encoder["<|endoftext|>"]], dtype=torch.long)
         pad_token = torch.tensor([0], dtype=torch.long)

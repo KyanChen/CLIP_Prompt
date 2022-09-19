@@ -18,6 +18,7 @@ class CLIP_Prompter(BaseDetector):
                  prompt_att_learner=None,
                  prompt_category_learner=None,
                  img_encoder=None,
+                 shared_prompt_vectors=False,
                  prompt_learner_weights='',
                  img_proj_head=False,
                  text_proj_head=False,
@@ -99,6 +100,8 @@ class CLIP_Prompter(BaseDetector):
             prompt_category_learner.update(
                 dict(attribute_list=list(self.category2id.keys()), clip_model=clip_model)
             )
+            if shared_prompt_vectors:
+                prompt_category_learner.update(dict(shared_prompt_vectors=prompt_att_learner.prompt_vectors))
             self.prompt_category_learner = build_backbone(prompt_category_learner)
 
         # if prompt_learner_weights:
