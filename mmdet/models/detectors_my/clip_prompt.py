@@ -101,7 +101,9 @@ class CLIP_Prompter(BaseDetector):
                 dict(attribute_list=list(self.category2id.keys()), clip_model=clip_model)
             )
             if shared_prompt_vectors:
-                prompt_category_learner.update(dict(shared_prompt_vectors=prompt_att_learner.prompt_vectors))
+                prompt_category_learner.update(
+                    dict(shared_prompt_vectors=self.prompt_att_learner.prompt_vectors)
+                )
             self.prompt_category_learner = build_backbone(prompt_category_learner)
 
         # if prompt_learner_weights:
