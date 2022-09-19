@@ -212,7 +212,7 @@ class PromptAttributes(BaseModule):
             print('att type: ', self.att2type)
 
         # self.ctx = nn.Parameter(prompt_vectors)  # to be optimized
-        if shared_prompt_vectors:
+        if shared_prompt_vectors is not None:
             self.prompt_vectors = shared_prompt_vectors
         else:
             if len(prompt_vectors):
