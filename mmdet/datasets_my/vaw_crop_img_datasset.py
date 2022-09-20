@@ -472,7 +472,6 @@ class VAWCropDataset(Dataset):
             pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
             gt_cate = gt_cate.detach().cpu()
 
-            pred_cate_logits[pred_cate_logits < 0.5] = 0
             values, indices = torch.max(pred_cate_logits, dim=-1)
             row_indices = torch.arange(len(values))[values > 0.5]
             col_indices = indices[values > 0.5]
@@ -491,6 +490,7 @@ class VAWCropDataset(Dataset):
                 top_k=top_k,
                 save_result=True
             )
+            print(output)
             result_metrics['cate_ap_all'] = output['PC_ap/all']
 
             # pred_pos_mask = pred_prob > 0.5
