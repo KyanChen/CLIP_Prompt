@@ -112,10 +112,17 @@ class VAWCropDataset(Dataset):
                 self.id2instances.pop('vaw_713545', None)
                 self.id2instances.pop('vaw_2369080', None)
 
-            if 'ovad' in self.dataset_names:
+            if 'ovadcate' in self.dataset_names:
                 if dataset_split == 'test':
                     dataset_split == 'val'
-                id2images_ovad, id2instances_ovad = self.read_data_ovad(dataset_split)
+                id2images_ovad, id2instances_ovad = self.read_data_ovad('cate')
+                self.id2images.update(id2images_ovad)
+                self.id2instances.update(id2instances_ovad)
+
+            if 'ovadattr' in self.dataset_names:
+                if dataset_split == 'test':
+                    dataset_split == 'val'
+                id2images_ovad, id2instances_ovad = self.read_data_ovad('attr')
                 self.id2images.update(id2images_ovad)
                 self.id2instances.update(id2instances_ovad)
 
@@ -244,7 +251,7 @@ class VAWCropDataset(Dataset):
         id2images = {}
         id2instances = {}
         for instance in instances:
-            img_id = 'ovad_' + str(instance['image_id'])
+            img_id = f'ovad{pattern}_' + str(instance['image_id'])
             instance['name'] = categoryid2name[instance['category_id']]
             instance['positive_attributes'] = []
             instance['negative_attributes'] = []
@@ -263,7 +270,7 @@ class VAWCropDataset(Dataset):
             id2instances[img_id] = id2instances.get(img_id, []) + [instance]
 
         for data in json_data['images']:
-            img_id = 'ovad_' + str(data['id'])
+            img_id = f'ovad{pattern}_' + str(data['id'])
             id2images[img_id] = data
 
         return id2images, id2instances
@@ -326,13 +333,19 @@ class VAWCropDataset(Dataset):
         elif data_set == 'vaw':
             prefix_path = f'/VG/VG_100K'
             data_set_type = 1
-        elif data_set == 'ovad':
-            data_set_type = 0
+        elif data_set in ['ovadcate', 'ovadattr']:
             if self.dataset_split == 'test':
                 dataset_split = 'val'
             else:
                 dataset_split = self.dataset_split
             prefix_path = f'/COCO/{dataset_split}2017'
+            if data_set == 'ovadcate':
+                data_set_type = 0
+            elif data_set == 'ovadattr':
+                data_set_type = 1
+            else:
+                raise NameError
+
         elif data_set == 'ovadgen':
             data_set_type = 1
             prefix_path = f'/ovadgen'
@@ -407,7 +420,7 @@ class VAWCropDataset(Dataset):
             img_id = instance['img_id']
             img_info = self.id2images[img_id]
             data_set = img_id.split('_')[0]
-            if data_set in ['vaw', 'ovad']:
+            if data_set in ['vaw', 'ovadattr']:
                 positive_attributes = instance["positive_attributes"]
                 negative_attributes = instance["negative_attributes"]
                 for att in positive_attributes:
@@ -418,7 +431,7 @@ class VAWCropDataset(Dataset):
                     att_id = self.att2id.get(att, None)
                     if att_id is not None:
                         labels[att_id] = 0
-            if data_set == 'coco':
+            if data_set == ['coco', 'ovadcate']:
                 category = instance['name']
                 category_id = self.category2id.get(category, None)
                 if category_id is not None:
@@ -434,8 +447,12 @@ class VAWCropDataset(Dataset):
             data_set = img_id.split('_')[0]
             if data_set == 'coco':
                 data_set_type = 0
-            elif data_set == 'vaw' or data_set == 'ovad':
+            elif data_set == 'vaw':
                 data_set_type = 1
+            elif data_set == 'ovadcate':
+                data_set_type = 0
+            elif data_set == 'ovadattr':
+                data_set_type = 0
             else:
                 raise NameError
             data_set_types.append(data_set_type)

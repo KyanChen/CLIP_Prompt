@@ -233,7 +233,7 @@ data = dict(
         ),
         test_mode=True,
         open_category=False,
-        dataset_names=['coco', 'ovad'],
+        dataset_names=['ovadcate', 'ovadattr'],
         save_label=False,
         load_label=None,
         pipeline=test_pipeline
