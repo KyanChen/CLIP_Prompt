@@ -469,8 +469,8 @@ class VAWCropDataset(Dataset):
             dataset_name = self.attribute_index_file['category_file'].split('/')[-2]
             top_k = 1 if dataset_name == 'COCO' else -1
 
-            pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu().numpy()
-            gt_cate = gt_cate.detach().cpu().numpy()
+            pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
+            gt_cate = gt_cate.detach().cpu()
 
             pred_cate_logits[pred_cate_logits < 0.5] = 0
             values, indices = torch.max(pred_cate_logits, dim=-1)
@@ -478,6 +478,9 @@ class VAWCropDataset(Dataset):
             col_indices = indices[values > 0.5]
             pred_cate_logits[row_indices, col_indices] = 1
             pred_cate_logits[pred_cate_logits < 1] = 0
+
+            pred_cate_logits = pred_cate_logits.numpy()
+            gt_cate = gt_cate.numpy()
 
             output = cal_metrics(
                 self.category2id,
