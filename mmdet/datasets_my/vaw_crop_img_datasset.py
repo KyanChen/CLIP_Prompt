@@ -481,7 +481,8 @@ class VAWCropDataset(Dataset):
         pred_cate_logits = preds[cate_mask][:, len(self.att2id):]
         gt_att = gt_labels[att_mask][:, :len(self.att2id)]
         gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
-
+        import pdb
+        pdb.set_trace()
         if len(pred_cate_logits):
             dataset_name = self.attribute_index_file['category_file'].split('/')[-2]
             top_k = 1 if dataset_name == 'COCO' else -1
