@@ -884,6 +884,7 @@ class SingleClassMetric(object):
 
 
 def print_metric_table(att_evaluator, results):
+    print(results)
     all_metrics = [
         "PCrand_P",
         "PC_ap",
