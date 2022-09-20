@@ -420,6 +420,8 @@ class VAWCropDataset(Dataset):
             img_id = instance['img_id']
             img_info = self.id2images[img_id]
             data_set = img_id.split('_')[0]
+            import pdb
+            pdb.set_trace()
             if data_set in ['vaw', 'ovadattr']:
                 positive_attributes = instance["positive_attributes"]
                 negative_attributes = instance["negative_attributes"]
