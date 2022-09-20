@@ -40,7 +40,7 @@ attribute_index_file = dict(
     att_file='../attributes/OVAD/common2common_att2id.json',
     att_group='common1',
     # category_file='../attributes/COCO/common2common_category2id_48_17.json',
-    category_file='../attributes/OVAD/common2common_category2id_48_32.json',
+    category_file='../attributes/COCO/common2common_category2id_48_32.json',
     category_group='common1',
 )
 
@@ -228,7 +228,7 @@ data = dict(
             att_file='../attributes/OVAD/common2common_att2id.json',
             att_group='common1',
             # category_file='../attributes/COCO/common2common_category2id_48_17.json',
-            category_file='../attributes/OVAD/common2common_category2id_48_32.json',
+            category_file='../attributes/COCO/common2common_category2id_48_32.json',
             category_group='common1',
         ),
         test_mode=True,
