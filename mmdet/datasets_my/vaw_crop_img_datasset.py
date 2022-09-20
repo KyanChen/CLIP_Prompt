@@ -472,11 +472,11 @@ class VAWCropDataset(Dataset):
             pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
             gt_cate = gt_cate.detach().cpu()
 
-            values, indices = torch.max(pred_cate_logits, dim=-1)
-            row_indices = torch.arange(len(values))[values > 0.5]
-            col_indices = indices[values > 0.5]
-            pred_cate_logits[row_indices, col_indices] = 1
-            pred_cate_logits[pred_cate_logits < 1] = 0
+            # values, indices = torch.max(pred_cate_logits, dim=-1)
+            # row_indices = torch.arange(len(values))[values > 0.5]
+            # col_indices = indices[values > 0.5]
+            # pred_cate_logits[row_indices, col_indices] = 1
+            # pred_cate_logits[pred_cate_logits < 1] = 0
 
             pred_cate_logits = pred_cate_logits.numpy()
             gt_cate = gt_cate.numpy()
