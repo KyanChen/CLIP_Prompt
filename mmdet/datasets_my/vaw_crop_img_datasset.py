@@ -433,7 +433,7 @@ class VAWCropDataset(Dataset):
                     att_id = self.att2id.get(att, None)
                     if att_id is not None:
                         labels[att_id] = 0
-            if data_set == ['coco', 'ovadcate']:
+            if data_set in ['coco', 'ovadcate']:
                 category = instance['name']
                 category_id = self.category2id.get(category, None)
                 if category_id is not None:
