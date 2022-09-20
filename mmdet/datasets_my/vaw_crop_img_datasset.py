@@ -490,6 +490,8 @@ class VAWCropDataset(Dataset):
                 top_k=top_k,
                 save_result=True
             )
+            import pdb
+            pdb.set_trace()
             print(output)
             result_metrics['cate_ap_all'] = output['PC_ap/all']
 
