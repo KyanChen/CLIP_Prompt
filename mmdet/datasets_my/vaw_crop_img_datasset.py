@@ -359,7 +359,7 @@ class VAWCropDataset(Dataset):
         if 'gen' in data_set:
             pass
         else:
-            key = 'bbox' if data_set in ['coco', 'ovad'] else 'instance_bbox'
+            key = 'bbox' if data_set in ['coco', 'ovadattr', 'ovadcate'] else 'instance_bbox'
             x, y, w, h = instance[key]
             results['crop_box'] = np.array([x, y, x + w, y + h])
         if self.test_mode:
@@ -452,7 +452,7 @@ class VAWCropDataset(Dataset):
             elif data_set == 'ovadcate':
                 data_set_type = 0
             elif data_set == 'ovadattr':
-                data_set_type = 0
+                data_set_type = 1
             else:
                 raise NameError
             data_set_types.append(data_set_type)
