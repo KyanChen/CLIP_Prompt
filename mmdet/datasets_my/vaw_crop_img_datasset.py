@@ -467,10 +467,17 @@ class VAWCropDataset(Dataset):
 
         if len(pred_cate_logits):
             dataset_name = self.attribute_index_file['category_file'].split('/')[-2]
-            top_k = 5 if dataset_name == 'COCO' else -1
+            top_k = 1 if dataset_name == 'COCO' else -1
 
             pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu().numpy()
             gt_cate = gt_cate.detach().cpu().numpy()
+
+            pred_cate_logits[pred_cate_logits < 0.5] = 0
+            values, indices = torch.max(pred_cate_logits, dim=-1)
+            row_indices = torch.arange(len(values))[values > 0.5]
+            col_indices = indices[values > 0.5]
+            pred_cate_logits[row_indices, col_indices] = 1
+            pred_cate_logits[pred_cate_logits < 1] = 0
 
             output = cal_metrics(
                 self.category2id,
