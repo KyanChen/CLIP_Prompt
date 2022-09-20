@@ -13,12 +13,10 @@ def cal_metrics(
         prefix_path,
         pred,
         gt_label,
-        is_logit=True,
-        use_vaw=False,
         top_k=8,
         save_result=False
 ):
-    if not use_vaw:
+    if dataset_name != 'COCO':
         attrs = list(attr2idx.keys())
         attr_type = json.load(open(prefix_path + '/attribute_types.json'))
         for k, vs in attr_type.items():
@@ -43,38 +41,38 @@ def cal_metrics(
                 if v in attrs:
                     true_vs.append(v)
             attribute_head_tail[k] = true_vs
+    else:
+        attr_type = None
+        attr_parent_type = None
+        attribute_head_tail = None
 
-        evaluator = AttEvaluator(
-            attr2idx,
-            attr_type=attr_type,
-            attr_parent_type=attr_parent_type,
-            attr_headtail=attribute_head_tail,
-            att_seen_unseen={},
-            dataset_name=dataset_name,
-            threshold=0.5,
-            top_k=top_k,
-            exclude_atts=[],
-        )
-        # Run evaluation
-        if is_logit:
-            pred = pred.data.cpu().float().sigmoid().numpy()  # Nx620
-        else:
-            pred = pred.data.cpu().float().numpy()  # Nx620
-        gt_label = gt_label.data.cpu().float().numpy()  # Nx620
+    evaluator = AttEvaluator(
+        attr2idx,
+        attr_type=attr_type,
+        attr_parent_type=attr_parent_type,
+        attr_headtail=attribute_head_tail,
+        att_seen_unseen={},
+        dataset_name=dataset_name,
+        threshold=0.5,
+        top_k=top_k,
+        exclude_atts=[],
+    )
+    # Run evaluation
+    if save_result:
+        output_file_fun = os.path.join("output", "{}.log".format(dataset_name))
+    else:
+        output_file_fun = ''
 
-        if save_result:
-            output_file_fun = os.path.join("output", "{}.log".format(dataset_name))
-        else:
-            output_file_fun = ''
+    results = evaluator.print_evaluation(
+        pred=pred,
+        gt_label=gt_label,
+        output_file=output_file_fun,
+    )
+    # Print results in table
+    results = print_metric_table(evaluator, results)
+    return results
 
-        results = evaluator.print_evaluation(
-            pred=pred,
-            gt_label=gt_label,
-            output_file=output_file_fun,
-        )
-        # Print results in table
-        results = print_metric_table(evaluator, results)
-        return results
+
 
     if fpath_attribute_index is None:
         fpath_attribute_index = prefix_path + '/attribute_index.json'

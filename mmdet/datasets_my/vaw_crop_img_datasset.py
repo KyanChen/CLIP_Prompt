@@ -466,29 +466,44 @@ class VAWCropDataset(Dataset):
         gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
 
         if len(pred_cate_logits):
-            pred_cate_logits = pred_cate_logits.detach().sigmoid()
-            pred_prob, pred_label = torch.max(pred_cate_logits, dim=-1)
-            pred_pos_mask = pred_prob > 0.5
-            pred_neg_mask = pred_prob <= 0.5
+            dataset_name = self.attribute_index_file['category_file'].split('/')[-2]
+            top_k = 5 if dataset_name == 'COCO' else -1
 
-            tp = torch.sum(gt_cate[pred_pos_mask][torch.arange(len(gt_cate[pred_pos_mask])), pred_label[pred_pos_mask]] == 1)
-            tn = torch.sum(torch.sum(gt_cate[pred_neg_mask], dim=-1) == 0)
-            fp = torch.sum(gt_cate[pred_pos_mask][torch.arange(len(gt_cate[pred_pos_mask])), pred_label[pred_pos_mask]] == 0)
-            fn = torch.sum(torch.sum(gt_cate[pred_neg_mask], dim=-1) == 1)
+            pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu().numpy()
+            gt_cate = gt_cate.detach().cpu().numpy()
 
-            result_metrics['cate_precision'] = tp / torch.sum(pred_pos_mask)
-            result_metrics['cate_recall'] = tp / (tp + fn)
-            result_metrics['cate_acc'] = (tp + tn) / (tp + tn + fp + fn)
-            result_metrics['cate_f1'] = 2 * result_metrics['cate_precision'] * result_metrics['cate_recall'] / (result_metrics['cate_precision'] + result_metrics['cate_recall'])
-            result_metrics['cate_num_tp'] = tp
-            result_metrics['cate_num_tn'] = tn
-            result_metrics['cate_num_fp'] = fp
-            result_metrics['cate_num_fn'] = fn
-            print()
-            for k, v in result_metrics.items():
-                value = f'{v.item():.4f}' if 'num' not in k else f'{v.item()}'
-                print(k, '\t', value)
-                result_metrics[k] = v.item()
+            output = cal_metrics(
+                self.category2id,
+                dataset_name,
+                prefix_path=f'../attributes/{dataset_name}',
+                pred=pred_cate_logits,
+                gt_label=gt_cate,
+                top_k=top_k,
+                save_result=True
+            )
+            result_metrics['cate_ap_all'] = output['PC_ap/all']
+
+            # pred_pos_mask = pred_prob > 0.5
+            # pred_neg_mask = pred_prob <= 0.5
+            #
+            # tp = torch.sum(gt_cate[pred_pos_mask][torch.arange(len(gt_cate[pred_pos_mask])), pred_label[pred_pos_mask]] == 1)
+            # tn = torch.sum(torch.sum(gt_cate[pred_neg_mask], dim=-1) == 0)
+            # fp = torch.sum(gt_cate[pred_pos_mask][torch.arange(len(gt_cate[pred_pos_mask])), pred_label[pred_pos_mask]] == 0)
+            # fn = torch.sum(torch.sum(gt_cate[pred_neg_mask], dim=-1) == 1)
+            #
+            # result_metrics['cate_precision'] = tp / torch.sum(pred_pos_mask)
+            # result_metrics['cate_recall'] = tp / (tp + fn)
+            # result_metrics['cate_acc'] = (tp + tn) / (tp + tn + fp + fn)
+            # result_metrics['cate_f1'] = 2 * result_metrics['cate_precision'] * result_metrics['cate_recall'] / (result_metrics['cate_precision'] + result_metrics['cate_recall'])
+            # result_metrics['cate_num_tp'] = tp
+            # result_metrics['cate_num_tn'] = tn
+            # result_metrics['cate_num_fp'] = fp
+            # result_metrics['cate_num_fn'] = fn
+            # print()
+            # for k, v in result_metrics.items():
+            #     value = f'{v.item():.4f}' if 'num' not in k else f'{v.item()}'
+            #     print(k, '\t', value)
+            #     result_metrics[k] = v.item()
 
         if self.save_label:
             np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
@@ -500,14 +515,15 @@ class VAWCropDataset(Dataset):
         dataset_name = self.attribute_index_file['att_file'].split('/')[-2]
         top_k = 15 if dataset_name == 'VAW' else 8
 
+        pred_att_logits = pred_att_logits.data.cpu().float().sigmoid().numpy()  # Nx620
+        gt_att = gt_att.data.cpu().float().numpy()  # Nx620
+
         output = cal_metrics(
             self.att2id,
             dataset_name,
             prefix_path=f'../attributes/{dataset_name}',
             pred=pred_att_logits,
             gt_label=gt_att,
-            is_logit=True,
-            use_vaw=False,
             top_k=top_k,
             save_result=True
         )
