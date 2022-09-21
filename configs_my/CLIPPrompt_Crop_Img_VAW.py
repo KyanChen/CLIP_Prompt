@@ -35,13 +35,13 @@ data_root = '/data/kyanchen/prompt/data'
 # )
 
 attribute_index_file = dict(
-    # att_file='../attributes/VAW/common2common_att2id.json',
-    # att_group='common1',
-    att_file='../attributes/OVAD/common2common_att2id.json',
+    att_file='../attributes/VAW/common2common_att2id.json',
     att_group='common1',
-    # category_file='../attributes/COCO/common2common_category2id_48_17.json',
-    category_file='../attributes/COCO/common2common_category2id_48_32.json',
-    category_group='common2',
+    # att_file='../attributes/OVAD/common2common_att2id.json',
+    # att_group='common1',
+    category_file='../attributes/COCO/common2common_category2id_48_17.json',
+    # category_file='../attributes/COCO/common2common_category2id_48_32.json',
+    category_group='common1',
 )
 
 # attribute_index_file = dict(
@@ -83,8 +83,8 @@ model = dict(
             n_prompt=30,
             is_att_specific=False,
             att_position='mid',
-            # att2type='../attributes/VAW/att2types.json',
-            att2type='../attributes/OVAD/att2types.json',
+            att2type='../attributes/VAW/att2types.json',
+            # att2type='../attributes/OVAD/att2types.json',
             context_length=77,
             n_prompt_type=None,
             generated_context=False,
@@ -223,17 +223,17 @@ data = dict(
         data_root=data_root,
         dataset_split='test',
         attribute_index_file=dict(
-            # att_file='../attributes/VAW/common2common_att2id.json',
-            # att_group='common1',
-            att_file='../attributes/OVAD/common2common_att2id.json',
+            att_file='../attributes/VAW/common2common_att2id.json',
             att_group='common1',
-            # category_file='../attributes/COCO/common2common_category2id_48_17.json',
-            category_file='../attributes/COCO/common2common_category2id_48_32.json',
-            category_group='common2',
+            # att_file='../attributes/OVAD/common2common_att2id.json',
+            # att_group='common1',
+            category_file='../attributes/COCO/common2common_category2id_48_17.json',
+            # category_file='../attributes/COCO/common2common_category2id_48_32.json',
+            category_group='common1',
         ),
         test_mode=True,
         open_category=False,
-        dataset_names=['ovadcate', 'ovadattr'],
+        dataset_names=['vaw', 'coco'],
         save_label=False,
         load_label=None,
         pipeline=test_pipeline
