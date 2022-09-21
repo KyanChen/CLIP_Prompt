@@ -91,19 +91,19 @@ model = dict(
             pos_emb=False,
         ),
     ),
-    # prompt_category_learner=dict(
-    #     type='PromptAttributes',
-    #     prompt_config=dict(
-    #         n_prompt=30,
-    #         is_att_specific=False,
-    #         att_position='mid',
-    #         att2type='../attributes/COCO/category2types.json',
-    #         context_length=77,
-    #         n_prompt_type=None,
-    #         generated_context=False,
-    #         pos_emb=False,
-    #     ),
-    # ),
+    prompt_category_learner=dict(
+        type='PromptAttributes',
+        prompt_config=dict(
+            n_prompt=30,
+            is_att_specific=False,
+            att_position='mid',
+            att2type='../attributes/COCO/category2types.json',
+            context_length=77,
+            n_prompt_type=None,
+            generated_context=False,
+            pos_emb=False,
+        ),
+    ),
     neck=None,
     bbox_head=dict(
         type='PromptHead',
