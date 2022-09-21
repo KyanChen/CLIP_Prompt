@@ -345,7 +345,6 @@ class VAWCropDataset(Dataset):
                 data_set_type = 1
             else:
                 raise NameError
-
         elif data_set == 'ovadgen':
             data_set_type = 1
             prefix_path = f'/ovadgen'
@@ -416,7 +415,7 @@ class VAWCropDataset(Dataset):
         np_gt_labels = []
         for instance in self.instances:
             labels = np.ones(len(self.att2id) + len(self.category2id)) * 2
-            labels[-len(self.category2id):] = 0
+            labels[len(self.att2id):] = 0
             img_id = instance['img_id']
             img_info = self.id2images[img_id]
             data_set = img_id.split('_')[0]
@@ -476,7 +475,8 @@ class VAWCropDataset(Dataset):
 
         data_set_type = self.get_data_set_type()
         data_set_type = torch.from_numpy(data_set_type)
-
+        import pdb
+        pdb.set_trace()
         cate_mask = data_set_type == 0
         att_mask = data_set_type == 1
         pred_att_logits = preds[att_mask][:, :len(self.att2id)]
