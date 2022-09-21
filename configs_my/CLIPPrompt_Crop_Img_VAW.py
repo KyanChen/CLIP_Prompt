@@ -53,7 +53,7 @@ model = dict(
     # classname_path=data_root+'/VAW/attribute_index.json',
     attribute_index_file=attribute_index_file,
     need_train_names=[
-        # 'prompt_category_learner',
+        'prompt_category_learner',
         'prompt_att_learner',
         # 'image_encoder',
         'text_encoder',
@@ -91,19 +91,19 @@ model = dict(
             pos_emb=False,
         ),
     ),
-    # prompt_category_learner=dict(
-    #     type='PromptAttributes',
-    #     prompt_config=dict(
-    #         n_prompt=0,
-    #         is_att_specific=False,
-    #         att_position='mid',
-    #         att2type='../attributes/COCO/category2types.json',
-    #         context_length=77,
-    #         n_prompt_type=None,
-    #         generated_context=False,
-    #         pos_emb=False,
-    #     ),
-    # ),
+    prompt_category_learner=dict(
+        type='PromptAttributes',
+        prompt_config=dict(
+            n_prompt=0,
+            is_att_specific=False,
+            att_position='mid',
+            att2type='../attributes/COCO/category2types.json',
+            context_length=77,
+            n_prompt_type=None,
+            generated_context=False,
+            pos_emb=False,
+        ),
+    ),
     neck=None,
     bbox_head=dict(
         type='PromptHead',
