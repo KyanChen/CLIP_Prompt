@@ -475,8 +475,8 @@ class VAWCropDataset(Dataset):
 
         data_set_type = self.get_data_set_type()
         data_set_type = torch.from_numpy(data_set_type)
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         cate_mask = data_set_type == 0
         att_mask = data_set_type == 1
         pred_att_logits = preds[att_mask][:, :len(self.att2id)]
