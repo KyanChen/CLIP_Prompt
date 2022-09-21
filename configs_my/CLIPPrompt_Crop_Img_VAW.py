@@ -39,8 +39,8 @@ attribute_index_file = dict(
     att_group='common1+common2',
     # att_file='../attributes/OVAD/common2common_att2id.json',
     # att_group='common1',
-    category_file='../attributes/COCO/common2common_category2id_48_17.json',
-    # # category_file='../attributes/COCO/common2common_category2id_48_32.json',
+    # category_file='../attributes/COCO/common2common_category2id_48_17.json',
+    category_file='../attributes/COCO/common2common_category2id_48_32.json',
     category_group='common1+common2',
 )
 
@@ -227,13 +227,13 @@ data = dict(
             att_group='common1+common2',
             # att_file='../attributes/OVAD/common2common_att2id.json',
             # att_group='common1',
-            category_file='../attributes/COCO/common2common_category2id_48_17.json',
-            # # category_file='../attributes/COCO/common2common_category2id_48_32.json',
+            # category_file='../attributes/COCO/common2common_category2id_48_17.json',
+            category_file='../attributes/COCO/common2common_category2id_48_32.json',
             category_group='common1+common2',
         ),
         test_mode=True,
         open_category=False,
-        dataset_names=['vaw', 'coco'],
+        dataset_names=['vaw', 'ovadcate'],
         save_label=False,
         load_label=None,
         pipeline=test_pipeline
