@@ -182,9 +182,7 @@ class CLIP_Tester(BaseDetector):
         logit_scale = self.model.logit_scale.exp()
         logits_per_image = logit_scale * image_features @ text_features.t()
         logits_per_text = logit_scale * text_features @ image_features.t()
-        import pdb
-        pdb.set_trace()
-        probs = logits_per_image.softmax(dim=-1).cpu().numpy()
+        probs = logits_per_image.cpu().numpy()
         # shape = [global_batch_size, global_batch_size]
         return probs
 
