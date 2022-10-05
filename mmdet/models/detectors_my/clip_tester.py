@@ -15,6 +15,8 @@ class CLIP_Tester(BaseDetector):
     def __init__(self,
                  attribute_index_file,
                  backbone_name,
+                 train_cfg=None,
+                 test_cfg=None,
                  init_cfg=None):
         super(CLIP_Tester, self).__init__(init_cfg)
 
