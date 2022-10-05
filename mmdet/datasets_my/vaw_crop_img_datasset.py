@@ -65,6 +65,8 @@ class VAWCropDataset(Dataset):
             elif att_group == 'common+rare':
                 self.att2id.update(att2id['common'])
                 self.att2id.update(att2id['rare'])
+                self.att_seen_unseen['seen'] = list(att2id['common'].keys())
+                self.att_seen_unseen['unseen'] = list(att2id['rare'].keys())
             else:
                 raise NameError
         self.category2id = {}
