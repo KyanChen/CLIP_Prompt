@@ -35,15 +35,15 @@ data_root = '/data/kyanchen/prompt/data'
 # )
 
 attribute_index_file = dict(
-    # att_file='../attributes/VAW/common2common_att2id.json',
-    # att_group='common1+common2',
+    att_file='../attributes/VAW/common2common_att2id.json',
+    att_group='common1',
     # att_file='../attributes/VAW/common2rare_att2id.json',
     # att_group='common+rare',
     # att_file='../attributes/OVAD/common2common_att2id.json',
     # att_group='common1',
-    category_file='../attributes/COCO/common2common_category2id_48_17.json',
-    # category_file='../attributes/COCO/common2common_category2id_48_32.json',
-    category_group='common1',
+    # category_file='../attributes/COCO/common2common_category2id_48_17.json',
+    # # category_file='../attributes/COCO/common2common_category2id_48_32.json',
+    # category_group='common1',
 )
 
 # attribute_index_file = dict(
@@ -55,8 +55,8 @@ model = dict(
     # classname_path=data_root+'/VAW/attribute_index.json',
     attribute_index_file=attribute_index_file,
     need_train_names=[
-        'prompt_category_learner',
-        # 'prompt_att_learner',
+        # 'prompt_category_learner',
+        'prompt_att_learner',
         # 'image_encoder',
         'text_encoder',
         'bbox_head', 'logit_scale'
@@ -79,40 +79,40 @@ model = dict(
     #     class_token_position='end'
     # ),
     shared_prompt_vectors=False,
-    # prompt_att_learner=dict(
-    #     type='PromptAttributes',
-    #     prompt_config=dict(
-    #         n_prompt=0,
-    #         is_att_specific=False,
-    #         att_position='mid',
-    #         # att2type='../attributes/VAW/att2types.json',
-    #         att2type=None,
-    #         # att2type='../attributes/OVAD/att2types.json',
-    #         context_length=77,
-    #         n_prompt_type=None,
-    #         generated_context=False,
-    #         pos_emb=False,
-    #     ),
-    # ),
-    prompt_category_learner=dict(
+    prompt_att_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
             n_prompt=30,
             is_att_specific=False,
             att_position='mid',
-            att2type='../attributes/COCO/category2types.json',
+            att2type='../attributes/VAW/att2types.json',
             # att2type=None,
+            # att2type='../attributes/OVAD/att2types.json',
             context_length=77,
             n_prompt_type=None,
             generated_context=False,
             pos_emb=False,
         ),
     ),
+    # prompt_category_learner=dict(
+    #     type='PromptAttributes',
+    #     prompt_config=dict(
+    #         n_prompt=30,
+    #         is_att_specific=False,
+    #         att_position='mid',
+    #         att2type='../attributes/COCO/category2types.json',
+    #         # att2type=None,
+    #         context_length=77,
+    #         n_prompt_type=None,
+    #         generated_context=False,
+    #         pos_emb=False,
+    #     ),
+    # ),
     neck=None,
     bbox_head=dict(
         type='PromptHead',
-        # attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
-        category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
+        attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
+        # category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
         re_weight_different_att=0.25,
         re_weight_category=2,
         re_weight_gamma=2,
@@ -192,8 +192,8 @@ test_generated_pipeline = [
 samples_per_gpu = 512
 data = dict(
     samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=0,
-    persistent_workers=False,
+    workers_per_gpu=8,
+    persistent_workers=True,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -203,7 +203,7 @@ data = dict(
         #     file=data_root+'/VAW/common2rare_att2id.json',
         #     att_group='rare'
         # ),
-        dataset_names=['coco'],
+        dataset_names=['vaw'],
         save_label=False,
         load_label=None,
         test_mode=False,
@@ -217,7 +217,7 @@ data = dict(
         data_root=data_root,
         dataset_split='test',
         attribute_index_file=attribute_index_file,
-        dataset_names=['coco'],
+        dataset_names=['vaw'],
         test_mode=True,
         open_category=False,
         pipeline=test_pipeline),
@@ -251,8 +251,8 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        # 'prompt_att_learner': {},
-        'prompt_category_learner': {},
+        'prompt_att_learner': {},
+        # 'prompt_category_learner': {},
         # 'image_encoder': {'lr_mult': 0.1},
         'text_encoder': {'lr_mult': 0.1},
         'bbox_head': {}, 'logit_scale': {}
