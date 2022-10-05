@@ -152,10 +152,6 @@ class VAWCropDataset(Dataset):
             dataset_types = {'coco': 0, 'vaw': 1, 'ovadgen': 1}
             flag_dataset = [dataset_types[x] for x in flag_dataset]
             flag_dataset = np.array(flag_dataset, dtype=np.int)
-            if len(np.bincount(flag_dataset)) != 1:
-                self.flag_dataset = flag_dataset
-            else:
-                pass
 
         self.flag = np.zeros(len(self), dtype=int)
 
