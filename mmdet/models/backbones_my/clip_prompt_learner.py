@@ -171,6 +171,8 @@ class PromptAttributes(BaseModule):
                  load_ckpt_from=None,
                  shared_prompt_vectors=None
                  ):
+        import pdb
+        pdb.set_trace()
         super(PromptAttributes, self).__init__()
         self.prompt_config = prompt_config
         n_att = len(attribute_list)

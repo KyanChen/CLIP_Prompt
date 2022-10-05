@@ -50,6 +50,7 @@ class VAWCropDataset(Dataset):
 
         self.attribute_index_file = attribute_index_file
         self.att2id = {}
+        self.att_seen_unseen = {}
         if 'att_file' in attribute_index_file.keys():
             file = attribute_index_file['att_file']
             att2id = json.load(open(file, 'r'))
@@ -59,12 +60,15 @@ class VAWCropDataset(Dataset):
             elif att_group == 'common1+common2':
                 self.att2id.update(att2id['common1'])
                 self.att2id.update(att2id['common2'])
+                self.att_seen_unseen['seen'] = list(att2id['common1'].keys())
+                self.att_seen_unseen['unseen'] = list(att2id['common2'].keys())
             elif att_group == 'common+rare':
                 self.att2id.update(att2id['common'])
                 self.att2id.update(att2id['rare'])
             else:
                 raise NameError
         self.category2id = {}
+        self.category_seen_unseen = {}
         if 'category_file' in attribute_index_file.keys():
             file = attribute_index_file['category_file']
             category2id = json.load(open(file, 'r'))
@@ -74,6 +78,8 @@ class VAWCropDataset(Dataset):
             elif att_group == 'common1+common2':
                 self.category2id.update(category2id['common1'])
                 self.category2id.update(category2id['common2'])
+                self.category_seen_unseen['seen'] = list(category2id['common1'].keys())
+                self.category_seen_unseen['unseen'] = list(category2id['common2'].keys())
             elif att_group == 'common+rare':
                 self.category2id.update(category2id['common'])
                 self.category2id.update(category2id['rare'])
@@ -557,7 +563,8 @@ class VAWCropDataset(Dataset):
             pred=pred_att_logits,
             gt_label=gt_att,
             top_k=top_k,
-            save_result=True
+            save_result=True,
+            att_seen_unseen=self.att_seen_unseen
         )
         result_metrics['att_ap_all'] = output['PC_ap/all']
         return result_metrics

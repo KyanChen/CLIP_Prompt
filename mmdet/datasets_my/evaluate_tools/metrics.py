@@ -14,7 +14,8 @@ def cal_metrics(
         pred,
         gt_label,
         top_k=8,
-        save_result=False
+        save_result=False,
+        att_seen_unseen=None
 ):
     if dataset_name != 'COCO':
         attrs = list(attr2idx.keys())
@@ -51,7 +52,7 @@ def cal_metrics(
         attr_type=attr_type,
         attr_parent_type=attr_parent_type,
         attr_headtail=attribute_head_tail,
-        att_seen_unseen={},
+        att_seen_unseen=att_seen_unseen,
         dataset_name=dataset_name,
         threshold=0.5,
         top_k=top_k,
