@@ -557,7 +557,8 @@ class VAWCropDataset(Dataset):
 
         pred_att_logits = pred_att_logits.data.cpu().float().sigmoid().numpy()  # Nx620
         gt_att = gt_att.data.cpu().float().numpy()  # Nx620
-
+        import pdb
+        pdb.set_trace()
         output = cal_metrics(
             self.att2id,
             dataset_name,
