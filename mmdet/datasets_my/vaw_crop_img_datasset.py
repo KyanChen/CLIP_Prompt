@@ -498,8 +498,11 @@ class VAWCropDataset(Dataset):
             top_k = 1 if dataset_name == 'COCO' else -1
 
             pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
-            import pdb
-            pdb.set_trace()
+            #         if self.mult_proposal_score:
+            #             proposal_scores = [p.get('objectness_logits') for p in proposals]
+            #             scores = [(s * ps[:, None]) ** 0.5 \
+            #                 for s, ps in zip(scores, proposal_scores)]
+            pred_cate_logits = pred_cate_logits * (pred_cate_logits == pred_cate_logits.max(dim=-1)[0][:, None])
             gt_cate = gt_cate.detach().cpu()
 
             # values, indices = torch.max(pred_cate_logits, dim=-1)
