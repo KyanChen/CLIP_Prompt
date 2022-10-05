@@ -310,8 +310,6 @@ class PromptAttributes(BaseModule):
         if att2type is not None:
             self.type_embeddings = [x.to(self.sot_embedding.device) for x in self.type_embeddings]
             assert att_position == 'mid'
-        import pdb
-        pdb.set_trace()
         self.attribute_embeddings = [x.to(self.sot_embedding.device) for x in self.attribute_embeddings]
         rearranged_context = []
         eot_index = []
@@ -321,7 +319,7 @@ class PromptAttributes(BaseModule):
             if is_att_specific:
                 prompt_vectors = self.prompt_vectors[i]
             else:
-                prompt_vectors = self.prompt_vectors
+                prompt_vectors = self.prompt_vectors.to(self.sot_embedding.device)
 
             if att_position == 'end':
                 rearranged_context_tmp.append(prompt_vectors)
