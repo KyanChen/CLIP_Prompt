@@ -172,7 +172,7 @@ class CLIP_Tester(BaseDetector):
         texts = list(self.category2id.keys())
         texts = tokenize(texts).to(img.device)
 
-        image_features = self.model.encode_image(img)
+        image_features, _, _ = self.model.encode_image(img)
         text_features = self.model.encode_text(texts)
         # normalized features
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
