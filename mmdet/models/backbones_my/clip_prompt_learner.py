@@ -232,7 +232,7 @@ class PromptAttributes(BaseModule):
             for attribute in attribute_list:
                 att_group_member_num = len(attribute.split(':')[-1].split('/'))
                 att_type_list += [id2type[str(att2typeid[attribute])]] * att_group_member_num
-            att_type_list = [f'And it is a photo of {att_type}.' for att_type in att_type_list]
+            att_type_list = [f'And it is a {att_type}.' for att_type in att_type_list]
             att_type_list = [att_type.replace("_", " ") for att_type in att_type_list]
             type_tokens = [torch.tensor(_tokenizer.encode(att_type)) for att_type in att_type_list]
             self.type_embeddings = [clip_model.token_embedding(x).detach() for x in type_tokens]
