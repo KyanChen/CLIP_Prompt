@@ -146,8 +146,6 @@ class VAWCropDataset(Dataset):
                     self.instances.append(item)
 
         rank, world_size = get_dist_info()
-        import pdb
-        pdb.set_trace()
         if not test_mode:
             self.instances = self.filter_instance(self.instances)
             flag_dataset = [x['img_id'].split('_')[0] for x in self.instances]
