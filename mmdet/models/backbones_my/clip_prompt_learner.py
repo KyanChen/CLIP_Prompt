@@ -307,8 +307,6 @@ class PromptAttributes(BaseModule):
             *args,
             **kwargs
     ):
-        import pdb
-        pdb.set_trace()
         if att2type is not None:
             self.type_embeddings = [x.to(self.sot_embedding.device) for x in self.type_embeddings]
             assert att_position == 'mid'
