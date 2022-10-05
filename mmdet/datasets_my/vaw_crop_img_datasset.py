@@ -498,6 +498,8 @@ class VAWCropDataset(Dataset):
             top_k = 1 if dataset_name == 'COCO' else -1
 
             pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
+            import pdb
+            pdb.set_trace()
             gt_cate = gt_cate.detach().cpu()
 
             # values, indices = torch.max(pred_cate_logits, dim=-1)
@@ -516,7 +518,8 @@ class VAWCropDataset(Dataset):
                 pred=pred_cate_logits,
                 gt_label=gt_cate,
                 top_k=top_k,
-                save_result=True
+                save_result=True,
+                att_seen_unseen=self.category_seen_unseen
             )
             # import pdb
             # pdb.set_trace()
