@@ -172,10 +172,17 @@ class CLIP_Tester(BaseDetector):
         texts = list(self.category2id.keys())
         texts = tokenize(texts).to(img.device)
 
-        # image_features = self.model.encode_image(img)
-        # text_features = self.model.encode_text(texts)
+        image_features = self.model.encode_image(img)
+        text_features = self.model.encode_text(texts)
+        # normalized features
+        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
-        logits_per_image, logits_per_text = self.model(img, texts)
+        # cosine similarity as logits
+        logit_scale = self.logit_scale.exp()
+        logits_per_image = logit_scale * image_features @ text_features.t()
+        logits_per_text = logit_scale * text_features @ image_features.t()
+
         probs = logits_per_image.softmax(dim=-1).cpu().numpy()
         # shape = [global_batch_size, global_batch_size]
         return probs
