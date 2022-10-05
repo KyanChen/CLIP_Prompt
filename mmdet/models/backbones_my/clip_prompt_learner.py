@@ -171,8 +171,8 @@ class PromptAttributes(BaseModule):
                  load_ckpt_from=None,
                  shared_prompt_vectors=None
                  ):
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         super(PromptAttributes, self).__init__()
         self.prompt_config = prompt_config
         n_att = len(attribute_list)
@@ -307,6 +307,8 @@ class PromptAttributes(BaseModule):
             *args,
             **kwargs
     ):
+        import pdb
+        pdb.set_trace()
         if att2type is not None:
             self.type_embeddings = [x.to(self.sot_embedding.device) for x in self.type_embeddings]
             assert att_position == 'mid'
