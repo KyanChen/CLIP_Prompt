@@ -498,7 +498,7 @@ class VAWCropDataset(Dataset):
             top_k = 1 if dataset_name == 'COCO' else -1
 
             # pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
-            pred_cate_logits = pred_cate_logits.detach().softmax(dim=-1).cpu()
+            pred_cate_logits = pred_cate_logits.float().softmax(dim=-1).cpu()
             #         if self.mult_proposal_score:
             #             proposal_scores = [p.get('objectness_logits') for p in proposals]
             #             scores = [(s * ps[:, None]) ** 0.5 \
