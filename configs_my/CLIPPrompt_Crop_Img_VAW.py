@@ -36,7 +36,7 @@ data_root = '/data/kyanchen/prompt/data'
 
 attribute_index_file = dict(
     att_file='../attributes/VAW/common2common_att2id.json',
-    att_group='common1+common2',
+    att_group='common1',
     # att_file='../attributes/VAW/common2rare_att2id.json',
     # att_group='common+rare',
     # att_file='../attributes/OVAD/common2common_att2id.json',
