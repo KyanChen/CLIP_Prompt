@@ -255,7 +255,7 @@ optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
         'prompt_att_learner': {},
-        # 'prompt_category_learner': {},
+        'prompt_category_learner': {},
         # 'image_encoder': {'lr_mult': 0.1},
         'text_encoder': {'lr_mult': 0.1},
         'bbox_head': {}, 'logit_scale': {}
