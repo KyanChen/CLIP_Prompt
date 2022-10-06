@@ -258,7 +258,8 @@ class CLIP_Prompter(BaseDetector):
 
     def simple_test(self, img, img_metas, rescale=False):
         image_features, last_f_map, f_maps = self.image_encoder(img)  # 2x1024
-
+        import pdb
+        pdb.set_trace()
         text_features = []
         if hasattr(self, 'prompt_att_learner'):
             prompt_context, eot_index, att_group_member_num = self.prompt_att_learner()  # 620x77x512
