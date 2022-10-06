@@ -569,9 +569,9 @@ class VAWCropDataset(Dataset):
         for i_att in range(pred_att_logits.shape[1]):
             y = gt_att[:, i_att]
             pred = pred_att_logits[:, i_att]
-            y = y[~(y == 2)]
+            gt_y = y[~(y == 2)]
             pred = pred[~(y == 2)]
-            pr = metrics.average_precision_score(y, pred)
+            pr = metrics.average_precision_score(gt_y, pred)
             prs.append(pr)
         print('map: ', np.mean(prs))
 
