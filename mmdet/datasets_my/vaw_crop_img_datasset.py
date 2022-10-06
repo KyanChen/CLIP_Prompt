@@ -566,7 +566,7 @@ class VAWCropDataset(Dataset):
         gt_att = gt_att.data.cpu().float().numpy()  # Nx620
 
         prs = []
-        for i_att in pred_att_logits.shape[1]:
+        for i_att in range(pred_att_logits.shape[1]):
             y = gt_att[:, i_att]
             pred = pred_att_logits[:, i_att]
             y = y[~(y == 2)]
