@@ -16,6 +16,7 @@ import mmcv
 import numpy as np
 import torch
 from mmcv.runner import get_dist_info
+from sklearn import metrics
 
 from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
@@ -563,6 +564,16 @@ class VAWCropDataset(Dataset):
 
         pred_att_logits = pred_att_logits.data.cpu().float().sigmoid().numpy()  # Nx620
         gt_att = gt_att.data.cpu().float().numpy()  # Nx620
+
+        prs = []
+        for i_att in pred_att_logits.shape[1]:
+            y = gt_att[:, i_att]
+            pred = pred_att_logits[:, i_att]
+            y = y[~(y == 2)]
+            pred = pred[~(y == 2)]
+            pr = metrics.average_precision_score(y, pred)
+            prs.append(pr)
+        print('map: ', np.mean(prs))
 
         output = cal_metrics(
             self.att2id,
