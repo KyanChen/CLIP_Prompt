@@ -19,7 +19,7 @@ class CLIP_Prompter(BaseDetector):
                  prompt_category_learner=None,
                  img_encoder=None,
                  shared_prompt_vectors=False,
-                 prompt_learner_weights='',
+                 load_prompt_weights='',
                  img_proj_head=False,
                  text_proj_head=False,
                  neck=None,
@@ -106,7 +106,7 @@ class CLIP_Prompter(BaseDetector):
                 )
             self.prompt_category_learner = build_backbone(prompt_category_learner)
 
-        # if prompt_learner_weights:
+        # if load_prompt_weights:
         #     state_dict = torch.load(prompt_learner_weights, map_location="cpu")
         #     self.prompt_learner.load_state_dict(state_dict)
 
