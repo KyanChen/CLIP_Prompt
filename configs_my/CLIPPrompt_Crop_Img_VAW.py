@@ -38,7 +38,7 @@ attribute_index_file = dict(
     # att_file='../attributes/VAW/common2common_att2id.json',
     # att_group='common1+common2',
     att_file='../attributes/VAW/common2rare_att2id.json',
-    att_group='common+rare',
+    att_group='common',
     # att_file='../attributes/OVAD/common2common_att2id.json',
     # att_group='common1',
     # category_file='../attributes/COCO/common2common_category2id_48_17.json',
@@ -46,7 +46,7 @@ attribute_index_file = dict(
     # category_group='common1+common2',
     category_file='../attributes/COCO/common2common_category2id_48_17.json',
     # category_file='../attributes/COCO/common2common_category2id_48_32.json',
-    category_group='common1+common2',
+    category_group='common1',
 )
 
 # attribute_index_file = dict(
@@ -58,8 +58,8 @@ model = dict(
     # classname_path=data_root+'/VAW/attribute_index.json',
     attribute_index_file=attribute_index_file,
     need_train_names=[
-        # 'prompt_category_learner',
-        # 'prompt_att_learner',
+        'prompt_category_learner',
+        'prompt_att_learner',
         # 'image_encoder',
         'text_encoder',
         'bbox_head', 'logit_scale'
@@ -114,8 +114,8 @@ model = dict(
     neck=None,
     bbox_head=dict(
         type='PromptHead',
-        # attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
-        # category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
+        attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
+        category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
         re_weight_different_att=0.25,
         re_weight_category=1,  # 2太大了，出现cate增，att下降
         re_weight_gamma=2,
@@ -255,7 +255,7 @@ optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
         'prompt_att_learner': {},
-        # 'prompt_category_learner': {},
+        'prompt_category_learner': {},
         # 'image_encoder': {'lr_mult': 0.1},
         'text_encoder': {'lr_mult': 0.1},
         'bbox_head': {}, 'logit_scale': {}
