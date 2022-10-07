@@ -554,8 +554,7 @@ class VAWCropDataset(Dataset):
 
         if self.save_label:
             np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
-        import pdb
-        pdb.set_trace()
+
         assert pred_att_logits.shape[-1] == gt_att.shape[-1]
 
         if not len(self.att2id):
