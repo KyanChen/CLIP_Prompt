@@ -170,6 +170,7 @@ class CLIP_Tester(BaseDetector):
 
     def simple_test(self, img, img_metas, rescale=False):
         texts = list(self.category2id.keys())
+        texts = [f'The attribute of the object is {x}' for x in texts]
         texts = tokenize(texts).to(img.device)
 
         image_features, _, _ = self.model.encode_image(img)
