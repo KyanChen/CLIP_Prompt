@@ -7,7 +7,7 @@ os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
               # '../configs_my/rpn_r50_fpn_mstrain_vg.py '
               # '../configs_my/rpn_r50_fpn_mstrain_vaw.py '
               # "../configs_my/rpn_r50_fpn_mstrain_coco.py "
-              "../configs_my/test_clip_config.py "
+              "../configs_my/CLIPPrompt_Crop_Img_VAW.py "
               f"results/EXP20220903_0/epoch_.pth "
               "8"
     )
