@@ -169,11 +169,10 @@ class CLIP_Tester(BaseDetector):
             return self.aug_test(imgs, img_metas, **kwargs)
 
     def simple_test(self, img, img_metas, rescale=False):
-        texts = list(self.category2id.keys())
+        texts = list(self.att2id.keys())
         texts = [f'The attribute of the object is {x}' for x in texts]
         texts = tokenize(texts).to(img.device)
-        import pdb
-        pdb.set_trace()
+
         image_features, _, _ = self.model.encode_image(img)
         text_features = self.model.encode_text(texts)
         # normalized features
