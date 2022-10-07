@@ -239,7 +239,7 @@ class PromptAttributes(BaseModule):
 
         # attribute_list = [attribute.replace("_", " ") for attribute in attribute_list]
         # attribute_list = [f'It is a photo of {attribute}.' for attribute in attribute_list]
-        attribute_list = [f'The attribute of the object is {attribute}.' for attribute in attribute_list]
+        # attribute_list = [f'The attribute of the object is {attribute}.' for attribute in attribute_list]
         attribute_list = [attribute.split(':')[-1].split('/') for attribute in attribute_list]
         self.att_group_member_num = [len(x) for x in attribute_list]
         attribute_list = [t.replace("_", " ") for x in attribute_list for t in x]
