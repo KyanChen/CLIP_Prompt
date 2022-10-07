@@ -44,9 +44,9 @@ attribute_index_file = dict(
     # category_file='../attributes/COCO/common2common_category2id_48_17.json',
     # # category_file='../attributes/COCO/common2common_category2id_48_32.json',
     # category_group='common1+common2',
-    category_file='../attributes/COCO/common2common_category2id_48_17.json',
-    # category_file='../attributes/COCO/common2common_category2id_48_32.json',
-    category_group='common1+common2',
+    # category_file='../attributes/COCO/common2common_category2id_48_17.json',
+    # # category_file='../attributes/COCO/common2common_category2id_48_32.json',
+    # category_group='common1+common2',
 )
 
 # attribute_index_file = dict(
@@ -58,8 +58,8 @@ model = dict(
     # classname_path=data_root+'/VAW/attribute_index.json',
     attribute_index_file=attribute_index_file,
     need_train_names=[
-        'prompt_category_learner',
-        'prompt_att_learner',
+        # 'prompt_category_learner',
+        # 'prompt_att_learner',
         # 'image_encoder',
         'text_encoder',
         'bbox_head', 'logit_scale'
@@ -97,20 +97,20 @@ model = dict(
             pos_emb=False,
         ),
     ),
-    prompt_category_learner=dict(
-        type='PromptAttributes',
-        prompt_config=dict(
-            n_prompt=30,
-            is_att_specific=False,
-            att_position='mid',
-            att2type='../attributes/COCO/category2types.json',
-            # att2type=None,
-            context_length=77,
-            n_prompt_type=None,
-            generated_context=False,
-            pos_emb=False,
-        ),
-    ),
+    # prompt_category_learner=dict(
+    #     type='PromptAttributes',
+    #     prompt_config=dict(
+    #         n_prompt=30,
+    #         is_att_specific=False,
+    #         att_position='mid',
+    #         att2type='../attributes/COCO/category2types.json',
+    #         # att2type=None,
+    #         context_length=77,
+    #         n_prompt_type=None,
+    #         generated_context=False,
+    #         pos_emb=False,
+    #     ),
+    # ),
     neck=None,
     bbox_head=dict(
         type='PromptHead',
@@ -236,13 +236,13 @@ data = dict(
             att_group='common1+common2',
             # att_file='../attributes/OVAD/common2common_att2id.json',
             # att_group='common1',
-            category_file='../attributes/COCO/common2common_category2id_48_17.json',
-            # # # category_file='../attributes/COCO/common2common_category2id_48_32.json',
-            category_group='common1+common2',
+            # category_file='../attributes/COCO/common2common_category2id_48_17.json',
+            # # # # category_file='../attributes/COCO/common2common_category2id_48_32.json',
+            # category_group='common1+common2',
         ),
         test_mode=True,
         open_category=False,
-        dataset_names=['coco', 'vaw'],
+        dataset_names=['vaw'],
         save_label=False,
         load_label=None,
         pipeline=test_pipeline
