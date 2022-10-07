@@ -35,10 +35,10 @@ data_root = '/data/kyanchen/prompt/data'
 # )
 
 attribute_index_file = dict(
-    # att_file='../attributes/VAW/common2common_att2id.json',
-    # att_group='common1',
-    att_file='../attributes/VAW/common2rare_att2id.json',
-    att_group='common',
+    att_file='../attributes/VAW/common2common_att2id.json',
+    att_group='common1+common2',
+    # att_file='../attributes/VAW/common2rare_att2id.json',
+    # att_group='common',
     # att_file='../attributes/OVAD/common2common_att2id.json',
     # att_group='common1',
     # category_file='../attributes/COCO/common2common_category2id_48_17.json',
@@ -46,7 +46,7 @@ attribute_index_file = dict(
     # category_group='common1+common2',
     category_file='../attributes/COCO/common2common_category2id_48_17.json',
     # category_file='../attributes/COCO/common2common_category2id_48_32.json',
-    category_group='common1',
+    category_group='common1+common2',
 )
 
 # attribute_index_file = dict(
@@ -114,8 +114,8 @@ model = dict(
     neck=None,
     bbox_head=dict(
         type='PromptHead',
-        attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
-        category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
+        # attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
+        # category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
         re_weight_different_att=0.25,
         re_weight_category=2,
         re_weight_gamma=2,
@@ -232,8 +232,8 @@ data = dict(
         attribute_index_file=dict(
             # att_file='../attributes/VAW/common2rare_att2id.json',
             # att_group='common+rare',
-            # att_file='../attributes/VAW/common2common_att2id.json',
-            # att_group='common1+common2',
+            att_file='../attributes/VAW/common2common_att2id.json',
+            att_group='common1+common2',
             # att_file='../attributes/OVAD/common2common_att2id.json',
             # att_group='common1',
             category_file='../attributes/COCO/common2common_category2id_48_17.json',
@@ -242,7 +242,7 @@ data = dict(
         ),
         test_mode=True,
         open_category=False,
-        dataset_names=['coco'],
+        dataset_names=['coco', 'vaw'],
         save_label=False,
         load_label=None,
         pipeline=test_pipeline
