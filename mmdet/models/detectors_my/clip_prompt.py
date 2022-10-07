@@ -280,7 +280,7 @@ class CLIP_Prompter(BaseDetector):
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
         # logit_scale = self.logit_scale.exp()
-        logit_scale = 1e-3
+        logit_scale = 1e-5
         logits = logit_scale * image_features @ text_features.t()  # 2x620
         if hasattr(self, 'prompt_att_learner'):
             att_logit, cate_logit = logits[:, :len(text_features_att)], logits[:, len(text_features_att):]
