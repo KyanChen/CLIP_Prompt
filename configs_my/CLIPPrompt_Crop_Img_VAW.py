@@ -81,7 +81,7 @@ model = dict(
     #     c_specific=False,
     #     class_token_position='end'
     # ),
-    shared_prompt_vectors=False,
+    shared_prompt_vectors=True,
     prompt_att_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
@@ -255,7 +255,7 @@ optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
         'prompt_att_learner': {},
-        'prompt_category_learner': {},
+        # 'prompt_category_learner': {},
         # 'image_encoder': {'lr_mult': 0.1},
         'text_encoder': {'lr_mult': 0.1},
         'bbox_head': {}, 'logit_scale': {}
