@@ -81,7 +81,7 @@ model = dict(
     #     c_specific=False,
     #     class_token_position='end'
     # ),
-    shared_prompt_vectors=True,
+    shared_prompt_vectors=False,
     prompt_att_learner=dict(
         type='PromptAttributes',
         prompt_config=dict(
