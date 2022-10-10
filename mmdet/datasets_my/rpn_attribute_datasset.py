@@ -220,6 +220,8 @@ class RPNAttributeDataset(Dataset):
                 x, y, w, h = instance[key]
                 if w < min_box_wh_size or h < min_box_wh_size:
                     continue
+                import pdb
+                pdb.set_trace()
                 if data_set == 'coco':
                     category = instance['name']
                     category_id = self.category2id.get(category, None)  # 未标注的该类别的应该去除
