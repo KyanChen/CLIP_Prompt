@@ -233,6 +233,8 @@ class PromptHead(BaseModule):
 
         cate_mask = data_set_type == 0
         att_mask = data_set_type == 1
+        import pdb
+        pdb.set_trace()
         x = pred_logits
         pred_att_logits = x[att_mask][:, :len(self.att2id)]
         pred_cate_logits = x[cate_mask][:, len(self.att2id):]
