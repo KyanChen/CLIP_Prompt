@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=10)
+checkpoint_config = dict(interval=5)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -26,20 +26,32 @@ mp_start_method = 'fork'
 auto_scale_lr = dict(enable=False, base_batch_size=16)
 
 data_root = '/data/kyanchen/prompt/data'
+
 attribute_index_file = dict(
-    file=data_root+'/VAW/common2rare_att2id.json',
-    att_group='all'
+    att_file='../attributes/VAW/common2common_att2id.json',
+    att_group='common1',
+    # att_file='../attributes/VAW/common2rare_att2id.json',
+    # att_group='common+rare',
+    # att_file='../attributes/OVAD/common2common_att2id.json',
+    # att_group='common1',
+    # category_file='../attributes/COCO/common2common_category2id_48_17.json',
+    # # category_file='../attributes/COCO/common2common_category2id_48_32.json',
+    # category_group='common1+common2',
+    category_file='../attributes/COCO/common2common_category2id_48_17.json',
+    # category_file='../attributes/COCO/common2common_category2id_48_32.json',
+    category_group='common1',
 )
 model = dict(
     type='RPN_CLIP_Prompter_Region',
     attribute_index_file=attribute_index_file,
-    rpn_all=True,  # RPN是否包含属性预测的内容
+    box_reg='coco+vaw',  # vaw, coco, coco+vaw RPN是否包含属性预测的内容
     need_train_names=[
         # 'img_backbone',
         'img_neck',
         'rpn_head',
         'att_head',
-        # 'prompt_learner',
+        'prompt_category_learner',
+        'prompt_att_learner',
         'logit_scale', 'head',
         'kd_img_align', 'kd_logit_scale',
     ],
@@ -92,7 +104,7 @@ model = dict(
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+        loss_bbox=dict(type='L1Loss', loss_weight=1.0)), # 可以修改
     att_head=dict(
         type='ProposalEncoder',
         out_channels=1024,
@@ -115,27 +127,36 @@ model = dict(
             global_pool=False,
         )
     ),
-    # prompt_learner=dict(
-    #     type='PromptLearner',
-    #     n_ctx=16,
-    #     ctx_init='',
-    #     c_specific=False,
-    #     class_token_position='middle',
-    #     load_ckpt_from='../pretrain/t_model.pth'
-    # ),
-    prompt_learner=dict(
+    shared_prompt_vectors=True,
+    prompt_att_learner=dict(
         type='PromptAttributes',
+        load_ckpt_from='results/EXP20220903_0/epoch_40.pth',
         prompt_config=dict(
             n_prompt=30,
             is_att_specific=False,
             att_position='mid',
-            with_att_type=True,
+            att2type='../attributes/VAW/att2types.json',
+            # att2type=None,
+            # att2type='../attributes/OVAD/att2types.json',
             context_length=77,
             n_prompt_type=None,
             generated_context=False,
             pos_emb=False,
         ),
-        load_ckpt_from='results/EXP20220903_0/epoch_40.pth'
+    ),
+    prompt_category_learner=dict(
+        type='PromptAttributes',
+        prompt_config=dict(
+            n_prompt=30,
+            is_att_specific=False,
+            att_position='mid',
+            att2type='../attributes/COCO/category2types.json',
+            # att2type=None,
+            context_length=77,
+            n_prompt_type=None,
+            generated_context=False,
+            pos_emb=False,
+        ),
     ),
     text_encoder=dict(
         type='CLIPModel',
@@ -164,18 +185,19 @@ model = dict(
     #     num_encoder_layers=1,
     #     global_pool=False,
     # ),
-    head=dict(
+    bbox_head=dict(
         type='PromptHead',
-        data_root=data_root,
-        re_weight_alpha=0.25,
+        # attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
+        # category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
+        re_weight_different_att=0.25,
+        re_weight_category=1,  # 2太大了，出现cate增，att下降
         re_weight_gamma=2,
         re_weight_beta=0.995,
+        # balance_unk=0.2,  # finetune
         balance_unk=0.15,
-        balance_kd=0.5,
-        # kd_model_loss='smooth-l1',
+        # balance_unk=1  # gen
         kd_model_loss='t_ce+ts_ce',
-        # balance_kd=1e2,
-        # kd_model_loss='ce'
+        balance_kd=0.5,
     ),
     train_cfg=dict(
         rpn=dict(
@@ -303,6 +325,7 @@ data = dict(
         data_root=data_root,
         dataset_split='train',
         attribute_index_file=attribute_index_file,
+        dataset_names=['coco', 'vaw'],
         test_mode=False,
         pipeline=train_pipeline,
         kd_pipeline=kd_pipeline,

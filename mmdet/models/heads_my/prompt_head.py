@@ -34,7 +34,8 @@ class PromptHead(BaseModule):
                  re_weight_beta=0.995,  # 越小，加权越弱
                  balance_unk=0.1,
                  kd_model_loss=None,
-                 balance_kd=0.1
+                 balance_kd=0.1,
+                 balance_teacher_loss=0.5
                  ):
         super(PromptHead, self).__init__(init_cfg)
         self.train_cfg = train_cfg
@@ -91,6 +92,7 @@ class PromptHead(BaseModule):
         self.balance_unk = balance_unk
         self.kd_model_loss = kd_model_loss
         self.balance_kd = balance_kd
+        self.balance_teacher_loss = balance_teacher_loss
 
     def reweight_att(self, attr_freq, att2id):
         refine_attr_freq = {}
@@ -222,7 +224,7 @@ class PromptHead(BaseModule):
         return losses
 
     def forward_train(self,
-                      x,
+                      pred_logits,
                       img_metas,
                       data_set_type,
                       gt_labels,
@@ -231,6 +233,7 @@ class PromptHead(BaseModule):
 
         cate_mask = data_set_type == 0
         att_mask = data_set_type == 1
+        x = pred_logits
         pred_att_logits = x[att_mask][:, :len(self.att2id)]
         pred_cate_logits = x[cate_mask][:, len(self.att2id):]
         gt_att = gt_labels[att_mask][:, :len(self.att2id)]
@@ -246,48 +249,97 @@ class PromptHead(BaseModule):
 
         if len(pred_cate_logits):
             if hasattr(self, 'reweight_cate_frac'):
-                total_rew_cate = self.re_weight_category * self.reweight_cate_frac.to(gt_labels.device)
+                total_rew_cate = self.reweight_cate_frac.to(gt_labels.device)
             else:
                 total_rew_cate = None
             cate_loss = self.get_classify_loss(pred_cate_logits, gt_cate, self.balance_unk, total_rew_cate)
             losses['cate_bce_loss'] = cate_loss * self.re_weight_category
             losses.update(self.get_acc(pred_cate_logits, gt_cate, pattern='cate'))
 
+        if 'img_crop_features' in kwargs and self.kd_model_loss:
+            img_crop_features = kwargs.get('img_crop_features', None)
+            proposal_features = kwargs.get('boxes_feats', None)
+            kd_logits = kwargs.get('kd_logits', None)
+
+            # img_crop_sigmoid = torch.sigmoid(img_crop_features)
+            # proposal_sigmoid = torch.sigmoid(proposal_features)
+
+            # loss_kd = F.kl_div(img_crop_features, proposal_features) + F.kl_div(proposal_features, img_crop_features)
+            # loss_kd = F.kl_div(proposal_features, img_crop_features, reduction='mean')
+
+            # similarity = torch.cosine_similarity(img_crop_features, proposal_features, dim=-1)
+            # loss = 1 - similarity
+            if self.kd_model_loss == 'smooth-l1':
+                loss_kd = F.smooth_l1_loss(proposal_features, img_crop_features, reduction='mean')
+                loss_kd = self.balance_kd * loss_kd
+            elif self.kd_model_loss == 'ce':
+                proposal_features = torch.sigmoid(self.balance_kd * proposal_features)
+                img_crop_features = torch.sigmoid(self.balance_kd * img_crop_features)
+                loss_kd = F.binary_cross_entropy(proposal_features, img_crop_features, reduction='mean')
+            elif self.kd_model_loss == 't_ce+ts_ce':
+                x = kd_logits
+                pred_att_logits = x[att_mask][:, :len(self.att2id)]
+                pred_cate_logits = x[cate_mask][:, len(self.att2id):]
+                gt_att = gt_labels[att_mask][:, :len(self.att2id)]
+                gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
+                if len(pred_att_logits):
+                    if hasattr(self, 'reweight_att_frac'):
+                        total_rew_att = self.reweight_att_frac.to(gt_labels.device)
+                    else:
+                        total_rew_att = None
+                    att_loss = self.get_classify_loss(pred_att_logits, gt_att, self.balance_unk, total_rew_att)
+
+                if len(pred_cate_logits):
+                    if hasattr(self, 'reweight_cate_frac'):
+                        total_rew_cate = self.reweight_cate_frac.to(gt_labels.device)
+                    else:
+                        total_rew_cate = None
+                    cate_loss = self.get_classify_loss(pred_cate_logits, gt_cate, self.balance_unk, total_rew_cate)
+                losses['t_ce_loss'] = att_loss + cate_loss * self.re_weight_category * self.balance_teacher_loss * self.balance_kd
+
+                loss_ts_ce = F.cross_entropy(pred_logits, (kd_logits.detach()).softmax(dim=-1))
+
+                losses['t_s_ce_loss'] = self.balance_kd * loss_ts_ce
+            elif self.kd_model_loss == 't_ce':
+                loss_t_ce = self.get_classify_loss(kd_logits, gt_labels)
+                losses['loss_t_ce'] = loss_t_ce
+            else:
+                raise NotImplementedError
+
         return losses
 
     def get_acc(self, cls_scores, gt_labels, pattern='att'):
         acces = {}
         if pattern == 'att':
-            pred_logits = cls_scores.detach().sigmoid()
-            valid_mask = gt_labels < 2
-            pred_prob = pred_logits[valid_mask]
-            gt_label = gt_labels[valid_mask]
-            pr = precision_recall(pred_prob, gt_label)
-            acces['att_precision'] = pr[0]
-            acces['att_recall'] = pr[1]
-            f1 = f1_score(pred_prob, gt_label)
-            acces['att_f1'] = f1
-            ap = average_precision(pred_prob, gt_label, pos_label=1)
-            acces['att_ap'] = ap
+            pred_att_logits = cls_scores.detach().sigmoid()
+            gt_att = gt_labels.detach()
+
+            prs = []
+            for i_att in range(pred_att_logits.shape[1]):
+                y = gt_att[:, i_att]
+                pred = pred_att_logits[:, i_att]
+                gt_y = y[~(y == 2)]
+                pred = pred[~(y == 2)]
+                pr = average_precision(pred, gt_y, pos_label=1)
+                prs.append(pr)
+            acces['att_map'] = torch.mean(torch.stack(prs))
 
         elif pattern == 'cate':
             pred_logits = cls_scores.detach().sigmoid()
-            pred_prob, pred_label = torch.max(pred_logits, dim=-1)
-            pred_pos_mask = pred_prob > 0.5
-            pred_neg_mask = pred_prob <= 0.5
+            # pred_cate_logits = pred_cate_logits.float().softmax(dim=-1).cpu()
 
-            tp = torch.sum(
-                gt_labels[pred_pos_mask][torch.arange(len(gt_labels[pred_pos_mask])), pred_label[pred_pos_mask]] == 1)
-            tn = torch.sum(torch.sum(gt_labels[pred_neg_mask], dim=-1) == 0)
-            fp = torch.sum(
-                gt_labels[pred_pos_mask][torch.arange(len(gt_labels[pred_pos_mask])), pred_label[pred_pos_mask]] == 0)
-            fn = torch.sum(torch.sum(gt_labels[pred_neg_mask], dim=-1) == 1)
+            pred_cate_logits = pred_logits * (pred_logits == pred_logits.max(dim=-1)[0][:, None])
+            gt_cate = gt_labels.detach()
 
-            acces['cate_precision'] = tp / torch.sum(pred_pos_mask)
-            acces['cate_recall'] = tp / (tp + fn)
-            acces['cate_acc'] = (tp + tn) / (tp + tn + fp + fn)
-            acces['cate_f1'] = 2 * acces['cate_precision'] * acces['cate_recall'] / (
-                        acces['cate_precision'] + acces['cate_recall'])
+            prs = []
+            for i_att in range(pred_cate_logits.shape[1]):
+                y = gt_cate[:, i_att]
+                pred = pred_cate_logits[:, i_att]
+                gt_y = y[~(y == 2)]
+                pred = pred[~(y == 2)]
+                pr = average_precision(pred, gt_y, pos_label=1)
+                prs.append(pr)
+            acces['cate_map'] = torch.mean(torch.stack(prs))
         return acces
 
     def forward(self, feats):

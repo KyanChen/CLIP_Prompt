@@ -17,14 +17,16 @@ import torch.distributed as dist
 class RPN_CLIP_Prompter_Region(BaseModule):
     def __init__(self,
                  attribute_index_file,
-                 rpn_all,  # 包含属性预测分支
+                 box_reg,  # vaw, coco, vaw+coco RPN是否包含属性预测的内容
                  need_train_names,
                  noneed_train_names,
                  img_backbone,
                  img_neck,
                  rpn_head,
                  att_head,
-                 prompt_learner,
+                 shared_prompt_vectors,
+                 prompt_att_learner,
+                 prompt_category_learner,
                  text_encoder,
                  head,
                  kd_model=None,
@@ -36,31 +38,42 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         if pretrained:
             warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
+        self.box_reg = box_reg
 
-        if isinstance(attribute_index_file, dict):
-            file = attribute_index_file['file']
+        self.att2id = {}
+        if 'att_file' in attribute_index_file.keys():
+            file = attribute_index_file['att_file']
             att2id = json.load(open(file, 'r'))
             att_group = attribute_index_file['att_group']
-            if 'common2common' in file:
-                if att_group in ['common1', 'common2']:
-                    self.att2id = att2id[att_group]
-                elif att_group == 'all':
-                    self.att2id = {}
-                    self.att2id.update(att2id['common1'])
-                    self.att2id.update(att2id['common2'])
-            elif 'common2rare' in file:
-                if att_group in ['common', 'rare']:
-                    self.att2id = att2id[att_group]
-                elif att_group == 'all':
-                    self.att2id = {}
-                    self.att2id.update(att2id['common'])
-                    self.att2id.update(att2id['rare'])
-        else:
-            self.att2id = json.load(open(attribute_index_file, 'r'))
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.att2id = att2id[att_group]
+            elif att_group == 'common1+common2':
+                self.att2id.update(att2id['common1'])
+                self.att2id.update(att2id['common2'])
+            elif att_group == 'common+rare':
+                self.att2id.update(att2id['common'])
+                self.att2id.update(att2id['rare'])
+            else:
+                raise NameError
+        self.category2id = {}
+        if 'category_file' in attribute_index_file.keys():
+            file = attribute_index_file['category_file']
+            category2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['category_group']
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.category2id = category2id[att_group]
+            elif att_group == 'common1+common2':
+                self.category2id.update(category2id['common1'])
+                self.category2id.update(category2id['common2'])
+            elif att_group == 'common+rare':
+                self.category2id.update(category2id['common'])
+                self.category2id.update(category2id['rare'])
+            else:
+                raise NameError
         self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
-        atts = list(self.att2id.keys())
+        self.category2id = {k: v - min(self.category2id.values()) for k, v in self.category2id.items()}
+
         rank, world_size = get_dist_info()
-        self.rpn_all = rpn_all
         if kd_model:
             if rank == 0:
                 print('build kd img backbone')
@@ -69,17 +82,10 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             self.kd_logit_scale = nn.Parameter(model_tmp.logit_scale.data)
             self.kd_img_align = nn.Linear(1024, 1024)
 
-        # if 'CLIPModel' in [img_backbone['type'], text_encoder['type']]:
-        #     if img_backbone['type'] == 'CLIPModel':
-        #         clip_config = img_backbone
-        #     else:
-        #         clip_config = text_encoder
-        #     clip_model = build_backbone(clip_config).model
-
         self.with_clip_img_backbone = False
+        if rank == 0:
+            print('build img backbone ', img_backbone['type'])
         if img_backbone['type'] == 'CLIPModel':
-            if rank == 0:
-                print('build img backbone')
             clip_model = build_backbone(img_backbone).model
             self.img_backbone = clip_model.visual.eval()
             self.with_clip_img_backbone = True
@@ -94,10 +100,11 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                     new_dict[k] = v
 
                 missing_keys, unexpected_keys = self.img_backbone.load_state_dict(new_dict, strict=False)
-                print('load img_backbone: ')
-                print('missing_keys: ', missing_keys)
-                print('unexpected_keys: ', unexpected_keys)
-                print()
+                if rank == 0:
+                    print('load img_backbone: ')
+                    print('missing_keys: ', missing_keys)
+                    print('unexpected_keys: ', unexpected_keys)
+                    print()
 
         if text_encoder['type'] == 'CLIPModel':
             if rank == 0:
@@ -107,17 +114,34 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                 dict(type='TextEncoder', clip_model=clip_model)
             )
             self.logit_scale = nn.Parameter(clip_model.logit_scale.data)
-        if rank == 0:
-            print('build prompt_learner')
+
         clip_model = build_backbone(text_encoder).model
-        prompt_learner.update(dict(attribute_list=atts, clip_model=clip_model))
-        self.prompt_learner = build_backbone(prompt_learner)
-        # self.tokenized_prompts = self.prompt_learner.tokenized_prompts
+        if prompt_att_learner is not None:
+            if rank == 0:
+                print('build prompt_att_learner')
+            assert len(self.att2id)
+            prompt_att_learner.update(
+                dict(attribute_list=list(self.att2id.keys()), clip_model=clip_model)
+            )
+            self.prompt_att_learner = build_backbone(prompt_att_learner)
+
+        if prompt_category_learner is not None:
+            if rank == 0:
+                print('build prompt_att_learner')
+            assert len(self.category2id)
+            prompt_category_learner.update(
+                dict(attribute_list=list(self.category2id.keys()), clip_model=clip_model)
+            )
+            if shared_prompt_vectors:
+                prompt_category_learner.update(
+                    dict(shared_prompt_vectors=self.prompt_att_learner.prompt_vectors)
+                )
+            self.prompt_category_learner = build_backbone(prompt_category_learner)
 
         if img_neck is not None:
             load_ckpt_from = img_neck.pop('load_ckpt_from', None)
             if rank == 0:
-                print('build neck')
+                print('build img neck')
             self.img_neck = build_neck(img_neck)
             if load_ckpt_from is not None:
                 state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
@@ -142,11 +166,13 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             rpn_train_cfg = train_cfg.rpn if train_cfg is not None else None
             rpn_head_ = rpn_head.copy()
             rpn_head_.update(train_cfg=rpn_train_cfg, test_cfg=test_cfg.rpn)
-            print('build rpn head')
+            if rank == 0:
+                print('build rpn head')
             self.rpn_head = build_head(rpn_head_)
 
         head['attribute_index_file'] = attribute_index_file
-        print('build head')
+        if rank == 0:
+            print('build head')
         self.head = build_head(head)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
@@ -278,12 +304,12 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             img_f_maps = self.img_backbone(img)
         img_f_maps = self.img_neck(img_f_maps)
 
-        dataset_type = dataset_type == 1
+        dataset_type = dataset_type == 1  # attribute for 1
         dataset_type = dataset_type.view(-1)
         assert len(dataset_type) == len(img)
         losses = dict()
 
-        if self.rpn_all:
+        if self.box_reg == 'coco+vaw':
             # proposal_cfg = self.train_cfg.get('rpn_proposal', self.test_cfg.rpn)
             rpn_losses = self.rpn_head.forward_train(img_f_maps,
                                                      img_metas,
@@ -292,8 +318,8 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                                                      gt_bboxes_ignore=None,
                                                      proposal_cfg=None,
                                                      **kwargs)
-        else:
-            if torch.any(~dataset_type):
+        elif self.box_reg == 'coco':
+            if torch.any(~dataset_type):  # 存在非属性目标
                 img_rpn = [x[~dataset_type, ...] for x in img_f_maps]
                 boxes_rpn = [x for idx, x in enumerate(gt_bboxes) if not dataset_type[idx]]
                 img_metas_rpn = [x for idx, x in enumerate(img_metas) if not dataset_type[idx]]
@@ -306,50 +332,44 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                                                          **kwargs)
             else:
                 rpn_losses = dict(loss_rpn_cls=torch.tensor(0.).to(img.device), loss_rpn_bbox=torch.tensor(0.).to(img.device))
+        else:
+            raise NameError
         losses.update(rpn_losses)
 
-        if torch.any(dataset_type):
-            img_att = [x[dataset_type, ...] for x in img_f_maps]
-            boxes_att = [x for idx, x in enumerate(gt_bboxes) if dataset_type[idx]]
-            labels_att = [x for idx, x in enumerate(gt_labels) if dataset_type[idx]]
-            img_metas_att = [x for idx, x in enumerate(img_metas) if dataset_type[idx]]
+        # for all proposals
+        boxes_feats, bbox_feat_maps = self.att_head(img_f_maps, gt_bboxes)
+        text_features = []
+        if hasattr(self, 'prompt_att_learner'):
+            prompt_context, eot_index, att_group_member_num = self.prompt_att_learner()  # 620x77x512
+            text_features_att = self.text_encoder(prompt_context, eot_index)
+            text_features.append(text_features_att)
 
-            boxes_feats, bbox_feat_maps = self.att_head(img_att, boxes_att)
+        if hasattr(self, 'prompt_category_learner'):
+            prompt_context, eot_index, cate_group_member_num = self.prompt_category_learner()  # 620x77x512
+            text_features_cate = self.text_encoder(prompt_context, eot_index)
+            text_features.append(text_features_cate)
+        text_features = torch.cat(text_features, dim=0)
 
-            # prompts = self.prompt_learner()  # 620x77x512
-            # tokenized_prompts = self.tokenized_prompts
-            # text_features = self.text_encoder(prompts, tokenized_prompts)
-            prompt_context, eot_index = self.prompt_learner()  # 620x77x512
-            text_features = self.text_encoder(prompt_context, eot_index)
+        boxes_feats = boxes_feats / boxes_feats.norm(dim=-1, keepdim=True)
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
-            boxes_feats = boxes_feats / boxes_feats.norm(dim=-1, keepdim=True)
-            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        extra_info = {'boxes_feats': boxes_feats}
+        if "img_crops" in kwargs and self.with_kd_model:
+            img_crops = kwargs.get('img_crops', None)
+            img_crops = torch.cat(img_crops, dim=0)
+            with torch.no_grad():
+                img_crop_features, _, _ = self.kd_model(img_crops)
+            img_crop_features = self.kd_img_align(img_crop_features)
+            img_crop_features = img_crop_features / img_crop_features.norm(dim=-1, keepdim=True)
+            extra_info['img_crop_features'] = img_crop_features
+            kd_logit_scale = self.kd_logit_scale.exp()
+            kd_logits = kd_logit_scale * img_crop_features @ text_features.t()  # 2x(620+80)
+            extra_info['kd_logits'] = kd_logits
 
-            extra_info = {'boxes_feats': boxes_feats}
-            if "img_crops" in kwargs and self.with_kd_model:
-                img_crops = kwargs.get('img_crops', None)
-                img_crops = [x for idx, x in enumerate(img_crops) if dataset_type[idx]]
-                img_crops = torch.cat(img_crops, dim=0)
-                with torch.no_grad():
-                    img_crop_features, _, _ = self.kd_model(img_crops)
-                img_crop_features = self.kd_img_align(img_crop_features)
-                img_crop_features = img_crop_features / img_crop_features.norm(dim=-1, keepdim=True)
-                extra_info['img_crop_features'] = img_crop_features
-                kd_logit_scale = self.kd_logit_scale.exp()
-                kd_logits = kd_logit_scale * img_crop_features @ text_features.t()  # 2x620
-                extra_info['kd_logits'] = kd_logits
+        logit_scale = self.logit_scale.exp()
+        logits = logit_scale * boxes_feats @ text_features.t()  # 2x620
+        att_losses = self.head.forward_train(logits, img_metas, dataset_type, gt_labels, **extra_info)
 
-            logit_scale = self.logit_scale.exp()
-            logits = logit_scale * boxes_feats @ text_features.t()  # 2x620
-            # import pdb
-            # pdb.set_trace()
-            labels_att = torch.cat(labels_att, dim=0)
-            att_losses = self.head.forward_train(logits, img_metas_att, labels_att, **extra_info)
-        else:
-            att_losses = dict(loss_s_ce=torch.tensor(0.).to(img.device),
-                              loss_t_ce=torch.tensor(0.).to(img.device),
-                              loss_ts_ce=torch.tensor(0.).to(img.device),
-                              acc=torch.tensor(0.).to(img.device))
         losses.update(att_losses)
 
         return losses

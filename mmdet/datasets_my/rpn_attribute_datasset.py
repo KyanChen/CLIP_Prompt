@@ -36,6 +36,7 @@ class RPNAttributeDataset(Dataset):
                  pipeline,
                  dataset_split='train',
                  attribute_index_file=None,
+                 dataset_names=[],
                  dataset_balance=False,
                  kd_pipeline=None,
                  test_rpn=False,
@@ -48,79 +49,127 @@ class RPNAttributeDataset(Dataset):
         self.test_mode = test_mode
         self.test_rpn = test_rpn
         self.pipeline = Compose(pipeline)
+        self.data_root = data_root
+        self.dataset_names = dataset_names
 
+        self.kd_pipeline = kd_pipeline
         if kd_pipeline:
             self.kd_pipeline = Compose(kd_pipeline)
-        else:
-            self.kd_pipeline = kd_pipeline
 
-        self.data_root = data_root
-        if test_mode:
-            id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
-            self.id2images = id2images_vaw
-            self.id2instances = id2instances_vaw
-            self.img_ids = list(self.id2images.keys())
-        else:
+        self.attribute_index_file = attribute_index_file
+        self.att2id = {}
+        self.att_seen_unseen = {}
+        if 'att_file' in attribute_index_file.keys():
+            file = attribute_index_file['att_file']
+            att2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['att_group']
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.att2id = att2id[att_group]
+            elif att_group == 'common1+common2':
+                self.att2id.update(att2id['common1'])
+                self.att2id.update(att2id['common2'])
+                self.att_seen_unseen['seen'] = list(att2id['common1'].keys())
+                self.att_seen_unseen['unseen'] = list(att2id['common2'].keys())
+            elif att_group == 'common+rare':
+                self.att2id.update(att2id['common'])
+                self.att2id.update(att2id['rare'])
+                self.att_seen_unseen['seen'] = list(att2id['common'].keys())
+                self.att_seen_unseen['unseen'] = list(att2id['rare'].keys())
+            else:
+                raise NameError
+        self.category2id = {}
+        self.category_seen_unseen = {}
+        if 'category_file' in attribute_index_file.keys():
+            file = attribute_index_file['category_file']
+            category2id = json.load(open(file, 'r'))
+            att_group = attribute_index_file['category_group']
+            if att_group in ['common1', 'common2', 'common', 'rare']:
+                self.category2id = category2id[att_group]
+            elif att_group == 'common1+common2':
+                self.category2id.update(category2id['common1'])
+                self.category2id.update(category2id['common2'])
+                self.category_seen_unseen['seen'] = list(category2id['common1'].keys())
+                self.category_seen_unseen['unseen'] = list(category2id['common2'].keys())
+            elif att_group == 'common+rare':
+                self.category2id.update(category2id['common'])
+                self.category2id.update(category2id['rare'])
+            else:
+                raise NameError
+        self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
+        self.category2id = {k: v - min(self.category2id.values()) for k, v in self.category2id.items()}
+
+        self.id2images = {}
+        self.id2instances = {}
+
+        if 'coco' in self.dataset_names:
             id2images_coco, id2instances_coco = self.read_data_coco(dataset_split)
-            id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
-            self.id2images = {}
             self.id2images.update(id2images_coco)
-            self.id2images.update(id2images_vaw)
-
-            self.id2instances = {}
             self.id2instances.update(id2instances_coco)
-            self.id2instances.update(id2instances_vaw)
+            self.id2instances.pop('coco_200365', None)
+            self.id2instances.pop('coco_183338', None)
+            self.id2instances.pop('coco_550395', None)
+            self.id2instances.pop('coco_77039', None)
+            self.id2instances.pop('coco_340038', None)
+            # self.id2instances.pop('coco_147195', None)
+            # self.id2instances.pop('coco_247306', None)
+            self.id2instances.pop('coco_438629', None)
+            self.id2instances.pop('coco_284932', None)
 
+        if 'vaw' in self.dataset_names:
+            assert dataset_split in ['train', 'test']
+            id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
+            self.id2images.update(id2images_vaw)
+            self.id2instances.update(id2instances_vaw)
+            self.id2instances.pop('vaw_713545', None)
+            self.id2instances.pop('vaw_2369080', None)
+
+        if 'ovadcate' in self.dataset_names:
+            if dataset_split == 'test':
+                dataset_split == 'val'
+            id2images_ovad, id2instances_ovad = self.read_data_ovad('cate')
+            self.id2images.update(id2images_ovad)
+            self.id2instances.update(id2instances_ovad)
+
+        if 'ovadattr' in self.dataset_names:
+            if dataset_split == 'test':
+                dataset_split == 'val'
+            id2images_ovad, id2instances_ovad = self.read_data_ovad('attr')
+            self.id2images.update(id2images_ovad)
+            self.id2instances.update(id2instances_ovad)
+
+        if 'ovadgen' in self.dataset_names:
+            id2images_ovadgen, id2instances_ovadgen = self.read_data_ovadgen(dataset_split)
+            self.id2images.update(id2images_ovadgen)
+            self.id2instances.update(id2instances_ovadgen)
+
+        if not self.test_mode:
             # filter images too small and containing no annotations
             self.img_ids = self._filter_imgs()
             self._set_group_flag()
-
-        self.attribute_index_file = attribute_index_file
-        if isinstance(attribute_index_file, dict):
-            file = attribute_index_file['file']
-            att2id = json.load(open(file, 'r'))
-            att_group = attribute_index_file['att_group']
-            if 'common2common' in file:
-                if att_group in ['common1', 'common2']:
-                    self.att2id = att2id[att_group]
-                elif att_group == 'all':
-                    self.att2id = {}
-                    self.att2id.update(att2id['common1'])
-                    self.att2id.update(att2id['common2'])
-            elif 'common2rare' in file:
-                if att_group in ['common', 'rare']:
-                    self.att2id = att2id[att_group]
-                elif att_group == 'all':
-                    self.att2id = {}
-                    self.att2id.update(att2id['common'])
-                    self.att2id.update(att2id['rare'])
-        else:
-            self.att2id = json.load(open(attribute_index_file, 'r'))
-        self.att2id = {k: v - min(self.att2id.values()) for k, v in self.att2id.items()}
 
         img_ids_per_dataset = {}
         for x in self.img_ids:
             img_ids_per_dataset[x.split('_')[0]] = img_ids_per_dataset.get(x.split('_')[0], []) + [x]
 
-        print()
-        for k, v in img_ids_per_dataset.items():
-            print(k, ': ', len(v))
-        if dataset_balance and not test_mode:
-            self.img_ids = img_ids_per_dataset['coco'] + 2*img_ids_per_dataset['vaw']
-            print('dataset_balance: ', True)
-            print()
+        rank, world_size = get_dist_info()
+        if rank == 0:
             for k, v in img_ids_per_dataset.items():
-                if 'coco' == k:
-                    print(k, ': ', len(v))
-                else:
-                    print(k, ': ', 2*len(v))
+                print('dataset: ', k, ' len - ', len(v))
+        if dataset_balance and not test_mode:
+            balance_frac = int(len(img_ids_per_dataset['coco']) / len(img_ids_per_dataset['vaw']))
+            self.img_ids = img_ids_per_dataset['coco'] + balance_frac * img_ids_per_dataset['vaw']
+            if rank == 0:
+                print('balance dataset fractor = ', balance_frac)
+                data_len = {}
+                for x in self.img_ids:
+                    data_len[x.split('_')[0]] = data_len.get(x.split('_')[0], 0) + 1
+                for k, v in data_len.items():
+                    print('data len: ', k, ' - ', v)
+
             flag_dataset = [x.split('_')[0] for x in self.img_ids]
             dataset_types = {'coco': 0, 'vaw': 1}
             flag_dataset = [dataset_types[x] for x in flag_dataset]
             self.flag_dataset = np.array(flag_dataset, dtype=np.int)
-            self.img_ids.pop(153703)
-
-        print('data len: ', len(self))
         self.error_list = set()
 
     def read_data_coco(self, pattern):
@@ -164,12 +213,23 @@ class RPNAttributeDataset(Dataset):
                 continue
             instances = self.id2instances.get(img_id, [])
             instances_tmp = []
+
+            data_set = img_id.split('_')[0]
+            key = 'bbox' if data_set == 'coco' else 'instance_bbox'
             for instance in instances:
-                key = 'bbox' if img_id.split('_')[0] == 'coco' else 'instance_bbox'
                 x, y, w, h = instance[key]
                 if w < min_box_wh_size or h < min_box_wh_size:
                     continue
-                instances_tmp.append(instance)
+                if data_set == 'coco':
+                    category = instance['name']
+                    category_id = self.category2id.get(category, None)  # 未标注的该类别的应该去除
+                    if category_id is not None:
+                        instances_tmp.append(instance)
+                elif data_set == 'vaw':
+                    instances_tmp.append(instance)
+                elif data_set == 'ovadgen':
+                    instances_tmp.append(instance)
+
             self.id2instances[img_id] = instances_tmp
             if len(instances_tmp) == 0:
                 continue
@@ -177,7 +237,6 @@ class RPNAttributeDataset(Dataset):
         return valid_img_ids
 
     def get_instances(self):
-
         proposals = json.load(open('/data/kyanchen/prompt1/tools/results/EXP20220628_0/FasterRCNN_R50_OpenImages.proposal.json', 'r'))
         img_proposal_pair = {}
         for instance in proposals:
@@ -230,17 +289,38 @@ class RPNAttributeDataset(Dataset):
         img_id = self.img_ids[idx]
         img_info = self.id2images[img_id]
         instances = self.id2instances[img_id]
-
         data_set = img_id.split('_')[0]
+
         if data_set == 'coco':
-            prefix_path = f'/COCO/{self.pattern}2017'
-            dataset_type = 0
+            data_set_type = 0
+            if self.dataset_split == 'test':
+                dataset_split = 'val'
+            else:
+                dataset_split = self.dataset_split
+            prefix_path = f'/COCO/{dataset_split}2017'
         elif data_set == 'vaw':
             prefix_path = f'/VG/VG_100K'
-            dataset_type = 1
+            data_set_type = 1
+        elif data_set in ['ovadcate', 'ovadattr']:
+            if self.dataset_split == 'test':
+                dataset_split = 'val'
+            else:
+                dataset_split = self.dataset_split
+            prefix_path = f'/COCO/{dataset_split}2017'
+            if data_set == 'ovadcate':
+                data_set_type = 0
+            elif data_set == 'ovadattr':
+                data_set_type = 1
+            else:
+                raise NameError
+        elif data_set == 'ovadgen':
+            data_set_type = 1
+            prefix_path = f'/ovadgen'
         else:
             raise NameError
+
         results = {}
+        results['data_set_type'] = data_set_type
         results['img_prefix'] = os.path.abspath(self.data_root) + prefix_path
         results['img_info'] = {}
         results['img_info']['filename'] = img_info['file_name']
@@ -251,25 +331,33 @@ class RPNAttributeDataset(Dataset):
             key = 'bbox' if data_set == 'coco' else 'instance_bbox'
             x, y, w, h = instance[key]
             bbox_list.append([x, y, x + w, y + h])
-            positive_attributes = instance.get("positive_attributes", [])
-            negative_attributes = instance.get("negative_attributes", [])
-            labels = np.ones(len(self.att2id.keys())) * 2
-            for att in positive_attributes:
-                att_id = self.att2id.get(att, None)
-                if att_id is not None:
-                    labels[att_id] = 1
-            for att in negative_attributes:
-                att_id = self.att2id.get(att, None)
-                if att_id is not None:
-                    labels[att_id] = 0
+
+            labels = np.ones(len(self.att2id)+len(self.category2id)) * 2
+            labels[len(self.att2id):] = 0
+            if data_set == 'vaw' or data_set == 'ovadgen':
+                positive_attributes = instance["positive_attributes"]
+                negative_attributes = instance["negative_attributes"]
+                for att in positive_attributes:
+                    att_id = self.att2id.get(att, None)
+                    if att_id is not None:
+                        labels[att_id] = 1
+                for att in negative_attributes:
+                    att_id = self.att2id.get(att, None)
+                    if att_id is not None:
+                        labels[att_id] = 0
+            if data_set == 'coco':
+                category = instance['name']
+                category_id = self.category2id.get(category, None)
+                if category_id is not None:
+                    labels[category_id+len(self.att2id)] = 1
             attr_label_list.append(labels)
 
         gt_bboxes = np.array(bbox_list, dtype=np.float32)
-        gt_labels = np.stack(attr_label_list, axis=0)
+        gt_labels = np.stack(attr_label_list, axis=0).astype(np.int)
         results['gt_bboxes'] = gt_bboxes
         results['bbox_fields'] = ['gt_bboxes']
-        results['gt_labels'] = gt_labels.astype(np.int)
-        results['dataset_type'] = dataset_type
+        results['gt_labels'] = gt_labels
+        results['dataset_type'] = data_set_type
         assert len(gt_labels) == len(gt_bboxes)
         if self.kd_pipeline:
             kd_results = results.copy()
@@ -298,8 +386,6 @@ class RPNAttributeDataset(Dataset):
             self.error_list.add(idx)
             self.error_list.add(img_id)
             print(self.error_list)
-            if len(self.error_list) > 20:
-               raise UnboundLocalError
             if not self.test_mode:
                 results = self.__getitem__(np.random.randint(0, len(self)))
         return results
@@ -357,6 +443,7 @@ class RPNAttributeDataset(Dataset):
             if self.test_rpn:
                 self.get_test_rpn_img_instances(idx)
             return self.get_test_img_instances(idx)
+
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
         return self.get_img_instances(idx)
