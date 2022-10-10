@@ -45,7 +45,7 @@ class RPNAttributeDataset(Dataset):
                  ):
         super(RPNAttributeDataset, self).__init__()
         assert dataset_split in ['train', 'val', 'test']
-        self.pattern = dataset_split
+        self.dataset_split = dataset_split
         self.test_mode = test_mode
         self.test_rpn = test_rpn
         self.pipeline = Compose(pipeline)
@@ -294,7 +294,6 @@ class RPNAttributeDataset(Dataset):
         img_info = self.id2images[img_id]
         instances = self.id2instances[img_id]
         data_set = img_id.split('_')[0]
-
         if data_set == 'coco':
             data_set_type = 0
             if self.dataset_split == 'test':
