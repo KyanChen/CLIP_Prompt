@@ -345,6 +345,9 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         # for all proposals
         patch_dataset_type = [dataset_type[idx] for idx, x in enumerate(gt_bboxes) for _ in range(len(x))]
         patch_dataset_type = torch.tensor(patch_dataset_type).to(img.device)
+
+        patch_gt_label = [i for x in enumerate(gt_labels) for i in x]
+        patch_gt_label = torch.stack(patch_gt_label, dim=0)
         boxes_feats, bbox_feat_maps = self.att_head(img_f_maps, gt_bboxes)
         text_features = []
         if hasattr(self, 'prompt_att_learner'):
@@ -376,7 +379,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
 
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * boxes_feats @ text_features.t()  # 2x620
-        att_losses = self.head.forward_train(logits, img_metas, patch_dataset_type, gt_labels, **extra_info)
+        att_losses = self.head.forward_train(logits, img_metas, patch_dataset_type, patch_gt_label, **extra_info)
 
         losses.update(att_losses)
 
