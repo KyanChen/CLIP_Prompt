@@ -343,6 +343,9 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         losses.update(rpn_losses)
 
         # for all proposals
+        import pdb
+        pdb.set_trace()
+        # patch_dataset_type =
         boxes_feats, bbox_feat_maps = self.att_head(img_f_maps, gt_bboxes)
         text_features = []
         if hasattr(self, 'prompt_att_learner'):

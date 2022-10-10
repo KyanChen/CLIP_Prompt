@@ -234,8 +234,6 @@ class PromptHead(BaseModule):
         cate_mask = data_set_type == 0
         att_mask = data_set_type == 1
         x = pred_logits
-        import pdb
-        pdb.set_trace()
         pred_att_logits = x[att_mask][:, :len(self.att2id)]
         pred_cate_logits = x[cate_mask][:, len(self.att2id):]
         gt_att = gt_labels[att_mask][:, :len(self.att2id)]
