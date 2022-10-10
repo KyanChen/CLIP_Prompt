@@ -323,6 +323,8 @@ class PromptHead(BaseModule):
                 if len(pred) != 0:
                     pr = average_precision(pred, gt_y, pos_label=1)
                     prs.append(pr)
+            import pdb
+            pdb.set_trace()
             acces['att_map'] = torch.mean(torch.stack(prs))
 
         elif pattern == 'cate':
