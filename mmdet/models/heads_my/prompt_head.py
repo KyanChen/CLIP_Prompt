@@ -321,9 +321,9 @@ class PromptHead(BaseModule):
                 gt_y = y[~(y == 2)]
                 pred = pred[~(y == 2)]
                 if len(pred) != 0:
-                    import pdb
-                    pdb.set_trace()
                     pr = average_precision(pred, gt_y, pos_label=1)
+                    if torch.isnan(pr):
+                        continue
                     prs.append(pr)
             acces['att_map'] = torch.mean(torch.stack(prs))
 
@@ -342,6 +342,8 @@ class PromptHead(BaseModule):
                 pred = pred[~(y == 2)]
                 if len(pred) != 0:
                     pr = average_precision(pred, gt_y, pos_label=1)
+                    if torch.isnan(pr):
+                        continue
                     prs.append(pr)
             acces['cate_map'] = torch.mean(torch.stack(prs))
         return acces
