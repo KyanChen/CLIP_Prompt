@@ -186,7 +186,7 @@ model = dict(
     #     num_encoder_layers=1,
     #     global_pool=False,
     # ),
-    bbox_head=dict(
+    head=dict(
         type='PromptHead',
         attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
         category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
