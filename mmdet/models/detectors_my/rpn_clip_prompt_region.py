@@ -347,8 +347,8 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         patch_dataset_type = torch.tensor(patch_dataset_type).to(img.device)
 
         patch_gt_label = [label for x_per_img in gt_labels for label in x_per_img]
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         patch_gt_label = torch.stack(patch_gt_label, dim=0)
         boxes_feats, bbox_feat_maps = self.att_head(img_f_maps, gt_bboxes)
         text_features = []
