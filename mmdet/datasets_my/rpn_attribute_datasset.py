@@ -173,9 +173,12 @@ class RPNAttributeDataset(Dataset):
         self.error_list = set()
 
     def read_data_coco(self, pattern):
+        if pattern == 'test':
+            pattern = 'val'
         json_file = 'instances_train2017' if pattern == 'train' else 'instances_val2017'
         # json_file = 'lvis_v1_train' if pattern == 'train' else 'instances_val2017'
         json_data = json.load(open(self.data_root + f'/COCO/annotations/{json_file}.json', 'r'))
+        id2name = {x['id']: x['name'] for x in json_data['categories']}
         id2images = {}
         id2instances = {}
         for data in json_data['images']:
@@ -184,6 +187,7 @@ class RPNAttributeDataset(Dataset):
             id2images[img_id] = data
         for data in json_data['annotations']:
             img_id = 'coco_' + str(data['image_id'])
+            data['name'] = id2name[data['category_id']]
             id2instances[img_id] = id2instances.get(img_id, []) + [data]
         return id2images, id2instances
 
@@ -220,8 +224,6 @@ class RPNAttributeDataset(Dataset):
                 x, y, w, h = instance[key]
                 if w < min_box_wh_size or h < min_box_wh_size:
                     continue
-                import pdb
-                pdb.set_trace()
                 if data_set == 'coco':
                     category = instance['name']
                     category_id = self.category2id.get(category, None)  # 未标注的该类别的应该去除
