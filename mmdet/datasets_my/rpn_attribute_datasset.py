@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import os
 import os.path as osp
 import pickle
@@ -156,7 +157,7 @@ class RPNAttributeDataset(Dataset):
             for k, v in img_ids_per_dataset.items():
                 print('dataset: ', k, ' len - ', len(v))
         if dataset_balance and not test_mode:
-            balance_frac = int(len(img_ids_per_dataset['coco']) / len(img_ids_per_dataset['vaw']))
+            balance_frac = round(len(img_ids_per_dataset['coco']) / len(img_ids_per_dataset['vaw']))
             self.img_ids = img_ids_per_dataset['coco'] + balance_frac * img_ids_per_dataset['vaw']
             if rank == 0:
                 print('balance dataset fractor = ', balance_frac)

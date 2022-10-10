@@ -346,7 +346,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         patch_dataset_type = [dataset_type[idx] for idx, x in enumerate(gt_bboxes) for _ in range(len(x))]
         patch_dataset_type = torch.tensor(patch_dataset_type).to(img.device)
 
-        patch_gt_label = [label for x_per_img in enumerate(gt_labels) for label in x_per_img]
+        patch_gt_label = [label for x_per_img in gt_labels for label in x_per_img]
         import pdb
         pdb.set_trace()
         patch_gt_label = torch.stack(patch_gt_label, dim=0)
