@@ -344,7 +344,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
 
         # for all proposals
         patch_dataset_type = [dataset_type[idx] for idx, x in enumerate(gt_bboxes) for _ in range(len(x))]
-        patch_dataset_type = torch.cat(patch_dataset_type).to(img.device)
+        patch_dataset_type = torch.tensor(patch_dataset_type).to(img.device)
         boxes_feats, bbox_feat_maps = self.att_head(img_f_maps, gt_bboxes)
         text_features = []
         if hasattr(self, 'prompt_att_learner'):
