@@ -233,8 +233,6 @@ class PromptHead(BaseModule):
 
         cate_mask = data_set_type == 0
         att_mask = data_set_type == 1
-        import pdb
-        pdb.set_trace()
         x = pred_logits
         pred_att_logits = x[att_mask][:, :len(self.att2id)]
         pred_cate_logits = x[cate_mask][:, len(self.att2id):]
@@ -247,6 +245,8 @@ class PromptHead(BaseModule):
                 total_rew_att = None
             att_loss = self.get_classify_loss(pred_att_logits, gt_att, self.balance_unk, total_rew_att)
             losses['att_bce_loss'] = att_loss
+            import pdb
+            pdb.set_trace()
             losses.update(self.get_acc(pred_att_logits, gt_att, pattern='att'))
 
         if len(pred_cate_logits):
