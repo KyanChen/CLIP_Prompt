@@ -245,8 +245,6 @@ class PromptHead(BaseModule):
                 total_rew_att = None
             att_loss = self.get_classify_loss(pred_att_logits, gt_att, self.balance_unk, total_rew_att)
             losses['att_bce_loss'] = att_loss
-            import pdb
-            pdb.set_trace()
             losses.update(self.get_acc(pred_att_logits, gt_att, pattern='att'))
 
         if len(pred_cate_logits):
