@@ -390,8 +390,8 @@ optimizer = dict(
         'img_neck': {},
         'rpn_head': {},
         'att_head': {},
-        'prompt_category_learner': {},
         'prompt_att_learner': {},
+        # 'prompt_category_learner': {},
         'logit_scale': {}, 'head': {},
         'kd_img_align': {}, 'kd_logit_scale': {}
         },
