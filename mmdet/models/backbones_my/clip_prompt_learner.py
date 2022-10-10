@@ -169,7 +169,8 @@ class PromptAttributes(BaseModule):
                      pos_emb=True,
                  ),
                  load_ckpt_from=None,
-                 shared_prompt_vectors=None
+                 shared_prompt_vectors=None,
+                 self_name='',
                  ):
         # import pdb
         # pdb.set_trace()
@@ -269,7 +270,7 @@ class PromptAttributes(BaseModule):
 
         if load_ckpt_from is not None:
             state_dict = torch.load(load_ckpt_from, map_location="cpu")['state_dict']
-            prompt_vectors = state_dict['prompt_learner.prompt_vectors']
+            prompt_vectors = state_dict[f'{self_name}.prompt_vectors']
             if rank == 0:
                 print(f'load prompt vectors from {load_ckpt_from}')
             self.prompt_vectors.data.copy_(prompt_vectors)

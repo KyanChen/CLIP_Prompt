@@ -121,7 +121,10 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                 print('build prompt_att_learner')
             assert len(self.att2id)
             prompt_att_learner.update(
-                dict(attribute_list=list(self.att2id.keys()), clip_model=clip_model)
+                dict(attribute_list=list(self.att2id.keys()),
+                     clip_model=clip_model,
+                     self_name='prompt_att_learner'
+                     )
             )
             self.prompt_att_learner = build_backbone(prompt_att_learner)
 
@@ -130,7 +133,10 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                 print('build prompt_att_learner')
             assert len(self.category2id)
             prompt_category_learner.update(
-                dict(attribute_list=list(self.category2id.keys()), clip_model=clip_model)
+                dict(attribute_list=list(self.category2id.keys()),
+                     clip_model=clip_model,
+                     self_name='prompt_category_learner'
+                     )
             )
             if shared_prompt_vectors:
                 prompt_category_learner.update(

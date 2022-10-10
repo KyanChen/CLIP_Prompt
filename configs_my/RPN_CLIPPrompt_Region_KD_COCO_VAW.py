@@ -130,7 +130,7 @@ model = dict(
     shared_prompt_vectors=True,
     prompt_att_learner=dict(
         type='PromptAttributes',
-        load_ckpt_from='results/EXP20220903_0/epoch_40.pth',
+        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         prompt_config=dict(
             n_prompt=30,
             is_att_specific=False,
@@ -146,6 +146,7 @@ model = dict(
     ),
     prompt_category_learner=dict(
         type='PromptAttributes',
+        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         prompt_config=dict(
             n_prompt=30,
             is_att_specific=False,
@@ -164,7 +165,7 @@ model = dict(
         with_attn=False,
         out_indices=[1, 2, 3, 4],
         # backbone_name='ViT-B/16',
-        load_ckpt_from='results/EXP20220903_0/epoch_40.pth',
+        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         precision='fp32',
     ),
     kd_model=dict(
@@ -172,7 +173,7 @@ model = dict(
         backbone_name='RN50',
         with_attn=True,
         out_indices=[],
-        load_ckpt_from='results/EXP20220903_0/epoch_40.pth',
+        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         precision='fp32',
     ),
     # text_header=dict(
@@ -187,8 +188,8 @@ model = dict(
     # ),
     bbox_head=dict(
         type='PromptHead',
-        # attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
-        # category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
+        attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
+        category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
         re_weight_different_att=0.25,
         re_weight_category=1,  # 2太大了，出现cate增，att下降
         re_weight_gamma=2,
@@ -389,7 +390,8 @@ optimizer = dict(
         'img_neck': {},
         'rpn_head': {},
         'att_head': {},
-        # 'prompt_learner': {},
+        'prompt_category_learner': {},
+        'prompt_att_learner': {},
         'logit_scale': {}, 'head': {},
         'kd_img_align': {}, 'kd_logit_scale': {}
         },
@@ -405,7 +407,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=2000,
     warmup_ratio=0.1,
-    step=[35, 50])
+    step=[30, 45])
 
 # lr_config = dict(
 #     policy='CosineAnnealing',
