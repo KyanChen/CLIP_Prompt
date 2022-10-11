@@ -327,6 +327,8 @@ class PromptHead(BaseModule):
                     prs.append(pr)
             if len(prs):
                 acces['att_map'] = torch.mean(torch.stack(prs))
+            else:
+                acces['att_map'] = torch.tensor(0.).to(cls_scores.device)
 
         elif pattern == 'cate':
             pred_logits = cls_scores.detach().sigmoid()
@@ -348,6 +350,8 @@ class PromptHead(BaseModule):
                     prs.append(pr)
             if len(prs):
                 acces['cate_map'] = torch.mean(torch.stack(prs))
+            else:
+                acces['cate_map'] = torch.tensor(0.).to(cls_scores.device)
         return acces
 
     def forward(self, feats):
