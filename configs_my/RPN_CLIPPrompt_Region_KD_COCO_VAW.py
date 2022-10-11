@@ -44,7 +44,7 @@ attribute_index_file = dict(
 model = dict(
     type='RPN_CLIP_Prompter_Region',
     attribute_index_file=attribute_index_file,
-    box_reg='coco+vaw',  # vaw, coco, coco+vaw RPN是否包含属性预测的内容
+    box_reg='coco',  # vaw, coco, coco+vaw RPN是否包含属性预测的内容
     need_train_names=[
         # 'img_backbone',
         'img_neck',
