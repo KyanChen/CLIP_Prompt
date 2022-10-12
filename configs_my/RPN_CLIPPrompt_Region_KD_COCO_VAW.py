@@ -318,7 +318,7 @@ test_box_free_pipeline = [
 samples_per_gpu = 26
 data = dict(
     samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=8,
+    workers_per_gpu=4,
     # samples_per_gpu=4,
     # workers_per_gpu=0,
     persistent_workers=True,
@@ -346,7 +346,7 @@ data = dict(
         pipeline=test_box_given_pipeline,
     ),
     test=dict(
-        samples_per_gpu=12,
+        samples_per_gpu=20,
         type=dataset_type,
         data_root=data_root,
         dataset_split='test',
