@@ -682,8 +682,7 @@ class RPNAttributeDataset(Dataset):
         result_metrics = OrderedDict()
 
         gt_labels = self.get_labels()
-        import pdb
-        pdb.set_trace()
+
         print('Computing cate RPN recall:')
         gt_bboxes = [gt[:, 1:5] for gt in gt_labels if gt[0, 0] == 0]
         proposals = [x[:, :5].numpy() for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 0]
@@ -691,7 +690,7 @@ class RPNAttributeDataset(Dataset):
         iou_thrs = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
         recalls = eval_recalls(
             gt_bboxes, proposals, proposal_nums, iou_thrs)
-        print(recalls[:, 0])
+
         ar = recalls.mean(axis=1)
         log_msg = []
         for i, num in enumerate(proposal_nums):
@@ -728,6 +727,9 @@ class RPNAttributeDataset(Dataset):
             log_msg.append(f'\nAR@{num}\t{ar[i]:.4f}')
         log_msg = ''.join(log_msg)
         print(log_msg)
+
+        import pdb
+        pdb.set_trace()
 
         print('Computing att mAP:')
         gt_bboxes = [gt for gt in gt_labels if gt[0, 0] == 1]
