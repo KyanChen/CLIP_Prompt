@@ -499,8 +499,6 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         return pred
 
     def simple_test(self, img, img_metas, gt_bboxes=None, rescale=False, **kwargs):
-        import pdb
-        pdb.set_trace()
         if self.test_content == 'box_given':
             assert gt_bboxes is not None
             gt_bboxes = gt_bboxes[0]
