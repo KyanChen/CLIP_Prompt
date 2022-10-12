@@ -188,8 +188,6 @@ class RPNAttributeDataset(Dataset):
         id2name = {x['id']: x['name'] for x in json_data['categories']}
         id2images = {}
         id2instances = {}
-        import pdb
-        pdb.set_trace()
         for data in json_data['images']:
             img_id = 'coco_' + str(data['id'])
             data['file_name'] = f'{data["id"]:012d}.jpg'
