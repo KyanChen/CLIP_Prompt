@@ -767,7 +767,7 @@ class RPNAttributeDataset(Dataset):
             if len(pred) != 0:
                 import pdb
                 pdb.set_trace()
-                pr = metrics.average_precision_score(pred, gt_y)
+                pr = metrics.average_precision_score(gt_y, pred)
                 if np.isnan(pr):
                     continue
                 prs.append(pr)
