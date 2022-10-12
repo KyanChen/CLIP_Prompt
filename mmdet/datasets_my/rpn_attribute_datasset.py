@@ -933,10 +933,12 @@ class RPNAttributeDataset(Dataset):
                  per_class_out_file=None,
                  is_logit=True
                  ):
-        if self.test_mode == 'attribute_prediction':
+        if self.test_content == 'attribute_prediction':
             return self.evaluate_rpn(results)
-        elif self.test_mode == 'box_oracle':
+        elif self.test_content == 'box_oracle':
             return self.evaluate_box_oracle(results)
+        else:
+            raise NotImplementedError
 
         if isinstance(results[0], type(np.array(0))):
             results = np.concatenate(results, axis=0)
