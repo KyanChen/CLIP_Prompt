@@ -768,7 +768,7 @@ class RPNAttributeDataset(Dataset):
                 import pdb
                 pdb.set_trace()
                 pr = metrics.average_precision_score(pred, gt_y)
-                if torch.isnan(pr):
+                if np.isnan(pr):
                     continue
                 prs.append(pr)
         print('map: ', np.mean(prs))
