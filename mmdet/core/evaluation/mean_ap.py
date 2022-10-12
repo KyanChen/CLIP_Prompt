@@ -679,8 +679,7 @@ def eval_map(det_results,
                 aps.append(cls_result['ap'])
         mean_ap = np.array(aps).mean().item() if aps else 0.0
 
-    print_map_summary(
-        mean_ap, eval_results, dataset, area_ranges, logger=logger)
+    # print_map_summary(mean_ap, eval_results, dataset, area_ranges, logger=logger)
 
     return mean_ap, eval_results
 

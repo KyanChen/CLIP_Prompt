@@ -770,8 +770,6 @@ class RPNAttributeDataset(Dataset):
                     continue
                 prs.append(pr)
         print('map: ', np.mean(prs))
-        import pdb
-        pdb.set_trace()
 
         output = cal_metrics(
             self.att2id,
@@ -816,7 +814,7 @@ class RPNAttributeDataset(Dataset):
         mean_ap, eval_results = eval_map(
             det_results,
             annotations,
-            scale_ranges=[(0, 32), (32, 96), (32, 1e3)],
+            scale_ranges=None,
             iou_thr=0.5,
             ioa_thr=None,
             dataset=None,
@@ -825,6 +823,77 @@ class RPNAttributeDataset(Dataset):
             nproc=8,
             use_legacy_coordinate=False,
             use_group_of=False)
+
+        seen_unseen_mAP = {'seen': [], 'unseen': []}
+        cateid2seen = {}
+        cateid2seen.update({self.category2id[x]: 'seen' for x in self.category_seen_unseen['seen']})
+        cateid2seen.update({self.category2id[x]: 'unseen' for x in self.category_seen_unseen['unseen']})
+
+        for idx, cls_result in enumerate(eval_results):
+            if cls_result['num_gts'] > 0:
+                seen_unseen_mAP[cateid2seen[idx]].append(cls_result['ap'])
+
+        print('seen mAP: ', np.array(seen_unseen_mAP['seen']).mean().item())
+        print('unseen mAP: ', np.array(seen_unseen_mAP['unseen']).mean().item())
+        cate_ap_all = np.array(seen_unseen_mAP['seen'] + seen_unseen_mAP['unseen']).mean().item()
+        print('all mAP: ', cate_ap_all)
+        result_metrics['cate_ap_all'] = cate_ap_all
+
+        print('Computing cate mAP with proposal score:')
+        gt_bboxes = [gt for gt in gt_labels if gt[0, 0] == 0]
+        predictions = [x for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 0]
+        # predictions List[Tensor] N, Nx(4+1+620)
+        # gts List[Tensor] N, Nx(1+4+620)
+
+        det_results = []
+        annotations = []
+        for pred, gt in zip(predictions, gt_bboxes):
+            if pred.shape[0] == 0:
+                pred_boxes = [np.zeros((0, 5), dtype=np.float32) for i in range(len(self.category2id))]
+            else:
+                # pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
+                pred_cate_logits = pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()
+
+                proposal_scores = pred[:, 4]
+                pred_cate_logits = (pred_cate_logits * proposal_scores) ** 0.5
+
+                max_v, max_ind = torch.max(pred_cate_logits, dim=-1)
+                max_v = max_v.view(-1, 1)
+                pred_boxes = pred[:, :4]
+                pred_boxes = [torch.cat([pred_boxes[max_ind == i], max_v[max_ind == i]], dim=-1).numpy()
+                              for i in range(len(self.category2id))]
+            det_results.append(pred_boxes)
+            annotation = {
+                'bboxes': gt[:, 1:5],
+                'labels': np.argmax(gt[:, 5 + len(self.att2id):], axis=-1)}
+            annotations.append(annotation)
+        mean_ap, eval_results = eval_map(
+            det_results,
+            annotations,
+            scale_ranges=None,
+            iou_thr=0.5,
+            ioa_thr=None,
+            dataset=None,
+            logger=None,
+            tpfp_fn=None,
+            nproc=8,
+            use_legacy_coordinate=False,
+            use_group_of=False)
+
+        seen_unseen_mAP = {'seen': [], 'unseen': []}
+        cateid2seen = {}
+        cateid2seen.update({self.category2id[x]: 'seen' for x in self.category_seen_unseen['seen']})
+        cateid2seen.update({self.category2id[x]: 'unseen' for x in self.category_seen_unseen['unseen']})
+
+        for idx, cls_result in enumerate(eval_results):
+            if cls_result['num_gts'] > 0:
+                seen_unseen_mAP[cateid2seen[idx]].append(cls_result['ap'])
+
+        print('seen mAP with proposal score: ', np.array(seen_unseen_mAP['seen']).mean().item())
+        print('unseen mAP with proposal score: ', np.array(seen_unseen_mAP['unseen']).mean().item())
+        cate_ap_all = np.array(seen_unseen_mAP['seen'] + seen_unseen_mAP['unseen']).mean().item()
+        print('all mAP with proposal score: ', cate_ap_all)
+        result_metrics['cate_ap_all_w_proposal_score'] = cate_ap_all
 
         return result_metrics
 
