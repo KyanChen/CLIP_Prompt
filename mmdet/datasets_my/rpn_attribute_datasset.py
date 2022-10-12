@@ -765,7 +765,7 @@ class RPNAttributeDataset(Dataset):
             gt_y = y[~(y == 2)]
             pred = pred[~(y == 2)]
             if len(pred) != 0:
-                pr = metrics.average_precision(pred, gt_y, pos_label=1)
+                pr = metrics.average_precision_score(pred, gt_y, pos_label=1)
                 if torch.isnan(pr):
                     continue
                 prs.append(pr)
@@ -783,7 +783,7 @@ class RPNAttributeDataset(Dataset):
             save_result=True,
             att_seen_unseen=self.att_seen_unseen
         )
-        result_metrics['att_ap_all'] = output['PC_ap/all']
+        result_metrics['att_att_all'] = output['PC_ap/all']
 
         print('Computing cate mAP:')
         gt_bboxes = [gt for gt in gt_labels if gt[0, 0] == 0]
