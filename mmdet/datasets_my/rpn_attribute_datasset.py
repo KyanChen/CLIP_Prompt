@@ -855,7 +855,7 @@ class RPNAttributeDataset(Dataset):
                 pred_cate_logits = pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()
 
                 proposal_scores = pred[:, 4]
-                pred_cate_logits = (pred_cate_logits * proposal_scores) ** 0.5
+                pred_cate_logits = (pred_cate_logits * proposal_scores[:, None]) ** 0.5
 
                 max_v, max_ind = torch.max(pred_cate_logits, dim=-1)
                 max_v = max_v.view(-1, 1)
