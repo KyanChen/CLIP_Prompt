@@ -493,7 +493,7 @@ class RPNAttributeDataset(Dataset):
     def __getitem__(self, idx):
         if self.test_mode:
             if self.test_content == 'box_free':
-                self.get_test_box_free(idx)
+                return self.get_test_box_free(idx)
             elif self.test_content == 'box_given':
                 return self.get_test_box_given(idx)
             else:
