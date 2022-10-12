@@ -29,7 +29,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                  prompt_category_learner,
                  text_encoder,
                  head,
-                 test_mode,
+                 test_content,
                  kd_model=None,
                  train_cfg=None,
                  test_cfg=None,
@@ -183,8 +183,8 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         self.head = build_head(head)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
-        self.test_mode = test_mode
-        assert self.test_mode in ['box_oracle', 'attribute_prediction']
+        self.test_content = test_content
+        assert self.test_content in ['box_oracle', 'attribute_prediction']
 
         self.need_train_names = need_train_names
         self.noneed_train_names = noneed_train_names
@@ -499,11 +499,11 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         return pred
 
     def simple_test(self, img, img_metas, gt_bboxes=None, rescale=False, **kwargs):
-        if self.test_mode == 'box_oracle':
+        if self.test_content == 'box_oracle':
             assert gt_bboxes is not None
             gt_bboxes = gt_bboxes[0]
             return self.test_box_oracle(img, gt_bboxes)
-        elif self.test_mode == 'attribute_prediction':
+        elif self.test_content == 'attribute_prediction':
             return self.test_attribute_prediction(img, img_metas, rescale=rescale, **kwargs)
         else:
             raise NotImplementedError

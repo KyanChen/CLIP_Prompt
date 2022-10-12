@@ -29,7 +29,7 @@ data_root = '/data/kyanchen/prompt/data'
 
 attribute_index_file = dict(
     att_file='../attributes/VAW/common2common_att2id.json',
-    att_group='common1',
+    att_group='common1+common2',
     # att_file='../attributes/VAW/common2rare_att2id.json',
     # att_group='common+rare',
     # att_file='../attributes/OVAD/common2common_att2id.json',
@@ -39,11 +39,12 @@ attribute_index_file = dict(
     # category_group='common1+common2',
     category_file='../attributes/COCO/common2common_category2id_48_17.json',
     # category_file='../attributes/COCO/common2common_category2id_48_32.json',
-    category_group='common1',
+    category_group='common1+common2',
 )
 model = dict(
     type='RPN_CLIP_Prompter_Region',
     attribute_index_file=attribute_index_file,
+    test_content='box_oracle',
     box_reg='coco',  # vaw, coco, coco+vaw RPN是否包含属性预测的内容
     need_train_names=[
         # 'img_backbone',
@@ -280,7 +281,7 @@ kd_pipeline = [
     dict(type='ImageToTensor', keys=['img']),
 ]
 
-test_pipeline = [
+test_box_oracle_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True,  rearrange=True, channel_order='rgb'),
     dict(type='MultiScaleFlipAug',
          img_scale=img_size,
@@ -296,7 +297,7 @@ test_pipeline = [
         ]
     )
 ]
-test_rpn_pipeline = [
+test_attribute_prediction_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True,  rearrange=True, channel_order='rgb'),
     dict(type='MultiScaleFlipAug',
          img_scale=img_size,
@@ -346,18 +347,27 @@ data = dict(
         type=dataset_type,
         data_root=data_root,
         dataset_split='test',
-        # attribute_index_file=dict(
-        #     file=data_root+'/VAW/common2common_att2id.json',
-        #     att_group='common1'
-        # ),
         attribute_index_file=dict(
-            file=data_root + '/VAW/common2rare_att2id.json',
-            att_group='all'
+            att_file='../attributes/VAW/common2common_att2id.json',
+            att_group='common1+common2',
+            # att_file='../attributes/VAW/common2rare_att2id.json',
+            # att_group='common+rare',
+            # att_file='../attributes/OVAD/common2common_att2id.json',
+            # att_group='common1',
+            # category_file='../attributes/COCO/common2common_category2id_48_17.json',
+            # # category_file='../attributes/COCO/common2common_category2id_48_32.json',
+            # category_group='common1+common2',
+            category_file='../attributes/COCO/common2common_category2id_48_17.json',
+            # category_file='../attributes/COCO/common2common_category2id_48_32.json',
+            category_group='common1+common2',
         ),
         test_mode=True,
-        # pipeline=test_pipeline
-        test_rpn=True,
-        pipeline=test_rpn_pipeline
+        mult_proposal_score=False,
+        test_content='box_oracle',
+        pipeline=test_box_oracle_pipeline,
+
+        # test_content='attribute_prediction',
+        # pipeline=test_attribute_prediction_pipeline,
     )
 )
 # #
