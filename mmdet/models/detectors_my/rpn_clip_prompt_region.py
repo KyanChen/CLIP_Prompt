@@ -184,7 +184,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
         self.test_content = test_content
-        assert self.test_content in ['box_oracle', 'attribute_prediction']
+        assert self.test_content in ['box_given', 'box_free']
 
         self.need_train_names = need_train_names
         self.noneed_train_names = noneed_train_names
@@ -422,7 +422,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             assert 'proposals' not in kwargs
             return self.aug_test(imgs, img_metas, **kwargs)
 
-    def test_attribute_prediction(self, img, img_metas, rescale=False, **kwargs):
+    def test_box_free(self, img, img_metas, rescale=False, **kwargs):
         if self.with_clip_img_backbone:
             image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
         else:
@@ -466,7 +466,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
 
         return results
 
-    def test_box_oracle(self, img, gt_bboxes):
+    def test_box_given(self, img, gt_bboxes):
         if self.with_clip_img_backbone:
             image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
         else:
@@ -499,11 +499,11 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         return pred
 
     def simple_test(self, img, img_metas, gt_bboxes=None, rescale=False, **kwargs):
-        if self.test_content == 'box_oracle':
+        if self.test_content == 'box_given':
             assert gt_bboxes is not None
             gt_bboxes = gt_bboxes[0]
-            return self.test_box_oracle(img, gt_bboxes)
-        elif self.test_content == 'attribute_prediction':
-            return self.test_attribute_prediction(img, img_metas, rescale=rescale, **kwargs)
+            return self.test_box_given(img, gt_bboxes)
+        elif self.test_content == 'box_free':
+            return self.test_box_free(img, img_metas, rescale=rescale, **kwargs)
         else:
             raise NotImplementedError

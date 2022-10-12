@@ -44,7 +44,7 @@ attribute_index_file = dict(
 model = dict(
     type='RPN_CLIP_Prompter_Region',
     attribute_index_file=attribute_index_file,
-    test_content='box_oracle',
+    test_content='box_free',
     box_reg='coco',  # vaw, coco, coco+vaw RPN是否包含属性预测的内容
     need_train_names=[
         # 'img_backbone',
@@ -281,7 +281,7 @@ kd_pipeline = [
     dict(type='ImageToTensor', keys=['img']),
 ]
 
-test_box_oracle_pipeline = [
+test_box_given_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True,  rearrange=True, channel_order='rgb'),
     dict(type='MultiScaleFlipAug',
          img_scale=img_size,
@@ -297,7 +297,7 @@ test_box_oracle_pipeline = [
         ]
     )
 ]
-test_attribute_prediction_pipeline = [
+test_box_free_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True,  rearrange=True, channel_order='rgb'),
     dict(type='MultiScaleFlipAug',
          img_scale=img_size,
@@ -342,8 +342,8 @@ data = dict(
         dataset_names=['coco', 'vaw'],
         test_mode=True,
         mult_proposal_score=False,
-        test_content='box_oracle',
-        pipeline=test_box_oracle_pipeline,
+        test_content='box_given',
+        pipeline=test_box_given_pipeline,
     ),
     test=dict(
         samples_per_gpu=12,
@@ -367,11 +367,12 @@ data = dict(
         dataset_names=['coco', 'vaw'],
         test_mode=True,
         mult_proposal_score=False,
-        test_content='box_oracle',
-        pipeline=test_box_oracle_pipeline,
 
-        # test_content='attribute_prediction',
-        # pipeline=test_attribute_prediction_pipeline,
+        # test_content='box_given',
+        # pipeline=test_box_given_pipeline,
+
+        test_content='box_free',
+        pipeline=test_box_free_pipeline,
     )
 )
 # #

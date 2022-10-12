@@ -42,7 +42,7 @@ class RPNAttributeDataset(Dataset):
                  dataset_balance=False,
                  kd_pipeline=None,
                  test_mode=False,
-                 test_content='box_oracle',
+                 test_content='box_given',
                  mult_proposal_score=False,
                  file_client_args=dict(backend='disk')
                  ):
@@ -177,7 +177,7 @@ class RPNAttributeDataset(Dataset):
             self.flag_dataset = np.array(flag_dataset, dtype=np.int)
         self.error_list = set()
         self.test_content = test_content
-        assert self.test_content in ['box_oracle', 'attribute_prediction']
+        assert self.test_content in ['box_given', 'box_free']
 
     def read_data_coco(self, pattern):
         if pattern == 'test':
@@ -400,7 +400,7 @@ class RPNAttributeDataset(Dataset):
                 results = self.__getitem__(np.random.randint(0, len(self)))
         return results
 
-    def get_test_box_oracle(self, idx):
+    def get_test_box_given(self, idx):
         img_id = self.img_ids[idx]
         img_info = self.id2images[img_id]
         instances = self.id2instances[img_id]
@@ -451,7 +451,7 @@ class RPNAttributeDataset(Dataset):
 
         return results
 
-    def get_test_attribute_prediction(self, idx):
+    def get_test_box_free(self, idx):
         img_id = self.img_ids[idx]
         img_info = self.id2images[img_id]
 
@@ -492,10 +492,10 @@ class RPNAttributeDataset(Dataset):
 
     def __getitem__(self, idx):
         if self.test_mode:
-            if self.test_content == 'attribute_prediction':
-                self.get_test_attribute_prediction(idx)
-            elif self.test_content == 'box_oracle':
-                return self.get_test_box_oracle(idx)
+            if self.test_content == 'box_free':
+                self.get_test_box_free(idx)
+            elif self.test_content == 'box_given':
+                return self.get_test_box_given(idx)
             else:
                 assert NotImplementedError
         if idx in self.error_list and not self.test_mode:
@@ -677,13 +677,14 @@ class RPNAttributeDataset(Dataset):
             gt_labels.append(gt_labels_tmp)
         return gt_labels
 
-    def evaluate_attribute_prediction(self, results):
+    def evaluate_box_free(self, results):
         # results List[Tensor] N, Nx(4+1+620)
         # gt_labels List[Tensor] N, Nx(1+4+620)
         result_metrics = OrderedDict()
 
         gt_labels = self.get_labels()
-
+        import pdb
+        pdb.set_trace()
         print('Computing cate RPN recall:')
         gt_bboxes = [gt[:, 1:5] for gt in gt_labels if gt[0, 0] == 0]
         proposals = [x[:, :5].numpy() for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 0]
@@ -824,7 +825,7 @@ class RPNAttributeDataset(Dataset):
 
         return result_metrics
 
-    def evaluate_box_oracle(self, results):
+    def evaluate_box_given(self, results):
         result_metrics = OrderedDict()
 
         if isinstance(results[0], type(np.array(0))):
@@ -929,10 +930,10 @@ class RPNAttributeDataset(Dataset):
                  per_class_out_file=None,
                  is_logit=True
                  ):
-        if self.test_content == 'attribute_prediction':
+        if self.test_content == 'box_free':
             return self.evaluate_rpn(results)
-        elif self.test_content == 'box_oracle':
-            return self.evaluate_box_oracle(results)
+        elif self.test_content == 'box_given':
+            return self.evaluate_box_given(results)
         else:
             raise NotImplementedError
 
