@@ -888,9 +888,6 @@ class RPNAttributeDataset(Dataset):
             # print(output)
             result_metrics['cate_ap_all'] = output['PC_ap/all']
 
-        if self.save_label:
-            np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
-
         assert pred_att_logits.shape[-1] == gt_att.shape[-1]
 
         if not len(self.att2id):
