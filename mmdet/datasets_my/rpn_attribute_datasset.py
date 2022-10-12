@@ -756,7 +756,7 @@ class RPNAttributeDataset(Dataset):
         top_k = 15 if dataset_name == 'VAW' else 8
 
         pred_att_logits = torch.from_numpy(prediction_attributes).float().sigmoid().numpy()  # Nx620
-        gt_att = gt_attributes
+        gt_att = gt_attributes.astype(np.int)
 
         prs = []
         for i_att in range(pred_att_logits.shape[1]):
@@ -767,7 +767,7 @@ class RPNAttributeDataset(Dataset):
             if len(pred) != 0:
                 import pdb
                 pdb.set_trace()
-                pr = metrics.average_precision_score(pred, gt_y.astype(np.int))
+                pr = metrics.average_precision_score(pred, gt_y)
                 if torch.isnan(pr):
                     continue
                 prs.append(pr)
