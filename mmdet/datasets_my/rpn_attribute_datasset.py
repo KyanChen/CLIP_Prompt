@@ -836,9 +836,7 @@ class RPNAttributeDataset(Dataset):
         gt_labels = self.get_labels()
         gt_labels = np.concatenate(gt_labels, axis=0)
         data_set_type = gt_labels[0].astype(np.int)
-        import pdb
-        pdb.set_trace()
-        gt_labels = torch.from_numpy(gt_labels[4:].astype(np.int))
+        gt_labels = torch.from_numpy(gt_labels[5:].astype(np.int))
         assert preds.shape[-1] == gt_labels.shape[-1]
         assert preds.shape[0] == gt_labels.shape[0]
 
