@@ -151,6 +151,8 @@ class RPNAttributeDataset(Dataset):
             self._set_group_flag()
         else:
             self.img_ids = list(self.id2images.keys())
+        import pdb
+        pdb.set_trace()
 
         img_ids_per_dataset = {}
         for x in self.img_ids:
