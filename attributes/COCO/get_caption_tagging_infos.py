@@ -5,7 +5,7 @@ from textblob import TextBlob
 from tqdm import tqdm
 
 parent_folder = '../../data/COCO/annotations'
-json_file = parent_folder+'/captions_val2017.json'
+json_file = parent_folder+'/captions_train2017.json'
 json_data = json.load(open(json_file, 'r'))
 caption_anns = json_data['annotations']
 extracted_data = {}
