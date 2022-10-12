@@ -690,7 +690,7 @@ class RPNAttributeDataset(Dataset):
         iou_thrs = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
         recalls = eval_recalls(
             gt_bboxes, proposals, proposal_nums, iou_thrs)
-
+        print(recalls[:, 0])
         ar = recalls.mean(axis=1)
         log_msg = []
         for i, num in enumerate(proposal_nums):
@@ -728,9 +728,6 @@ class RPNAttributeDataset(Dataset):
         log_msg = ''.join(log_msg)
         print(log_msg)
 
-        import pdb
-        pdb.set_trace()
-
         print('Computing att mAP:')
         gt_bboxes = [gt for gt in gt_labels if gt[0, 0] == 1]
         predictions = [x.numpy() for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 1]
@@ -767,9 +764,14 @@ class RPNAttributeDataset(Dataset):
             pred = pred_att_logits[:, i_att]
             gt_y = y[~(y == 2)]
             pred = pred[~(y == 2)]
-            pr = metrics.average_precision_score(gt_y, pred)
-            prs.append(pr)
+            if len(pred) != 0:
+                pr = metrics.average_precision(pred, gt_y, pos_label=1)
+                if torch.isnan(pr):
+                    continue
+                prs.append(pr)
         print('map: ', np.mean(prs))
+        import pdb
+        pdb.set_trace()
 
         output = cal_metrics(
             self.att2id,
