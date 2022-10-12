@@ -340,7 +340,9 @@ data = dict(
         dataset_split='test',
         attribute_index_file=attribute_index_file,
         test_mode=True,
-        pipeline=test_pipeline
+        mult_proposal_score=False,
+        test_content='box_oracle',
+        pipeline=test_box_oracle_pipeline,
     ),
     test=dict(
         samples_per_gpu=12,
