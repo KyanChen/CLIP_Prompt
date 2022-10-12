@@ -29,6 +29,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                  prompt_category_learner,
                  text_encoder,
                  head,
+                 test_mode,
                  kd_model=None,
                  train_cfg=None,
                  test_cfg=None,
@@ -182,6 +183,8 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         self.head = build_head(head)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
+        self.test_mode = test_mode
+        assert self.test_mode in ['box_oracle', 'attribute_prediction']
 
         self.need_train_names = need_train_names
         self.noneed_train_names = noneed_train_names
@@ -419,32 +422,37 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             assert 'proposals' not in kwargs
             return self.aug_test(imgs, img_metas, **kwargs)
 
-    def simple_test_rpn(self, img, img_metas, rescale=False, **kwargs):
+    def test_attribute_prediction(self, img, img_metas, rescale=False, **kwargs):
         if self.with_clip_img_backbone:
             image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
         else:
             img_f_maps = self.img_backbone(img)
         img_f_maps = self.img_neck(img_f_maps)
         proposal_list = self.rpn_head.simple_test_rpn(img_f_maps, img_metas)
-        per_img_boxes = [len(x) for x in proposal_list]
 
+        num_boxes_per_img = [len(x) for x in proposal_list]
         boxes_feats, bbox_feat_maps = self.att_head(img_f_maps, proposal_list)
+        text_features = []
+        if hasattr(self, 'prompt_att_learner'):
+            prompt_context, eot_index, att_group_member_num = self.prompt_att_learner()  # 620x77x512
+            text_features_att = self.text_encoder(prompt_context, eot_index)
+            text_features.append(text_features_att)
 
-        # prompts = self.prompt_learner()  # 620x77x512
-        # tokenized_prompts = self.tokenized_prompts
-        # text_features = self.text_encoder(prompts, tokenized_prompts)
-        prompt_context, eot_index = self.prompt_learner()  # 620x77x512
-        text_features = self.text_encoder(prompt_context, eot_index)
+        if hasattr(self, 'prompt_category_learner'):
+            prompt_context, eot_index, cate_group_member_num = self.prompt_category_learner()  # 620x77x512
+            text_features_cate = self.text_encoder(prompt_context, eot_index)
+            text_features.append(text_features_cate)
+        text_features = torch.cat(text_features, dim=0)
 
         boxes_feats = boxes_feats / boxes_feats.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * boxes_feats @ text_features.t()  # 2x620
+        logits = torch.split(logits, num_boxes_per_img, dim=0)
 
-        logits = torch.split(logits, per_img_boxes, dim=0)
         pred_att_list = [x.detach().cpu() for x in logits]
-        proposal_list = [x.detach().cpu()for x in proposal_list]
+        proposal_list = [x.detach().cpu() for x in proposal_list]
         # (tl_x, tl_y, br_x, br_y, score)
         # proposal_list
 
@@ -458,21 +466,27 @@ class RPN_CLIP_Prompter_Region(BaseModule):
 
         return results
 
-    def simple_test(self, img, img_metas, gt_bboxes=None, rescale=False, **kwargs):
-        if gt_bboxes is None:
-            return self.simple_test_rpn(img, img_metas, rescale=rescale, **kwargs)
-        gt_bboxes = gt_bboxes[0]
+    def test_box_oracle(self, img, gt_bboxes):
         if self.with_clip_img_backbone:
             image_features, final_map, img_f_maps = self.img_backbone(img)  # 2x1024
         else:
             img_f_maps = self.img_backbone(img)
         img_f_maps = self.img_neck(img_f_maps)
-        per_img_boxes = [len(x) for x in gt_bboxes]
 
+        num_boxes_per_img = [len(x) for x in gt_bboxes]
         boxes_feats, bbox_feat_maps = self.att_head(img_f_maps, gt_bboxes)
 
-        prompt_context, eot_index = self.prompt_learner()  # 620x77x512
-        text_features = self.text_encoder(prompt_context, eot_index)
+        text_features = []
+        if hasattr(self, 'prompt_att_learner'):
+            prompt_context, eot_index, att_group_member_num = self.prompt_att_learner()  # 620x77x512
+            text_features_att = self.text_encoder(prompt_context, eot_index)
+            text_features.append(text_features_att)
+
+        if hasattr(self, 'prompt_category_learner'):
+            prompt_context, eot_index, cate_group_member_num = self.prompt_category_learner()  # 620x77x512
+            text_features_cate = self.text_encoder(prompt_context, eot_index)
+            text_features.append(text_features_cate)
+        text_features = torch.cat(text_features, dim=0)
 
         boxes_feats = boxes_feats / boxes_feats.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
@@ -480,6 +494,16 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * boxes_feats @ text_features.t()  # 2x620
 
-        logits = torch.split(logits, per_img_boxes, dim=0)
+        logits = torch.split(logits, num_boxes_per_img, dim=0)
         pred = [x.detach().cpu().numpy() for x in logits]
         return pred
+
+    def simple_test(self, img, img_metas, gt_bboxes=None, rescale=False, **kwargs):
+        if self.test_mode == 'box_oracle':
+            assert gt_bboxes is not None
+            gt_bboxes = gt_bboxes[0]
+            return self.test_box_oracle(img, gt_bboxes)
+        elif self.test_mode == 'attribute_prediction':
+            return self.test_attribute_prediction(img, img_metas, rescale=rescale, **kwargs)
+        else:
+            raise NotImplementedError

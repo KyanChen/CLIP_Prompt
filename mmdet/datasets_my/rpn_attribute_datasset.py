@@ -17,9 +17,10 @@ import numpy as np
 import torch
 from mmcv import tensor2imgs
 from mmcv.parallel import DataContainer
+from sklearn import metrics
 from torchmetrics.detection import MeanAveragePrecision
 
-from ..core import eval_recalls
+from ..core import eval_recalls, eval_map
 from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
 from ..datasets.pipelines import Compose
@@ -40,15 +41,16 @@ class RPNAttributeDataset(Dataset):
                  dataset_names=[],
                  dataset_balance=False,
                  kd_pipeline=None,
-                 test_rpn=False,
                  test_mode=False,
+                 test_content='box_oracle',
+                 mult_proposal_score=False,
                  file_client_args=dict(backend='disk')
                  ):
         super(RPNAttributeDataset, self).__init__()
         assert dataset_split in ['train', 'val', 'test']
         self.dataset_split = dataset_split
         self.test_mode = test_mode
-        self.test_rpn = test_rpn
+        self.mult_proposal_score = mult_proposal_score
         self.pipeline = Compose(pipeline)
         self.data_root = data_root
         self.dataset_names = dataset_names
@@ -172,6 +174,8 @@ class RPNAttributeDataset(Dataset):
             flag_dataset = [dataset_types[x] for x in flag_dataset]
             self.flag_dataset = np.array(flag_dataset, dtype=np.int)
         self.error_list = set()
+        self.test_content = test_content
+        assert self.test_content in ['box_oracle', 'attribute_prediction']
 
     def read_data_coco(self, pattern):
         if pattern == 'test':
@@ -394,19 +398,39 @@ class RPNAttributeDataset(Dataset):
                 results = self.__getitem__(np.random.randint(0, len(self)))
         return results
 
-    def get_test_img_instances(self, idx):
+    def get_test_box_oracle(self, idx):
         img_id = self.img_ids[idx]
         img_info = self.id2images[img_id]
         instances = self.id2instances[img_id]
-
         data_set = img_id.split('_')[0]
         if data_set == 'coco':
-            raise NameError
+            data_set_type = 0
+            if self.dataset_split == 'test':
+                dataset_split = 'val'
+            else:
+                dataset_split = self.dataset_split
+            prefix_path = f'/COCO/{dataset_split}2017'
         elif data_set == 'vaw':
             prefix_path = f'/VG/VG_100K'
-            dataset_type = 1
+            data_set_type = 1
+        elif data_set in ['ovadcate', 'ovadattr']:
+            if self.dataset_split == 'test':
+                dataset_split = 'val'
+            else:
+                dataset_split = self.dataset_split
+            prefix_path = f'/COCO/{dataset_split}2017'
+            if data_set == 'ovadcate':
+                data_set_type = 0
+            elif data_set == 'ovadattr':
+                data_set_type = 1
+            else:
+                raise NameError
+        elif data_set == 'ovadgen':
+            data_set_type = 1
+            prefix_path = f'/ovadgen'
         else:
             raise NameError
+
         results = {}
         results['img_prefix'] = os.path.abspath(self.data_root) + prefix_path
         results['img_info'] = {}
@@ -422,17 +446,39 @@ class RPNAttributeDataset(Dataset):
         results['gt_bboxes'] = gt_bboxes
         results['bbox_fields'] = ['gt_bboxes']
         results = self.pipeline(results)
+
         return results
 
-    def get_test_rpn_img_instances(self, idx):
+    def get_test_attribute_prediction(self, idx):
         img_id = self.img_ids[idx]
         img_info = self.id2images[img_id]
 
         data_set = img_id.split('_')[0]
         if data_set == 'coco':
-            raise NameError
+            data_set_type = 0
+            if self.dataset_split == 'test':
+                dataset_split = 'val'
+            else:
+                dataset_split = self.dataset_split
+            prefix_path = f'/COCO/{dataset_split}2017'
         elif data_set == 'vaw':
             prefix_path = f'/VG/VG_100K'
+            data_set_type = 1
+        elif data_set in ['ovadcate', 'ovadattr']:
+            if self.dataset_split == 'test':
+                dataset_split = 'val'
+            else:
+                dataset_split = self.dataset_split
+            prefix_path = f'/COCO/{dataset_split}2017'
+            if data_set == 'ovadcate':
+                data_set_type = 0
+            elif data_set == 'ovadattr':
+                data_set_type = 1
+            else:
+                raise NameError
+        elif data_set == 'ovadgen':
+            data_set_type = 1
+            prefix_path = f'/ovadgen'
         else:
             raise NameError
         results = {}
@@ -444,10 +490,12 @@ class RPNAttributeDataset(Dataset):
 
     def __getitem__(self, idx):
         if self.test_mode:
-            if self.test_rpn:
-                self.get_test_rpn_img_instances(idx)
-            return self.get_test_img_instances(idx)
-
+            if self.test_content == 'attribute_prediction':
+                self.get_test_attribute_prediction(idx)
+            elif self.test_content == 'box_oracle':
+                return self.get_test_box_oracle(idx)
+            else:
+                assert NotImplementedError
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
         return self.get_img_instances(idx)
@@ -494,7 +542,6 @@ class RPNAttributeDataset(Dataset):
             att_id = self.att2id.get(att, None)
             if att_id is not None:
                 labels[att_id] = 0
-
         results['gt_labels'] = labels.astype(np.int)
 
         try:
@@ -526,20 +573,61 @@ class RPNAttributeDataset(Dataset):
         return results
 
     def get_labels(self):
-        np_gt_labels = []
-        for results in self.instances:
-            positive_attributes = results['positive_attributes']
-            negative_attributes = results['negative_attributes']
-            label = np.ones(len(self.classname_maps.keys())) * 2
-            for att in positive_attributes:
-                label[self.classname_maps[att]] = 1
-            for att in negative_attributes:
-                label[self.classname_maps[att]] = 0
+        total_gt_list = []
+        for idx in range(len(self)):
+            img_id = self.img_ids[idx]
+            img_info = self.id2images[img_id]
+            instances = self.id2instances[img_id]
+            data_set = img_id.split('_')[0]
 
-            gt_labels = label.astype(np.int)
+            if data_set == 'coco':
+                data_set_type = 0
+            elif data_set == 'vaw':
+                data_set_type = 1
+            elif data_set in ['ovadcate', 'ovadattr']:
+                if data_set == 'ovadcate':
+                    data_set_type = 0
+                elif data_set == 'ovadattr':
+                    data_set_type = 1
+                else:
+                    raise NameError
+            elif data_set == 'ovadgen':
+                data_set_type = 1
+            else:
+                raise NameError
 
-            np_gt_labels.append(gt_labels.astype(np.int))
-        return np.stack(np_gt_labels, axis=0)
+            bbox_list = []
+            attr_label_list = []
+            for instance in instances:
+                key = 'bbox' if data_set == 'coco' else 'instance_bbox'
+                x, y, w, h = instance[key]
+                bbox_list.append([data_set_type, x, y, x + w, y + h])
+
+                labels = np.ones(len(self.att2id) + len(self.category2id)) * 2
+                labels[len(self.att2id):] = 0
+                if data_set == 'vaw' or data_set == 'ovadgen':
+                    positive_attributes = instance["positive_attributes"]
+                    negative_attributes = instance["negative_attributes"]
+                    for att in positive_attributes:
+                        att_id = self.att2id.get(att, None)
+                        if att_id is not None:
+                            labels[att_id] = 1
+                    for att in negative_attributes:
+                        att_id = self.att2id.get(att, None)
+                        if att_id is not None:
+                            labels[att_id] = 0
+                if data_set == 'coco':
+                    category = instance['name']
+                    category_id = self.category2id.get(category, None)
+                    if category_id is not None:
+                        labels[category_id + len(self.att2id)] = 1
+                attr_label_list.append(labels)
+
+            gt_bboxes = np.array(bbox_list, dtype=np.float32).reshape(-1, 5)
+            gt_labels = np.stack(attr_label_list, axis=0).reshape(-1, len(self.att2id) + len(self.category2id))
+            total_gt_list.append(np.concatenate([gt_bboxes, gt_labels], axis=1))
+
+        return total_gt_list
 
     def get_img_instance_labels(self):
         attr_label_list = []
@@ -587,14 +675,16 @@ class RPNAttributeDataset(Dataset):
             gt_labels.append(gt_labels_tmp)
         return gt_labels
 
-    def evaluate_rpn(self, results):
+    def evaluate_attribute_prediction(self, results):
         # results List[Tensor] N, Nx(4+1+620)
-        # gt_labels List[Tensor] N, Nx(4+620)
-        gt_labels = self.get_rpn_img_instance_labels()
+        # gt_labels List[Tensor] N, Nx(1+4+620)
+        result_metrics = OrderedDict()
 
-        print('Computing!')
-        gt_bboxes = [gt[:, :4].numpy() for gt in gt_labels]
-        proposals = [x[:, :5].numpy() for x in results]
+        gt_labels = self.get_labels()
+
+        print('Computing cate RPN recall:')
+        gt_bboxes = [gt[:, 1:5] for gt in gt_labels if gt[0, 0] == 0]
+        proposals = [x[:, :5].numpy() for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 0]
         proposal_nums = [100, 300, 1000]
         iou_thrs = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
         recalls = eval_recalls(
@@ -606,7 +696,233 @@ class RPNAttributeDataset(Dataset):
             log_msg.append(f'\nAR@{num}\t{ar[i]:.4f}')
         log_msg = ''.join(log_msg)
         print(log_msg)
-        return ar[0]
+
+        print('Computing att RPN recall:')
+        gt_bboxes = [gt[:, 1:5] for gt in gt_labels if gt[0, 0] == 1]
+        proposals = [x[:, :5].numpy() for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 1]
+        proposal_nums = [100, 300, 1000]
+        iou_thrs = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
+        recalls = eval_recalls(
+            gt_bboxes, proposals, proposal_nums, iou_thrs)
+        print(recalls[:, 0])
+        ar = recalls.mean(axis=1)
+        log_msg = []
+        for i, num in enumerate(proposal_nums):
+            log_msg.append(f'\nAR@{num}\t{ar[i]:.4f}')
+        log_msg = ''.join(log_msg)
+        print(log_msg)
+
+        print('Computing all RPN recall:')
+        gt_bboxes = [gt[:, 1:5] for gt in gt_labels]
+        proposals = [x[:, :5].numpy() for idx, x in enumerate(results)]
+        proposal_nums = [100, 300, 1000]
+        iou_thrs = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
+        recalls = eval_recalls(
+            gt_bboxes, proposals, proposal_nums, iou_thrs)
+        print(recalls[:, 0])
+        ar = recalls.mean(axis=1)
+        log_msg = []
+        for i, num in enumerate(proposal_nums):
+            log_msg.append(f'\nAR@{num}\t{ar[i]:.4f}')
+        log_msg = ''.join(log_msg)
+        print(log_msg)
+
+        print('Computing att mAP:')
+        gt_bboxes = [gt for gt in gt_labels if gt[0, 0] == 1]
+        predictions = [x.numpy() for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 1]
+
+        prediction_attributes = []
+        gt_attributes = []
+        # predictions List[Tensor] N, Nx(4+1+620)
+        # gts List[Tensor] N, Nx(1+4+620)
+        for prediction, gt in zip(predictions, gt_bboxes):
+            IoUs = bbox_overlaps(prediction[:, :4], gt[:, 1:5])
+            inds = np.argmax(IoUs, axis=0)
+            pred_att = prediction[inds][:, 5:5+len(self.att2id)]
+            gt_att = gt[:, 5:5 + len(self.att2id)]
+
+            # thres = 0.5
+            # IoU_thres = IoUs[inds, range(IoUs.shape[1])]
+            # pred_att = pred_att[IoU_thres > thres]
+            # gt_att = gt_att[IoU_thres > thres]
+            #
+            prediction_attributes.append(pred_att)
+            gt_attributes.append(gt_att)
+        prediction_attributes = np.concatenate(prediction_attributes, axis=0)
+        gt_attributes = np.concatenate(gt_attributes, axis=0)
+
+        dataset_name = self.attribute_index_file['att_file'].split('/')[-2]
+        top_k = 15 if dataset_name == 'VAW' else 8
+
+        pred_att_logits = torch.from_numpy(prediction_attributes).float().sigmoid().numpy()  # Nx620
+        gt_att = gt_attributes
+
+        prs = []
+        for i_att in range(pred_att_logits.shape[1]):
+            y = gt_att[:, i_att]
+            pred = pred_att_logits[:, i_att]
+            gt_y = y[~(y == 2)]
+            pred = pred[~(y == 2)]
+            pr = metrics.average_precision_score(gt_y, pred)
+            prs.append(pr)
+        print('map: ', np.mean(prs))
+
+        output = cal_metrics(
+            self.att2id,
+            dataset_name,
+            prefix_path=f'../attributes/{dataset_name}',
+            pred=pred_att_logits,
+            gt_label=gt_att,
+            top_k=top_k,
+            save_result=True,
+            att_seen_unseen=self.att_seen_unseen
+        )
+        result_metrics['att_ap_all'] = output['PC_ap/all']
+
+        print('Computing cate mAP:')
+        gt_bboxes = [gt for gt in gt_labels if gt[0, 0] == 0]
+        predictions = [x for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 0]
+        # predictions List[Tensor] N, Nx(4+1+620)
+        # gts List[Tensor] N, Nx(1+4+620)
+
+        det_results = []
+        annotations = []
+        for pred, gt in zip(predictions, gt_bboxes):
+            if pred.shape[0] == 0:
+                pred_boxes = [np.zeros((0, 5), dtype=np.float32) for i in range(len(self.category2id))]
+            else:
+                # pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
+                pred_cate_logits = pred[:, 5+len(self.att2id):].float().softmax(dim=-1).cpu()
+                if self.mult_proposal_score:
+                    proposal_scores = pred[:, 4]
+                    pred_cate_logits = (pred_cate_logits * proposal_scores) ** 0.5
+
+                max_v, max_ind = torch.max(pred_cate_logits, dim=-1)
+                max_v = max_v.view(-1, 1)
+                pred_boxes = pred[:, :4]
+                pred_boxes = [torch.cat([pred_boxes[max_ind == i], max_v[max_ind == i]], dim=-1).numpy()
+                              for i in range(len(self.category2id))]
+            det_results.append(pred_boxes)
+            annotation = {
+                'bboxes': gt[:, 1:5],
+                'labels': np.argmax(gt[:, 5 + len(self.att2id):], axis=-1)}
+            annotations.append(annotation)
+        mean_ap, eval_results = eval_map(
+            det_results,
+            annotations,
+            scale_ranges=[(0, 32), (32, 96), (32, 1e3)],
+            iou_thr=0.5,
+            ioa_thr=None,
+            dataset=None,
+            logger=None,
+            tpfp_fn=None,
+            nproc=8,
+            use_legacy_coordinate=False,
+            use_group_of=False)
+
+        return result_metrics
+
+    def evaluate_box_oracle(self, results):
+        result_metrics = OrderedDict()
+
+        if isinstance(results[0], type(np.array(0))):
+            results = np.concatenate(results, axis=0)
+        else:
+            results = np.array(results)
+
+        preds = torch.from_numpy(results)
+        gt_labels = self.get_labels()
+        gt_labels = np.concatenate(gt_labels, axis=0)
+        data_set_type = gt_labels[0].astype(np.int)
+
+        gt_labels = torch.from_numpy(gt_labels[4:].astype(np.int))
+        assert preds.shape[-1] == gt_labels.shape[-1]
+        assert preds.shape[0] == gt_labels.shape[0]
+
+        data_set_type = torch.from_numpy(data_set_type)
+
+        cate_mask = data_set_type == 0
+        att_mask = data_set_type == 1
+        pred_att_logits = preds[att_mask][:, :len(self.att2id)]
+        pred_cate_logits = preds[cate_mask][:, len(self.att2id):]
+        gt_att = gt_labels[att_mask][:, :len(self.att2id)]
+        gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
+        # import pdb
+        # pdb.set_trace()
+        if len(pred_cate_logits):
+            dataset_name = self.attribute_index_file['category_file'].split('/')[-2]
+            top_k = 1 if dataset_name == 'COCO' else -1
+            print('dataset_name: ', dataset_name, 'top k: ', top_k)
+
+            # pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
+            pred_cate_logits = pred_cate_logits.float().softmax(dim=-1).cpu()
+            #         if self.mult_proposal_score:
+            #             proposal_scores = [p.get('objectness_logits') for p in proposals]
+            #             scores = [(s * ps[:, None]) ** 0.5 \
+            #                 for s, ps in zip(scores, proposal_scores)]
+            pred_cate_logits = pred_cate_logits * (pred_cate_logits == pred_cate_logits.max(dim=-1)[0][:, None])
+            gt_cate = gt_cate.detach().cpu()
+
+            # values, indices = torch.max(pred_cate_logits, dim=-1)
+            # row_indices = torch.arange(len(values))[values > 0.5]
+            # col_indices = indices[values > 0.5]
+            # pred_cate_logits[row_indices, col_indices] = 1
+            # pred_cate_logits[pred_cate_logits < 1] = 0
+
+            pred_cate_logits = pred_cate_logits.numpy()
+            gt_cate = gt_cate.numpy()
+
+            output = cal_metrics(
+                self.category2id,
+                dataset_name,
+                prefix_path=f'../attributes/{dataset_name}',
+                pred=pred_cate_logits,
+                gt_label=gt_cate,
+                top_k=top_k,
+                save_result=True,
+                att_seen_unseen=self.category_seen_unseen
+            )
+            # import pdb
+            # pdb.set_trace()
+            # print(output)
+            result_metrics['cate_ap_all'] = output['PC_ap/all']
+
+        if self.save_label:
+            np.save(self.save_label, preds.data.cpu().float().sigmoid().numpy())
+
+        assert pred_att_logits.shape[-1] == gt_att.shape[-1]
+
+        if not len(self.att2id):
+            return result_metrics
+
+        dataset_name = self.attribute_index_file['att_file'].split('/')[-2]
+        top_k = 15 if dataset_name == 'VAW' else 8
+
+        pred_att_logits = pred_att_logits.data.cpu().float().sigmoid().numpy()  # Nx620
+        gt_att = gt_att.data.cpu().float().numpy()  # Nx620
+
+        prs = []
+        for i_att in range(pred_att_logits.shape[1]):
+            y = gt_att[:, i_att]
+            pred = pred_att_logits[:, i_att]
+            gt_y = y[~(y == 2)]
+            pred = pred[~(y == 2)]
+            pr = metrics.average_precision_score(gt_y, pred)
+            prs.append(pr)
+        print('map: ', np.mean(prs))
+
+        output = cal_metrics(
+            self.att2id,
+            dataset_name,
+            prefix_path=f'../attributes/{dataset_name}',
+            pred=pred_att_logits,
+            gt_label=gt_att,
+            top_k=top_k,
+            save_result=True,
+            att_seen_unseen=self.att_seen_unseen
+        )
+        result_metrics['att_ap_all'] = output['PC_ap/all']
+        return result_metrics
 
     def evaluate(self,
                  results,
@@ -615,10 +931,11 @@ class RPNAttributeDataset(Dataset):
                  per_class_out_file=None,
                  is_logit=True
                  ):
-        if self.test_rpn:
+        if self.test_mode == 'attribute_prediction':
             return self.evaluate_rpn(results)
-        # import pdb
-        # pdb.set_trace()
+        elif self.test_mode == 'box_oracle':
+            return self.evaluate_box_oracle(results)
+
         if isinstance(results[0], type(np.array(0))):
             results = np.concatenate(results, axis=0)
         else:
