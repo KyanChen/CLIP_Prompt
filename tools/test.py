@@ -26,7 +26,7 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
     parser.add_argument('--config', default='../configs_my/RPN_CLIPPrompt_Region_KD_COCO_VAW.py', help='test config file path')
-    parser.add_argument('--checkpoint', default='results/EXP20221010_0/epoch_10.pth', help='checkpoint file')
+    parser.add_argument('--checkpoint', default='results/EXP20221010_0/epoch_50.pth', help='checkpoint file')
     # parser.add_argument('--checkpoint', default='/data/kyanchen/prompt/pretrain/faster_rcnn_r50_fpn_32x2_cas_1x_openimages_challenge_20220221_192021-34c402d9.pth', help='checkpoint file')
     parser.add_argument(
         '--work-dir',
