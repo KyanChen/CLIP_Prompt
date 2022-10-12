@@ -765,7 +765,7 @@ class RPNAttributeDataset(Dataset):
             gt_y = y[~(y == 2)]
             pred = pred[~(y == 2)]
             if len(pred) != 0:
-                pr = metrics.average_precision_score(pred, gt_y, pos_label=1)
+                pr = metrics.average_precision_score(pred, gt_y)
                 if torch.isnan(pr):
                     continue
                 prs.append(pr)
