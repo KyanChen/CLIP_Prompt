@@ -502,7 +502,6 @@ class RPNAttributeDataset(Dataset):
             idx = np.random.randint(0, len(self))
         return self.get_img_instances(idx)
 
-
         if self.test_mode:
             return self.get_test_data(idx)
 
@@ -931,7 +930,7 @@ class RPNAttributeDataset(Dataset):
                  is_logit=True
                  ):
         if self.test_content == 'box_free':
-            return self.evaluate_rpn(results)
+            return self.evaluate_box_free(results)
         elif self.test_content == 'box_given':
             return self.evaluate_box_given(results)
         else:
