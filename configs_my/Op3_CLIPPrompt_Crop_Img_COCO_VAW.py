@@ -59,9 +59,9 @@ model = dict(
     need_train_names=[
         'prompt_category_learner',
         'prompt_att_learner',
-        # 'image_encoder',
+        'image_encoder',
+        # 'text_encoder',
         'prompt_phase_learner',
-        'text_encoder',
         'bbox_head', 'logit_scale'
     ],
     backbone=dict(
@@ -275,8 +275,8 @@ optimizer = dict(
         # 'prompt_category_learner': {'lr_mult': 0.1},
         # 'image_encoder',
         'prompt_phase_learner': {},
-        # 'image_encoder': {'lr_mult': 0.1},
-        'text_encoder': {'lr_mult': 0.1},
+        'image_encoder': {'lr_mult': 0.1},
+        # 'text_encoder': {'lr_mult': 0.1},
         'bbox_head': {}, 'logit_scale': {}
     },
     # type='SGD',
