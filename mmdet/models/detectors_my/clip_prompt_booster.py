@@ -241,7 +241,7 @@ class CLIP_Prompt_Booster(BaseDetector):
             for idx_sample, num_content in enumerate(num_caption_per_img):
                 label_phase_cap[idx_sample, flag_set_cursor:flag_set_cursor + num_content] = 1
                 flag_set_cursor += num_content
-            assert flag_set_cursor == len(logits_phase_cap.shape[-1]) - 1
+            assert flag_set_cursor == logits_phase_cap.shape[-1]
 
         logits = logit_scale * image_features @ text_features.t()  # 2x620
         if hasattr(self, 'prompt_att_learner'):
