@@ -1,6 +1,8 @@
 import json
 import copy
 import re
+
+import numpy as np
 from textblob import TextBlob
 from tqdm import tqdm
 
@@ -10,54 +12,21 @@ json_data = json.load(open(json_file, 'r'))
 
 proposal_data = json.load(open(parent_folder+'/train_faster_rcnn.proposal.json', 'r'))
 
-caption_anns = json_data['annotations']
-extracted_data = {}
-for ann in caption_anns:
-    image_id = ann['image_id']
-    caption = ann['caption']
-    if caption[-1] not in ['.', '。', '?', '!', ';']:
-        caption += '.'
-    extracted_data[image_id] = extracted_data.get(image_id, {})
-    extracted_data[image_id]['caption'] = extracted_data[image_id].get('caption', []) + [caption]
+proposal_data_dict = {}
+for proposal in proposal_data:
+    image_id = proposal['image_id']
+    box = proposal['bbox']
+    bbox = [box[0], box[1], box[0]+box[2], box[1]+box[3], proposal['score'], proposal['category_id']]
+    proposal_data_dict[image_id] = proposal_data_dict.get(image_id, []) + [bbox]
 
-categories = json.load(open('common2common_category2id_48_32.json', 'r'))
-categories = list(categories['common1'].keys()) + list(categories['common2'].keys())
-print('len category: ', len(categories))
+for k, v in proposal_data_dict.items():
+    v = np.array(v).reshape(-1, 6)
+    v_area = (v[:, 2] - v[:, 0]) * (v[:, 3] - v[:, 1])
+    ind = np.argmax(v_area)
+    biggest_box = v[ind].tolist()
+    sorted(v, key=lambda x: x[-2], reverse=True)
+    box_sort_by_score = v[:50].tolist()
+    json_data[k]['biggest_proposal'] = biggest_box
+    json_data[k]['proposals'] = box_sort_by_score
 
-atts = json.load(open('../VAW/common2rare_att2id.json', 'r'))
-atts = list(atts['common'].keys()) + list(atts['rare'].keys())
-print('len att: ', len(atts))
-
-
-def punc_filter(text):
-    rule = re.compile(r'[^\-a-zA-Z0-9]')
-    text = rule.sub(' ', text)
-    text = ' '.join([x.strip() for x in text.split(' ') if len(x.strip()) > 0])
-    return text
-
-extracted_data_tmp = extracted_data.copy()
-for img_id, item in tqdm(extracted_data_tmp.items()):
-    captions = item['caption']
-
-    all_caps = ' '.join(captions)
-    caption = punc_filter(all_caps)
-    caption = caption.lower()
-
-    extracted_data[img_id]['category'] = []
-    extracted_data[img_id]['attribute'] = []
-    for category in categories:
-        rex = re.search(rf'\b{category}\b', caption)
-        if rex is not None:
-            extracted_data[img_id]['category'] += [category]
-    for att in atts:
-        rex = re.search(rf'\b{att}\b', caption)
-        if rex is not None:
-            extracted_data[img_id]['attribute'] += [att]
-
-    speech = TextBlob(caption)
-    noun_phrases = [str(x) for x in speech.noun_phrases]
-    extracted_data[img_id]['phase'] = list(set(noun_phrases))
-    extracted_data[img_id]['category'] = list(set(extracted_data[img_id]['category']))
-    extracted_data[img_id]['attribute'] = list(set(extracted_data[img_id]['attribute']))
-
-json.dump(extracted_data, open(parent_folder+'/train_2017_caption_tagging.json', 'w'), indent=4)
+json.dump(json_data, open(parent_folder+'/train_2017_caption_tagging_with_proposals.json', 'w'), indent=4)
