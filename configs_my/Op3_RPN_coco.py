@@ -164,7 +164,7 @@ data = dict(
         img_prefix=data_root + 'val2017/',
         pipeline=test_pipeline))
 
-evaluation = dict(interval=1, metric='bbox', jsonfile_prefix=data_root+'annotations')
+evaluation = dict(interval=1, metric='bbox', jsonfile_prefix=data_root+'annotations/val_faster_rcnn')
 
 # optimizer
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
