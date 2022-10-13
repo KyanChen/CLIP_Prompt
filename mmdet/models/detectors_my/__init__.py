@@ -7,9 +7,12 @@ from .rpn_clip_prompt_region import RPN_CLIP_Prompter_Region
 from .clip_tester import CLIP_Tester
 from .clip_prompt_booster import CLIP_Prompt_Booster
 
+from .faster_rcnn_rpn_infer import FasterRCNNRPNInfer
+
 __all__ =[
     'CLIP_Prompter', 'OFA_Prompter',
     'MaskRCNNCLIP', 'FasterRCNNRPN',
     'CLIP_Prompter_Region', 'RPN_CLIP_Prompter_Region',
-    'CLIP_Tester', 'CLIP_Prompt_Booster'
+    'CLIP_Tester', 'CLIP_Prompt_Booster',
+    'FasterRCNNRPNInfer'
 ]

@@ -12,7 +12,7 @@ from ..detectors.faster_rcnn import FasterRCNN
 
 
 @DETECTORS.register_module()
-class FasterRCNNRPN(FasterRCNN):
+class FasterRCNNRPNInfer(FasterRCNN):
     # Inference ONLY RPN Network
     def __init__(self,
                  backbone,
@@ -23,7 +23,7 @@ class FasterRCNNRPN(FasterRCNN):
                  neck=None,
                  pretrained=None,
                  init_cfg=None):
-        super(FasterRCNN, self).__init__(
+        super(FasterRCNNRPNInfer, self).__init__(
             backbone=backbone,
             neck=neck,
             rpn_head=rpn_head,
