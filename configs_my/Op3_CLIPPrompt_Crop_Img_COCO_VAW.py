@@ -127,7 +127,7 @@ model = dict(
         re_weight_category=1,  # 2太大了，出现cate增，att下降
         re_weight_gamma=2,
         re_weight_beta=0.995,
-        balance_unk=0.4,  # boost
+        balance_unk=0.5,  # boost: 0.5
         # balance_unk=0.15,
         # balance_unk=1  # gen
     )
@@ -213,7 +213,7 @@ test_generated_pipeline = [
     )
 ]
 
-samples_per_gpu = 28
+samples_per_gpu = 64  # 28:text_encoder
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
