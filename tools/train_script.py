@@ -5,7 +5,7 @@ while True:
     os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
               "sh dist_train.sh "
               "../configs_my/Op3_CLIPPrompt_Crop_Img_COCO_VAW.py "
-              "results/EXP20221013_0 "
+              "results/EXP20221013_1 "
               "8")
     # os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
     #           "sh dist_train.sh "
