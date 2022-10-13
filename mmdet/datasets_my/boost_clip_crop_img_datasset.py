@@ -138,15 +138,6 @@ class BoostCLIPCropDataset(Dataset):
             id2images_coco, id2instances_coco = self.read_data_coco_cap(dataset_split)
             self.id2images.update(id2images_coco)
             self.id2instances.update(id2instances_coco)
-            self.id2instances.pop('coco_200365', None)
-            self.id2instances.pop('coco_183338', None)
-            self.id2instances.pop('coco_550395', None)
-            self.id2instances.pop('coco_77039', None)
-            self.id2instances.pop('coco_340038', None)
-            # self.id2instances.pop('coco_147195', None)
-            # self.id2instances.pop('coco_247306', None)
-            self.id2instances.pop('coco_438629', None)
-            self.id2instances.pop('coco_284932', None)
 
         self.instances = []
         for k, v in self.id2instances.items():
@@ -158,9 +149,9 @@ class BoostCLIPCropDataset(Dataset):
         if not test_mode:
             self.instances = self.filter_instance(self.instances)
             flag_dataset = [x['img_id'].split('_')[0] for x in self.instances]
-            dataset_types = {'coco': 0, 'vaw': 1, 'ovadgen': 1}
+            dataset_types = {'coco': 0, 'vaw': 1, 'ovadgen': 1, 'cococap': 2}
             flag_dataset = [dataset_types[x] for x in flag_dataset]
-            self.flag_dataset = np.array(flag_dataset, dtype=np.int)
+            # self.flag_dataset = np.array(flag_dataset, dtype=np.int)
 
         self.flag = np.zeros(len(self), dtype=int)
 
@@ -188,6 +179,8 @@ class BoostCLIPCropDataset(Dataset):
             elif data_set == 'vaw':
                 return_instances.append(instance)
             elif data_set == 'ovadgen':
+                return_instances.append(instance)
+            elif data_set == 'cococap':
                 return_instances.append(instance)
         return return_instances
 
@@ -251,10 +244,9 @@ class BoostCLIPCropDataset(Dataset):
             img_id = 'cococap_' + str(data['id'])
             data['file_name'] = f'{data["id"]:012d}.jpg'
             id2images[img_id] = data
-        cap_data = json.load(open(self.data_root + f'/COCO/annotations/train_2017_caption_tagging.json', 'r'))
-        for data in json_data['annotations']:
-            img_id = 'coco_' + str(data['image_id'])
-            data['name'] = id2name[data['category_id']]
+        cap_data = json.load(open(self.data_root + f'/COCO/annotations/train_2017_caption_tagging_with_proposals.json', 'r'))
+        for img_id, data in cap_data.item():
+            img_id = 'cococap_' + str(img_id)
             id2instances[img_id] = id2instances.get(img_id, []) + [data]
         return id2images, id2instances
 
@@ -383,6 +375,9 @@ class BoostCLIPCropDataset(Dataset):
         elif data_set == 'ovadgen':
             data_set_type = 1
             prefix_path = f'/ovadgen'
+        elif data_set == 'cococap':
+            data_set_type = 2
+            prefix_path = f'/COCO/train2017'
         else:
             raise NameError
         results = {}
