@@ -246,7 +246,7 @@ class BoostCLIPCropDataset(Dataset):
             data['file_name'] = f'{data["id"]:012d}.jpg'
             id2images[img_id] = data
         cap_data = json.load(open(self.data_root + f'/COCO/annotations/train_2017_caption_tagging_with_proposals.json', 'r'))
-        for img_id, data in cap_data.item():
+        for img_id, data in cap_data.items():
             img_id = 'cococap_' + str(img_id)
             id2instances[img_id] = id2instances.get(img_id, []) + [data]
         return id2images, id2instances
