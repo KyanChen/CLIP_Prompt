@@ -430,8 +430,8 @@ class BoostCLIPCropDataset(Dataset):
                     category_id = self.category2id.get(category, None)
                     if category_id is not None:
                         labels[category_id + len(self.att2id)] = 1
-                results['caption'] = DataContainer(instance['caption'], stack=False)
-                results['phase'] = DataContainer(instance['phase'], stack=False)
+                results['caption'] = DataContainer(instance['caption'], stack=False, cpu_only=True)
+                results['phase'] = DataContainer(instance['phase'], stack=False, cpu_only=True)
             results['gt_labels'] = labels.astype(np.int)
             if 'gen' in data_set:
                 results = self.pipeline(results, 0)
