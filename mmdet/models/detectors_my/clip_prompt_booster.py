@@ -227,8 +227,6 @@ class CLIP_Prompt_Booster(BaseDetector):
         logit_scale = self.logit_scale.exp()
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-        import pdb
-        pdb.set_trace()
         if hasattr(self, 'prompt_phase_learner') and hasattr(self, 'prompt_caption_learner'):
             phase_cap_features = phase_cap_features / phase_cap_features.norm(dim=-1, keepdim=True)
             logits_phase_cap = logit_scale * image_features @ phase_cap_features.T
