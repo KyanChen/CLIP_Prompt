@@ -5,6 +5,7 @@ from textblob import TextBlob
 from tqdm import tqdm
 
 parent_folder = '../../data/COCO/annotations'
+# parent_folder = '/Users/kyanchen/Documents/COCO/annotations'
 json_file = parent_folder+'/captions_train2017.json'
 json_data = json.load(open(json_file, 'r'))
 caption_anns = json_data['annotations']
@@ -27,21 +28,21 @@ print('len att: ', len(atts))
 
 
 def punc_filter(text):
-    rule = re.compile(r'[^\-a-zA-Z0-9]')
+    # rule = re.compile(r'[^\-a-zA-Z0-9]')
+    rule = re.compile('^\w+$')  # 由数字、26个英文字母或者下划线组成的字符串
     text = rule.sub(' ', text)
     text = ' '.join([x.strip() for x in text.split(' ') if len(x.strip()) > 0])
     return text
 
 extracted_data_tmp = extracted_data.copy()
 for img_id, item in tqdm(extracted_data_tmp.items()):
-    captions = item['caption']
-
-    all_caps = ' '.join(captions)
-    caption = punc_filter(all_caps)
-    caption = caption.lower()
-
     extracted_data[img_id]['category'] = []
     extracted_data[img_id]['attribute'] = []
+    captions = item['caption']
+    # for caption in captions:
+    caption = ' '.join(captions)
+    caption = punc_filter(caption)
+    caption = caption.lower()
     for category in categories:
         rex = re.search(rf'\b{category}\b', caption)
         if rex is not None:
@@ -53,6 +54,7 @@ for img_id, item in tqdm(extracted_data_tmp.items()):
 
     speech = TextBlob(caption)
     noun_phrases = [str(x) for x in speech.noun_phrases]
+    # extracted_data[img_id]['phase'] += noun_phrases
     extracted_data[img_id]['phase'] = list(set(noun_phrases))
     extracted_data[img_id]['category'] = list(set(extracted_data[img_id]['category']))
     extracted_data[img_id]['attribute'] = list(set(extracted_data[img_id]['attribute']))
