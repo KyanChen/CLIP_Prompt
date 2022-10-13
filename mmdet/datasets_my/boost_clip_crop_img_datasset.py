@@ -135,7 +135,7 @@ class BoostCLIPCropDataset(Dataset):
             self.id2images.update(id2images_ovadgen)
             self.id2instances.update(id2instances_ovadgen)
 
-        if 'coco_cap' in self.dataset_names:
+        if 'cococap' in self.dataset_names:
             id2images_coco, id2instances_coco = self.read_data_coco_cap(dataset_split)
             self.id2images.update(id2images_coco)
             self.id2instances.update(id2instances_coco)
