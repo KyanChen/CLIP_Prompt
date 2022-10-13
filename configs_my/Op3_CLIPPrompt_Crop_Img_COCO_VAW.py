@@ -213,7 +213,7 @@ test_generated_pipeline = [
     )
 ]
 
-samples_per_gpu = 56  # 28:text_encoder 50: img_encoder
+samples_per_gpu = 48  # 28:text_encoder 50: img_encoder
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
