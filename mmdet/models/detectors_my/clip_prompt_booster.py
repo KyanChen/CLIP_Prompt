@@ -194,6 +194,8 @@ class CLIP_Prompt_Booster(BaseDetector):
         # prompts = self.prompt_learner()  # 620x77x512
         # tokenized_prompts = self.tokenized_prompts
         # text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
+        import pdb
+        pdb.set_trace()
         text_features = []
         if hasattr(self, 'prompt_att_learner'):
             prompt_context, eot_index, att_group_member_num = self.prompt_att_learner()  # 620x77x512
