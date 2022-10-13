@@ -122,5 +122,5 @@ class PromptCaption(BaseModule):
     def forward(self, captions, device):
         caption_tokens = tokenize(captions, self.context_length, truncate=True).to(device)
         caption_embs = self.token_emb(caption_tokens)
-        return caption_embs, caption_tokens.argmax(dim=-1), _
+        return caption_embs, caption_tokens.argmax(dim=-1), None
 
