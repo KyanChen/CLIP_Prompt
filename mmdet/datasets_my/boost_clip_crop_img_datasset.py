@@ -399,50 +399,50 @@ class BoostCLIPCropDataset(Dataset):
         if self.test_mode:
             results = self.pipeline(results)
         else:
-            try:
-                labels = np.ones(len(self.att2id)+len(self.category2id)) * 2
-                labels[len(self.att2id):] = 0
-                if data_set == 'vaw' or data_set == 'ovadgen':
-                    positive_attributes = instance["positive_attributes"]
-                    negative_attributes = instance["negative_attributes"]
-                    for att in positive_attributes:
-                        att_id = self.att2id.get(att, None)
-                        if att_id is not None:
-                            labels[att_id] = 1
-                    for att in negative_attributes:
-                        att_id = self.att2id.get(att, None)
-                        if att_id is not None:
-                            labels[att_id] = 0
-                if data_set == 'coco':
-                    category = instance['name']
+            # try:
+            labels = np.ones(len(self.att2id)+len(self.category2id)) * 2
+            labels[len(self.att2id):] = 0
+            if data_set == 'vaw' or data_set == 'ovadgen':
+                positive_attributes = instance["positive_attributes"]
+                negative_attributes = instance["negative_attributes"]
+                for att in positive_attributes:
+                    att_id = self.att2id.get(att, None)
+                    if att_id is not None:
+                        labels[att_id] = 1
+                for att in negative_attributes:
+                    att_id = self.att2id.get(att, None)
+                    if att_id is not None:
+                        labels[att_id] = 0
+            if data_set == 'coco':
+                category = instance['name']
+                category_id = self.category2id.get(category, None)
+                if category_id is not None:
+                    labels[category_id+len(self.att2id)] = 1
+
+            if data_set == 'cococap':
+                positive_attributes = instance["attribute"]
+                for att in positive_attributes:
+                    att_id = self.att2id.get(att, None)
+                    if att_id is not None:
+                        labels[att_id] = 1
+                categories = instance["category"]
+                for category in categories:
                     category_id = self.category2id.get(category, None)
                     if category_id is not None:
-                        labels[category_id+len(self.att2id)] = 1
-
-                if data_set == 'cococap':
-                    positive_attributes = instance["attribute"]
-                    for att in positive_attributes:
-                        att_id = self.att2id.get(att, None)
-                        if att_id is not None:
-                            labels[att_id] = 1
-                    categories = instance["category"]
-                    for category in categories:
-                        category_id = self.category2id.get(category, None)
-                        if category_id is not None:
-                            labels[category_id + len(self.att2id)] = 1
-                    results['caption'] = DataContainer(results['caption'], stack=False)
-                    results['phase'] = DataContainer(instance['phase'], stack=False)
-                results['gt_labels'] = labels.astype(np.int)
-                if 'gen' in data_set:
-                    results = self.pipeline(results, 0)
-                    results = self.pipeline(results, (2, ':'))
-                else:
-                    results = self.pipeline(results)
-            except Exception as e:
-                self.error_list.add(idx)
-                self.error_list.add(img_id)
-                print(self.error_list)
-                results = self.__getitem__(np.random.randint(0, len(self)))
+                        labels[category_id + len(self.att2id)] = 1
+                results['caption'] = DataContainer(results['caption'], stack=False)
+                results['phase'] = DataContainer(instance['phase'], stack=False)
+            results['gt_labels'] = labels.astype(np.int)
+            if 'gen' in data_set:
+                results = self.pipeline(results, 0)
+                results = self.pipeline(results, (2, ':'))
+            else:
+                results = self.pipeline(results)
+            # except Exception as e:
+            #     self.error_list.add(idx)
+            #     self.error_list.add(img_id)
+            #     print(self.error_list)
+            #     results = self.__getitem__(np.random.randint(0, len(self)))
 
         # img = results['img']
         # img_metas = results['img_metas'].data
