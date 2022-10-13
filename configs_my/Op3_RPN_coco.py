@@ -104,7 +104,7 @@ model = dict(
     ))
 
 dataset_type = 'CocoRPNDataset'
-data_root = '/data/kyanchen/prompt/data'
+data_root = '/data/kyanchen/prompt/data/'
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
@@ -164,7 +164,7 @@ data = dict(
         img_prefix=data_root + 'val2017/',
         pipeline=test_pipeline))
 
-evaluation = dict(interval=1, metric='bbox', jsonfile_prefix=data_root+'/annotations')
+evaluation = dict(interval=1, metric='bbox', jsonfile_prefix=data_root+'annotations')
 
 # optimizer
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
