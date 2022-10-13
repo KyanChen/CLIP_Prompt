@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=5)
+checkpoint_config = dict(interval=2)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -35,10 +35,10 @@ data_root = '/data/kyanchen/prompt/data'
 # )
 
 attribute_index_file = dict(
-    # att_file='../attributes/VAW/common2common_att2id.json',
-    # att_group='common1+common2',
-    att_file='../attributes/VAW/common2rare_att2id.json',
-    att_group='common+rare',
+    att_file='../attributes/VAW/common2common_att2id.json',
+    att_group='common1+common2',
+    # att_file='../attributes/VAW/common2rare_att2id.json',
+    # att_group='common+rare',
     # att_file='../attributes/OVAD/common2common_att2id.json',
     # att_group='common1',
     # category_file='../attributes/COCO/common2common_category2id_48_17.json',
@@ -57,8 +57,8 @@ model = dict(
     type='CLIP_Prompt_Booster',
     attribute_index_file=attribute_index_file,
     need_train_names=[
-        # 'prompt_category_learner',
-        # 'prompt_att_learner',
+        'prompt_category_learner',
+        'prompt_att_learner',
         # 'image_encoder',
         'prompt_phase_learner',
         'text_encoder',
@@ -72,7 +72,7 @@ model = dict(
         load_ckpt_from=None,
         precision='fp32',
     ),
-    shared_prompt_vectors=False,
+    shared_prompt_vectors=True,
     prompt_att_learner=dict(
         type='PromptAttributes',
         load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
@@ -113,22 +113,22 @@ model = dict(
         ),
     ),
     prompt_caption_learner=dict(
-        type='PromptPhases',
+        type='PromptCaption',
         prompt_config=dict(
             context_length=77,
         ),
     ),
     neck=None,
     bbox_head=dict(
-        type='BoostCLIPHead',
-        # attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
-        # category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
+        type='PromptHead',
+        attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
+        category_freq_file='../attributes/COCO/category_freq_wo_sort.json',
         re_weight_different_att=0.25,
         re_weight_category=1,  # 2太大了，出现cate增，att下降
         re_weight_gamma=2,
         re_weight_beta=0.995,
-        # balance_unk=0.2,  # finetune
-        balance_unk=0.15,
+        balance_unk=0.4,  # boost
+        # balance_unk=0.15,
         # balance_unk=1  # gen
     )
 )
@@ -154,6 +154,19 @@ train_pipeline = [
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['gt_labels']),
     dict(type='Collect', keys=['img', 'gt_labels', 'data_set_type'])
+]
+
+train_cap_pipeline = [
+    dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
+    dict(type='ScaleCrop', scale_range=[0.0, 0.0]),
+    # dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
+    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(type='Resize', img_scale=img_scale, keep_ratio=True),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='Pad', size=img_scale, center_pad=True),
+    dict(type='ImageToTensor', keys=['img']),
+    dict(type='ToTensor', keys=['gt_labels']),
+    dict(type='Collect', keys=['img', 'gt_labels', 'data_set_type', 'phase', 'caption'])
 ]
 
 train_generated_pipeline = [
@@ -210,16 +223,12 @@ data = dict(
         data_root=data_root,
         dataset_split='train',
         attribute_index_file=attribute_index_file,
-        # attribute_index_file=dict(
-        #     file=data_root+'/VAW/common2rare_att2id.json',
-        #     att_group='rare'
-        # ),
-        dataset_names=['coco', 'vaw'],
+        dataset_names=['cococap'],
         save_label=False,
         load_label=None,
         test_mode=False,
         open_category=False,
-        pipeline=train_pipeline
+        pipeline=train_cap_pipeline
         # pipeline=train_generated_pipeline
     ),
     val=dict(
@@ -262,8 +271,10 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        'prompt_att_learner': {},
-        'prompt_category_learner': {},
+        'prompt_att_learner': {'lr_mult': 0.1},
+        'prompt_category_learner': {'lr_mult': 0.1},
+        # 'image_encoder',
+        'prompt_phase_learner': {},
         # 'image_encoder': {'lr_mult': 0.1},
         'text_encoder': {'lr_mult': 0.1},
         'bbox_head': {}, 'logit_scale': {}
@@ -296,7 +307,8 @@ lr_config = dict(
     warmup_ratio=0.1,
     # gamma=0.5,
     # step=[50, 80],
-    step=[35, 50]
+    # step=[35, 50],
+    step=[15, 30]
 )
 # lr_config = None
 # lr_config = dict(
@@ -309,7 +321,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=60)
+runner = dict(type='EpochBasedRunner', max_epochs=40)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = 'results/EXP20221006_0/epoch_20.pth'

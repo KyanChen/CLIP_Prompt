@@ -15,6 +15,7 @@ import imagesize
 import mmcv
 import numpy as np
 import torch
+from mmcv.parallel import DataContainer
 from mmcv.runner import get_dist_info
 from sklearn import metrics
 
@@ -388,16 +389,15 @@ class BoostCLIPCropDataset(Dataset):
         if 'gen' in data_set:
             pass
         else:
-            key = 'bbox' if data_set in ['coco', 'ovadattr', 'ovadcate'] else 'instance_bbox'
-            x, y, w, h = instance[key]
+            dataset2boxkey = {
+                'coco': 'bbox',
+                'vaw': 'instance_bbox',
+                'cococap': 'biggest_proposal'
+            }
+            x, y, w, h = instance[dataset2boxkey[data_set]][:4]
             results['crop_box'] = np.array([x, y, x + w, y + h])
         if self.test_mode:
             results = self.pipeline(results)
-            # try:
-            #
-            # except Exception as e:
-            #     print(f'idx: {idx}')
-            #     print(f'img_id: {img_id}')
         else:
             try:
                 labels = np.ones(len(self.att2id)+len(self.category2id)) * 2
@@ -418,6 +418,20 @@ class BoostCLIPCropDataset(Dataset):
                     category_id = self.category2id.get(category, None)
                     if category_id is not None:
                         labels[category_id+len(self.att2id)] = 1
+
+                if data_set == 'cococap':
+                    positive_attributes = instance["attribute"]
+                    for att in positive_attributes:
+                        att_id = self.att2id.get(att, None)
+                        if att_id is not None:
+                            labels[att_id] = 1
+                    categories = instance["category"]
+                    for category in categories:
+                        category_id = self.category2id.get(category, None)
+                        if category_id is not None:
+                            labels[category_id + len(self.att2id)] = 1
+                    results['caption'] = DataContainer(results['caption'], stack=False)
+                    results['phase'] = DataContainer(instance['phase'], stack=False)
                 results['gt_labels'] = labels.astype(np.int)
                 if 'gen' in data_set:
                     results = self.pipeline(results, 0)

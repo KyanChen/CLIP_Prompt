@@ -18,6 +18,7 @@ class CLIP_Prompt_Booster(BaseDetector):
                  prompt_att_learner=None,
                  prompt_category_learner=None,
                  prompt_phase_learner=None,
+                 prompt_caption_learner=None,
                  img_encoder=None,
                  shared_prompt_vectors=False,
                  load_prompt_weights='',
@@ -101,6 +102,12 @@ class CLIP_Prompt_Booster(BaseDetector):
             )
             self.prompt_phase_learner = build_backbone(prompt_phase_learner)
 
+        if prompt_caption_learner is not None:
+            prompt_caption_learner.update(
+                dict(clip_model=clip_model)
+            )
+            self.prompt_caption_learner = build_backbone(prompt_caption_learner)
+
         # if load_prompt_weights:
         #     state_dict = torch.load(prompt_learner_weights, map_location="cpu")
         #     self.prompt_learner.load_state_dict(state_dict)
@@ -120,9 +127,6 @@ class CLIP_Prompt_Booster(BaseDetector):
         self.need_train_names = need_train_names
 
         rank, world_size = get_dist_info()
-        if rank == 0:
-            print('img_proj_head: ', img_proj_head)
-            print('text_proj_head: ', text_proj_head)
 
         for name, param in self.named_parameters():
             flag = False
@@ -195,19 +199,44 @@ class CLIP_Prompt_Booster(BaseDetector):
             text_features_cate = self.text_encoder(prompt_context, eot_index)
             text_features.append(text_features_cate)
         text_features = torch.cat(text_features, dim=0)
-        # import pdb
-        # pdb.set_trace()
+
+        if hasattr(self, 'prompt_phase_learner') and hasattr(self, 'prompt_caption_learner'):
+            phases = kwargs['phase']
+            captions = kwargs['caption']
+            num_phase_per_img = [len(x) for x in phases]
+            num_caption_per_img = [len(x) for x in captions]
+            phases = [t for x in phases for t in x]
+            captions = [t for x in captions for t in x]
+            phase_context, phase_eot_index, _ = self.prompt_phase_learner(phases, device=img.device)  # 620x77x512
+            caption_context, caption_eot_index, _ = self.prompt_caption_learner(captions, device=img.device)
+            prompt_context = torch.cat([phase_context, caption_context], dim=0)
+            eot_index = torch.cat([phase_eot_index, caption_eot_index], dim=0)
+            phase_cap_features = self.text_encoder(prompt_context, eot_index)
+
         if hasattr(self, 'img_proj_head'):
             image_features = getattr(self, 'img_proj_head')(image_features)
         if hasattr(self, 'text_proj_head'):
             text_features = getattr(self, 'text_proj_head')(text_features)
 
+        logit_scale = self.logit_scale.exp()
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
-        logit_scale = self.logit_scale.exp()
-        logits = logit_scale * image_features @ text_features.t()  # 2x620
+        if hasattr(self, 'prompt_phase_learner') and hasattr(self, 'prompt_caption_learner'):
+            phase_cap_features = phase_cap_features / phase_cap_features.norm(dim=-1, keepdim=True)
+            logits_phase_cap = logit_scale * image_features @ phase_cap_features.T
+            # logits_per_text = logit_scale * phase_cap_features @ image_features.T
+            label_phase_cap = torch.zeros_like(logits_phase_cap, device=img.device)
+            flag_set_cursor = 0
+            for idx_sample, num_content in enumerate(num_phase_per_img):
+                label_phase_cap[idx_sample, flag_set_cursor:flag_set_cursor+num_content] = 1
+                flag_set_cursor += num_content
+            for idx_sample, num_content in enumerate(num_caption_per_img):
+                label_phase_cap[idx_sample, flag_set_cursor:flag_set_cursor + num_content] = 1
+                flag_set_cursor += num_content
+            assert flag_set_cursor == len(logits_phase_cap.shape[-1]) - 1
 
+        logits = logit_scale * image_features @ text_features.t()  # 2x620
         if hasattr(self, 'prompt_att_learner'):
             att_logit, cate_logit = logits[:, :len(text_features_att)], logits[:, len(text_features_att):]
             split_att_group_logits = att_logit.split(att_group_member_num, dim=-1)
@@ -215,7 +244,10 @@ class CLIP_Prompt_Booster(BaseDetector):
             att_logit = torch.cat(att_logit, dim=-1)
             logits = torch.cat((att_logit, cate_logit), dim=-1)
 
-        losses = self.bbox_head.forward_train(logits, img_metas, data_set_type, gt_labels)
+        losses = self.bbox_head.forward_train(logits, img_metas, data_set_type, gt_labels,
+                                              logits_phase_cap=logits_phase_cap,
+                                              label_phase_cap=label_phase_cap
+                                              )
 
         return losses
 

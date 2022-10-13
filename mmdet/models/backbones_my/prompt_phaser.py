@@ -100,7 +100,7 @@ class PromptPhases(BaseModule):
                                      [self.pad_embedding] * (self.context_length - len(rearranged_context_tmp))
             rearranged_context_tmp = torch.cat(rearranged_context_tmp, dim=0)
             rearranged_context.append(rearranged_context_tmp)
-        return torch.stack(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long)
+        return torch.stack(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long), None
 
 
 @BACKBONES.register_module()

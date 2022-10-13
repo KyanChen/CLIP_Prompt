@@ -231,8 +231,8 @@ class PromptHead(BaseModule):
                       **kwargs):
         losses = {}
 
-        cate_mask = data_set_type == 0
-        att_mask = data_set_type == 1
+        cate_mask = (data_set_type == 0) | (data_set_type == 2)
+        att_mask = (data_set_type == 1) | (data_set_type == 2)
         x = pred_logits
         pred_att_logits = x[att_mask][:, :len(self.att2id)]
         pred_cate_logits = x[cate_mask][:, len(self.att2id):]
@@ -305,6 +305,12 @@ class PromptHead(BaseModule):
                 losses['loss_t_ce'] = loss_t_ce
             else:
                 raise NotImplementedError
+
+        if 'logits_phase_cap' in kwargs:
+            logits_phase_cap = kwargs.get('logits_phase_cap', None)
+            label_phase_cap = kwargs.get('label_phase_cap', None)
+            loss_phase_cap = F.binary_cross_entropy_with_logits(logits_phase_cap, label_phase_cap, reduction='mean')
+            losses['loss_phase_cap'] = loss_phase_cap
 
         return losses
 
