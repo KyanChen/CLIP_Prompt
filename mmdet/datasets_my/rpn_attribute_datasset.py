@@ -150,7 +150,7 @@ class RPNAttributeDataset(Dataset):
             self.img_ids = self._filter_imgs()
             self._set_group_flag()
         else:
-            self.img_ids = list(self.id2instances.keys())[:40]
+            self.img_ids = list(self.id2instances.keys())[:20] + list(self.id2instances.keys())[-20:]
 
         img_ids_per_dataset = {}
         for x in self.img_ids:
