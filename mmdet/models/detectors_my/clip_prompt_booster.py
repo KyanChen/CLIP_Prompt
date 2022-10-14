@@ -190,6 +190,8 @@ class CLIP_Prompt_Booster(BaseDetector):
             data_set_type=None,
             **kwargs
     ):
+        import pdb
+        pdb.set_trace()
         image_features, last_f_map, f_maps = self.image_encoder(img)  # 2x1024
         # prompts = self.prompt_learner()  # 620x77x512
         # tokenized_prompts = self.tokenized_prompts
