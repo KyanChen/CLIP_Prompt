@@ -212,8 +212,8 @@ test_generated_pipeline = [
         ]
     )
 ]
-
-samples_per_gpu = 24  # 24:text_encoder 48: img_encoder
+# captext:24 capimg:48 coco_captext:84 img:128
+samples_per_gpu = 24
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
