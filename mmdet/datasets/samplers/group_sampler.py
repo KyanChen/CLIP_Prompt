@@ -69,7 +69,7 @@ class GroupSampler(Sampler):
                         num_samp_of_flag = samples_per_flag[i_flag]
                         indice_per_gpu += data_flag_indices[i_flag][i_group * num_samp_of_flag: (i_group + 1) * num_samp_of_flag]
                     indice_rearrange += indice_per_gpu
-                indice = indice[np.array(indice_rearrange, dtype=np.int32)]
+                indice = indice[indice_rearrange]
             indices.append(indice)
         indices = np.concatenate(indices)
         indices = [
