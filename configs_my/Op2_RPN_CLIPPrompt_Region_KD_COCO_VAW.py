@@ -443,7 +443,7 @@ evaluation = dict(
         type='nms',
         class_agnostic=False,
         iou_threshold=0.5,
-        score_thr=0.15,
+        score_thr=0.5,
         max_num=100))
 
 load_from = None
