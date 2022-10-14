@@ -36,8 +36,6 @@ class GroupSampler(Sampler):
                 [indice, np.random.choice(indice, num_extra)])
             if hasattr(self, 'flag_dataset'):
                 # rank, world_size = get_dist_info()
-                import pdb
-                pdb.set_trace()
                 indice = np.array(indice, dtype=np.int64)
                 flag_dataset_tmp = self.flag_dataset[indice]
                 num_flag_dataset = np.bincount(flag_dataset_tmp)
@@ -54,6 +52,8 @@ class GroupSampler(Sampler):
                     [math.ceil(num_flag_dataset[idx_flag] / samples_per_flag[idx_flag])
                      for idx_flag in range(len(num_flag_dataset))]
                 )
+                import pdb
+                pdb.set_trace()
                 data_flag_indices = {idx_flag: [] for idx_flag in range(len(num_flag_dataset))}
                 for flag_i, flag_size in enumerate(num_flag_dataset):
                     data_flag_indice = np.where(flag_dataset_tmp == flag_i)[0]
