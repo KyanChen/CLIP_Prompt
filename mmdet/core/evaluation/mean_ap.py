@@ -589,7 +589,7 @@ def eval_map(det_results,
     eval_results = []
     for i in range(num_classes):
         # get gt and det bboxes of this class
-        cls_dets, cls_gts, cls_gts_ignore = get_cls_results(
+        cls_dets, cls_gts, cls_gts_ignore = get_cnls_results(
             det_results, annotations, i)
         # choose proper function according to datasets to compute tp and fp
         if tpfp_fn is None:
@@ -612,6 +612,8 @@ def eval_map(det_results,
         if ioa_thr is not None:
             args.append([ioa_thr for _ in range(num_imgs)])
         # compute tp and fp for each image with multiple processes
+        import pdb
+        pdb.set_trace()
         tpfp = pool.starmap(
             tpfp_fn,
             zip(cls_dets, cls_gts, cls_gts_ignore,

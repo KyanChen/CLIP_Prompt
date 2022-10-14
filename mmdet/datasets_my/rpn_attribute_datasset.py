@@ -680,8 +680,6 @@ class RPNAttributeDataset(Dataset):
         # results List[Tensor] N, Nx(4+1+620)
         # gt_labels List[Tensor] N, Nx(1+4+620)
         result_metrics = OrderedDict()
-        import pdb
-        pdb.set_trace()
         gt_labels = self.get_labels()
 
         print('Computing cate RPN recall:')
@@ -783,7 +781,6 @@ class RPNAttributeDataset(Dataset):
             att_seen_unseen=self.att_seen_unseen
         )
         result_metrics['att_att_all'] = output['PC_ap/all']
-
         print('Computing cate mAP:')
         gt_bboxes = [gt for gt in gt_labels if gt[0, 0] == 0]
         predictions = [x for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 0]
@@ -811,6 +808,8 @@ class RPNAttributeDataset(Dataset):
                 'bboxes': gt[:, 1:5],
                 'labels': np.argmax(gt[:, 5 + len(self.att2id):], axis=-1)}
             annotations.append(annotation)
+        import pdb
+        pdb.set_trace()
         mean_ap, eval_results = eval_map(
             det_results,
             annotations,
