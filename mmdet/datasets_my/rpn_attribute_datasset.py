@@ -875,7 +875,7 @@ class RPNAttributeDataset(Dataset):
             dataset=None,
             logger=None,
             tpfp_fn=None,
-            nproc=1,
+            nproc=8,
             use_legacy_coordinate=False,
             use_group_of=False)
 
