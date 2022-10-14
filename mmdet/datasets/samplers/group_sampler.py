@@ -67,8 +67,7 @@ class GroupSampler(Sampler):
                     indice_per_gpu = []
                     for i_flag in range(len(num_flag_dataset)):
                         num_samp_of_flag = samples_per_flag[i_flag]
-                        indice_per_gpu.append(
-                            data_flag_indices[i_flag][i_group * num_samp_of_flag: (i_group + 1) * num_samp_of_flag])
+                        indice_per_gpu += data_flag_indices[i_flag][i_group * num_samp_of_flag: (i_group + 1) * num_samp_of_flag]
                     indice_rearrange += indice_per_gpu
                 indice = indice[np.array(indice_rearrange, dtype=np.int32)]
             indices.append(indice)
