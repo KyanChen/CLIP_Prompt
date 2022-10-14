@@ -170,7 +170,7 @@ class DistributedGroupSampler(Sampler):
                     num_flag_dataset = np.bincount(flag_dataset_tmp)
                     # 把每个卡上每个flag的样本数求出来
                     samples_per_flag = {
-                        idx_flag: round(self.samples_per_gpu*(v/num_flag_dataset.sum()))
+                        idx_flag: round(self.samples_per_gpu * (v / num_flag_dataset.sum()))
                         for idx_flag, v in enumerate(num_flag_dataset)
                     }
                     # 补齐样本数
@@ -178,7 +178,7 @@ class DistributedGroupSampler(Sampler):
                         self.samples_per_gpu - sum(list(samples_per_flag.values())[1:])
 
                     max_group_samps = max(
-                        [math.ceil(num_flag_dataset[idx_flag]/samples_per_flag[idx_flag])
+                        [math.ceil(num_flag_dataset[idx_flag] / samples_per_flag[idx_flag])
                          for idx_flag in range(len(num_flag_dataset))]
                     )
                     data_flag_indices = {idx_flag: [] for idx_flag in range(len(num_flag_dataset))}
@@ -187,17 +187,17 @@ class DistributedGroupSampler(Sampler):
                         assert len(data_flag_indice) == flag_size
                         data_flag_indice = data_flag_indice.tolist()
                         # 让 index 越界
-                        data_flag_indice += data_flag_indice[:samples_per_flag[flag_i]]
+                        data_flag_indice += data_flag_indice
                         data_flag_indices[flag_i] = data_flag_indice
                     indice_rearrange = []
                     for i_group in range(max_group_samps):
                         indice_per_gpu = []
                         for i_flag in range(len(num_flag_dataset)):
                             num_samp_of_flag = samples_per_flag[i_flag]
-                            indice_per_gpu.append(
-                                data_flag_indices[i_flag][i_group*num_samp_of_flag: (i_group+1)*num_samp_of_flag])
+                            indice_per_gpu += data_flag_indices[i_flag][
+                                              i_group * num_samp_of_flag: (i_group + 1) * num_samp_of_flag]
                         indice_rearrange += indice_per_gpu
-                    indice = indice[np.array(indice_rearrange, dtype=np.int32)].tolist()
+                    indice = indice[indice_rearrange]
                 indices.extend(indice)
         assert len(indices) == self.total_size
 
