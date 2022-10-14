@@ -36,39 +36,39 @@ class GroupSampler(Sampler):
                 [indice, np.random.choice(indice, num_extra)])
             if hasattr(self, 'flag_dataset'):
                 # rank, world_size = get_dist_info()
+                indice = np.array(indice, dtype=np.int64)
                 flag_dataset_tmp = self.flag_dataset[indice]
-                ratio = sum(flag_dataset_tmp == 0) / len(flag_dataset_tmp)
-                num_split_0 = int(ratio * self.samples_per_gpu)
-                num_split_1 = self.samples_per_gpu - num_split_0
+                num_flag_dataset = np.bincount(flag_dataset_tmp)
+                # 把每个卡上每个flag的样本数求出来
+                samples_per_flag = {
+                    idx_flag: round(self.samples_per_gpu * (v / num_flag_dataset.sum()))
+                    for idx_flag, v in enumerate(num_flag_dataset)
+                }
+                # 补齐样本数
+                samples_per_flag[list(samples_per_flag.keys())[0]] = \
+                    self.samples_per_gpu - sum(list(samples_per_flag.values())[1:])
 
-                dataset_type_dict = {0: [], 1: []}
-                for idx, flg in enumerate(flag_dataset_tmp):
-                    dataset_type_dict[flg].append(indice[idx])
+                max_group_samps = max(
+                    [math.ceil(num_flag_dataset[idx_flag] / samples_per_flag[idx_flag])
+                     for idx_flag in range(len(num_flag_dataset))]
+                )
+                data_flag_indices = {idx_flag: [] for idx_flag in range(len(num_flag_dataset))}
+                for flag_i, flag_size in enumerate(num_flag_dataset):
+                    data_flag_indice = np.where(flag_dataset_tmp == flag_i)[0]
+                    assert len(data_flag_indice) == flag_size
+                    data_flag_indice = data_flag_indice.tolist()
+                    # 让 index 越界
+                    data_flag_indice += data_flag_indice[:samples_per_flag[flag_i]]
+                    data_flag_indices[flag_i] = data_flag_indice
                 indice_rearrange = []
-                start_0 = 0
-                start_1 = 0
-                while len(indice_rearrange) < len(indice):
-                    end_0 = start_0+num_split_0
-                    end_1 = start_1+num_split_1
-                    if end_0 > len(dataset_type_dict[0]):
-                        end_0 = len(dataset_type_dict[0])
-                        end_1 = start_1 + self.samples_per_gpu - (end_0 - start_0)
-                    if end_1 > len(dataset_type_dict[1]):
-                        end_1 = len(dataset_type_dict[1])
-                        end_0 = start_0 + self.samples_per_gpu - (end_1 - start_1)
-                        assert end_0 <= len(dataset_type_dict[0])
-
-                    indice_0 = dataset_type_dict[0][start_0: end_0]
-                    indice_1 = dataset_type_dict[1][start_1: end_1]
-                    if len(indice_0) == 0:
-                        indice_1[-2:] = np.random.choice(dataset_type_dict[0], 2).tolist()
-                    if len(indice_1) == 0:
-                        indice_0[-2:] = np.random.choice(dataset_type_dict[1], 2).tolist()
-                    start_0 = end_0
-                    start_1 = end_1
-                    assert len(indice_0+indice_1) == self.samples_per_gpu
-                    indice_rearrange = indice_rearrange + indice_0 + indice_1
-                indice = np.array(indice_rearrange, dtype=np.int64)
+                for i_group in range(max_group_samps):
+                    indice_per_gpu = []
+                    for i_flag in range(len(num_flag_dataset)):
+                        num_samp_of_flag = samples_per_flag[i_flag]
+                        indice_per_gpu.append(
+                            data_flag_indices[i_flag][i_group * num_samp_of_flag: (i_group + 1) * num_samp_of_flag])
+                    indice_rearrange += indice_per_gpu
+                indice = indice[indice_rearrange]
             indices.append(indice)
         indices = np.concatenate(indices)
         indices = [
@@ -166,41 +166,38 @@ class DistributedGroupSampler(Sampler):
                     # rank, world_size = get_dist_info()
                     indice = np.array(indice, dtype=np.int64)
                     flag_dataset_tmp = self.flag_dataset[indice]
-                    ratio = sum(flag_dataset_tmp == 0) / len(flag_dataset_tmp)
-                    num_split_0 = int(ratio * self.samples_per_gpu)
-                    num_split_1 = self.samples_per_gpu - num_split_0
+                    num_flag_dataset = np.bincount(flag_dataset_tmp)
+                    # 把每个卡上每个flag的样本数求出来
+                    samples_per_flag = {
+                        idx_flag: round(self.samples_per_gpu*(v/num_flag_dataset.sum()))
+                        for idx_flag, v in enumerate(num_flag_dataset)
+                    }
+                    # 补齐样本数
+                    samples_per_flag[list(samples_per_flag.keys())[0]] = \
+                        self.samples_per_gpu - sum(list(samples_per_flag.values())[1:])
 
-                    dataset_type_dict = {0: [], 1: []}
-                    for idx, flg in enumerate(flag_dataset_tmp):
-                        dataset_type_dict[flg].append(indice[idx])
+                    max_group_samps = max(
+                        [math.ceil(num_flag_dataset[idx_flag]/samples_per_flag[idx_flag])
+                         for idx_flag in range(len(num_flag_dataset))]
+                    )
+                    data_flag_indices = {idx_flag: [] for idx_flag in range(len(num_flag_dataset))}
+                    for flag_i, flag_size in enumerate(num_flag_dataset):
+                        data_flag_indice = np.where(flag_dataset_tmp == flag_i)[0]
+                        assert len(data_flag_indice) == flag_size
+                        data_flag_indice = data_flag_indice.tolist()
+                        # 让 index 越界
+                        data_flag_indice += data_flag_indice[:samples_per_flag[flag_i]]
+                        data_flag_indices[flag_i] = data_flag_indice
                     indice_rearrange = []
-                    start_0 = 0
-                    start_1 = 0
-                    while len(indice_rearrange) < len(indice):
-                        end_0 = start_0 + num_split_0
-                        end_1 = start_1 + num_split_1
-                        if end_0 > len(dataset_type_dict[0]):
-                            end_0 = len(dataset_type_dict[0])
-                            end_1 = start_1 + self.samples_per_gpu - (end_0 - start_0)
-                        if end_1 > len(dataset_type_dict[1]):
-                            end_1 = len(dataset_type_dict[1])
-                            end_0 = start_0 + self.samples_per_gpu - (end_1 - start_1)
-                            assert end_0 <= len(dataset_type_dict[0])
-
-                        indice_0 = dataset_type_dict[0][start_0: end_0]
-                        indice_1 = dataset_type_dict[1][start_1: end_1]
-                        if len(indice_0) == 0:
-                            indice_1[-2:] = np.random.choice(dataset_type_dict[0], 2).tolist()
-                        if len(indice_1) == 0:
-                            indice_0[-2:] = np.random.choice(dataset_type_dict[1], 2).tolist()
-                        start_0 = end_0
-                        start_1 = end_1
-                        assert len(indice_0 + indice_1) == self.samples_per_gpu
-                        indice_rearrange = indice_rearrange + indice_0 + indice_1
-                    indice = indice_rearrange
-
+                    for i_group in range(max_group_samps):
+                        indice_per_gpu = []
+                        for i_flag in range(len(num_flag_dataset)):
+                            num_samp_of_flag = samples_per_flag[i_flag]
+                            indice_per_gpu.append(
+                                data_flag_indices[i_flag][i_group*num_samp_of_flag: (i_group+1)*num_samp_of_flag])
+                        indice_rearrange += indice_per_gpu
+                    indice = indice[indice_rearrange].tolist()
                 indices.extend(indice)
-
         assert len(indices) == self.total_size
 
         indices = [
@@ -215,7 +212,6 @@ class DistributedGroupSampler(Sampler):
         offset = self.num_samples * self.rank
         indices = indices[offset:offset + self.num_samples]
         assert len(indices) == self.num_samples
-
         return iter(indices)
 
     def __len__(self):

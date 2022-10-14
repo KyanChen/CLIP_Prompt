@@ -155,7 +155,7 @@ class BoostCLIPCropDataset(Dataset):
             flag_dataset = [x['img_id'].split('_')[0] for x in self.instances]
             dataset_types = {'coco': 0, 'vaw': 1, 'ovadgen': 1, 'cococap': 2}
             flag_dataset = [dataset_types[x] for x in flag_dataset]
-            # self.flag_dataset = np.array(flag_dataset, dtype=np.int)
+            self.flag_dataset = np.array(flag_dataset, dtype=np.int)
 
         self.flag = np.zeros(len(self), dtype=int)
 
