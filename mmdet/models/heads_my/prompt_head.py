@@ -348,7 +348,7 @@ class PromptHead(BaseModule):
             logits_phase_cap = kwargs.get('logits_phase_cap', None)
             label_phase_cap = kwargs.get('label_phase_cap', None)
             loss_phase_cap = F.binary_cross_entropy_with_logits(logits_phase_cap, label_phase_cap, reduction='mean')
-            losses['loss_phase_cap'] = self.balance_capdata * loss_phase_cap
+            losses['loss_phase_cap'] = self.balance_capdata * 0.5 * loss_phase_cap
 
         return losses
 

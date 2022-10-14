@@ -244,12 +244,12 @@ class CLIP_Prompt_Booster(BaseDetector):
             assert flag_set_cursor == logits_phase_cap.shape[-1]
 
         logits = logit_scale * image_features @ text_features.t()  # 2x620
-        if hasattr(self, 'prompt_att_learner'):
-            att_logit, cate_logit = logits[:, :len(text_features_att)], logits[:, len(text_features_att):]
-            split_att_group_logits = att_logit.split(att_group_member_num, dim=-1)
-            att_logit = [torch.mean(x, dim=-1, keepdim=True) for x in split_att_group_logits]
-            att_logit = torch.cat(att_logit, dim=-1)
-            logits = torch.cat((att_logit, cate_logit), dim=-1)
+        # if hasattr(self, 'prompt_att_learner'):
+        #     att_logit, cate_logit = logits[:, :len(text_features_att)], logits[:, len(text_features_att):]
+        #     split_att_group_logits = att_logit.split(att_group_member_num, dim=-1)
+        #     att_logit = [torch.mean(x, dim=-1, keepdim=True) for x in split_att_group_logits]
+        #     att_logit = torch.cat(att_logit, dim=-1)
+        #     logits = torch.cat((att_logit, cate_logit), dim=-1)
 
         losses = self.bbox_head.forward_train(logits, img_metas, data_set_type, gt_labels,
                                               logits_phase_cap=logits_phase_cap,
