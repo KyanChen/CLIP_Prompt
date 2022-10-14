@@ -192,7 +192,8 @@ def tpfp_default(det_bboxes,
         tuple[np.ndarray]: (tp, fp) whose elements are 0 and 1. The shape of
         each array is (num_scales, m).
     """
-
+    import pdb
+    pdb.set_trace()
     if not use_legacy_coordinate:
         extra_length = 0.
     else:
@@ -612,19 +613,17 @@ def eval_map(det_results,
         if ioa_thr is not None:
             args.append([ioa_thr for _ in range(num_imgs)])
         # compute tp and fp for each image with multiple processes
-        import pdb
-        pdb.set_trace()
-        tpfp = tpfp_fn(
-            zip(cls_dets, cls_gts, cls_gts_ignore,
-                [iou_thr for _ in range(num_imgs)],
-                [area_ranges for _ in range(num_imgs)],
-                [use_legacy_coordinate for _ in range(num_imgs)], *args))
-        # tpfp = pool.starmap(
-        #     tpfp_fn,
+        # tpfp = tpfp_fn(
         #     zip(cls_dets, cls_gts, cls_gts_ignore,
         #         [iou_thr for _ in range(num_imgs)],
         #         [area_ranges for _ in range(num_imgs)],
         #         [use_legacy_coordinate for _ in range(num_imgs)], *args))
+        tpfp = pool.starmap(
+            tpfp_fn,
+            zip(cls_dets, cls_gts, cls_gts_ignore,
+                [iou_thr for _ in range(num_imgs)],
+                [area_ranges for _ in range(num_imgs)],
+                [use_legacy_coordinate for _ in range(num_imgs)], *args))
         if use_group_of:
             tp, fp, cls_dets = tuple(zip(*tpfp))
         else:
