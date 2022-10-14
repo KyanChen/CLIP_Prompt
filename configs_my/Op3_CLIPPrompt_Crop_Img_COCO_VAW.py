@@ -107,7 +107,7 @@ model = dict(
     prompt_phase_learner=dict(
         type='PromptPhases',
         prompt_config=dict(
-            n_prompt=0,
+            n_prompt=16,
             att_position='mid',
             context_length=77,
         ),
@@ -127,7 +127,7 @@ model = dict(
         re_weight_category=1,  # 2太大了，出现cate增，att下降
         re_weight_gamma=2,
         re_weight_beta=0.995,
-        balance_unk=0.5,  # boost: 0.5
+        balance_unk=0.2,  # boost: 0.5; Cap,VAW,COCO: 0.2
         # balance_unk=0.15,
         # balance_unk=1  # gen
     )
@@ -143,7 +143,7 @@ img_norm_cfg = dict(
 )
 # Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
 
-train_pipeline = [
+train_vawcoco_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
     dict(type='ScaleCrop', scale_range=[0.0, 0.3]),
     dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
@@ -153,7 +153,7 @@ train_pipeline = [
     dict(type='Pad', size=img_scale, center_pad=True),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='ToTensor', keys=['gt_labels']),
-    dict(type='Collect', keys=['img', 'gt_labels', 'data_set_type'])
+    dict(type='Collect', keys=['img', 'gt_labels', 'data_set_type', 'phase', 'caption'])
 ]
 
 train_cap_pipeline = [
@@ -223,12 +223,13 @@ data = dict(
         data_root=data_root,
         dataset_split='train',
         attribute_index_file=attribute_index_file,
-        dataset_names=['cococap'],
+        dataset_names=['coco', 'vaw', 'cococap'],
         save_label=False,
         load_label=None,
         test_mode=False,
         open_category=False,
-        pipeline=train_cap_pipeline
+        cap_pipeline=train_cap_pipeline,
+        vawcoco_pipline=train_vawcoco_pipeline
         # pipeline=train_generated_pipeline
     ),
     val=dict(

@@ -43,6 +43,7 @@ class PromptHead(BaseModule):
 
         self.attribute_index_file = attribute_index_file
         self.att2id = {}
+        self.att_seen_unseen = {}
         if 'att_file' in attribute_index_file.keys():
             file = attribute_index_file['att_file']
             att2id = json.load(open(file, 'r'))
@@ -52,12 +53,17 @@ class PromptHead(BaseModule):
             elif att_group == 'common1+common2':
                 self.att2id.update(att2id['common1'])
                 self.att2id.update(att2id['common2'])
+                self.att_seen_unseen['seen'] = list(att2id['common1'].keys())
+                self.att_seen_unseen['unseen'] = list(att2id['common2'].keys())
             elif att_group == 'common+rare':
                 self.att2id.update(att2id['common'])
                 self.att2id.update(att2id['rare'])
+                self.att_seen_unseen['seen'] = list(att2id['common'].keys())
+                self.att_seen_unseen['unseen'] = list(att2id['rare'].keys())
             else:
                 raise NameError
         self.category2id = {}
+        self.category_seen_unseen = {}
         if 'category_file' in attribute_index_file.keys():
             file = attribute_index_file['category_file']
             category2id = json.load(open(file, 'r'))
@@ -67,6 +73,8 @@ class PromptHead(BaseModule):
             elif att_group == 'common1+common2':
                 self.category2id.update(category2id['common1'])
                 self.category2id.update(category2id['common2'])
+                self.category_seen_unseen['seen'] = list(category2id['common1'].keys())
+                self.category_seen_unseen['unseen'] = list(category2id['common2'].keys())
             elif att_group == 'common+rare':
                 self.category2id.update(category2id['common'])
                 self.category2id.update(category2id['rare'])
@@ -231,30 +239,58 @@ class PromptHead(BaseModule):
                       **kwargs):
         losses = {}
 
-        cate_mask = (data_set_type == 0) | (data_set_type == 2)
-        att_mask = (data_set_type == 1) | (data_set_type == 2)
+        # for vaw and coco dataset
+        cate_mask = data_set_type == 0
+        att_mask = data_set_type == 1
         x = pred_logits
-        pred_att_logits = x[att_mask][:, :len(self.att2id)]
-        pred_cate_logits = x[cate_mask][:, len(self.att2id):]
-        gt_att = gt_labels[att_mask][:, :len(self.att2id)]
-        gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
+        pred_att_logits = x[att_mask][:, :len(self.att_seen_unseen['seen'])]
+        pred_cate_logits = x[cate_mask][:, len(self.att2id):len(self.att2id)+len(self.category_seen_unseen['seen'])]
+        gt_att = gt_labels[att_mask][:, :len(self.att_seen_unseen['seen'])]
+        gt_cate = gt_labels[cate_mask][:, len(self.att2id):len(self.att2id)+len(self.category_seen_unseen['seen'])]
         if len(pred_att_logits):
             if hasattr(self, 'reweight_att_frac'):
                 total_rew_att = self.reweight_att_frac.to(gt_labels.device)
             else:
                 total_rew_att = None
-            att_loss = self.get_classify_loss(pred_att_logits, gt_att, self.balance_unk, total_rew_att)
+            att_loss = self.get_classify_loss(
+                pred_att_logits, gt_att, self.balance_unk, total_rew_att[:pred_att_logits.size(-1)])
             losses['att_bce_loss'] = att_loss
             losses.update(self.get_acc(pred_att_logits, gt_att, pattern='att'))
+        else:
+            losses['att_bce_loss'] = torch.tensor(0.).to(x.device)
+            losses['att_map'] = torch.tensor(0.).to(x.device)
 
         if len(pred_cate_logits):
             if hasattr(self, 'reweight_cate_frac'):
                 total_rew_cate = self.reweight_cate_frac.to(gt_labels.device)
             else:
                 total_rew_cate = None
-            cate_loss = self.get_classify_loss(pred_cate_logits, gt_cate, self.balance_unk, total_rew_cate)
+            cate_loss = self.get_classify_loss(
+                pred_cate_logits, gt_cate, self.balance_unk, total_rew_cate[:pred_cate_logits.size(-1)])
             losses['cate_bce_loss'] = cate_loss * self.re_weight_category
             losses.update(self.get_acc(pred_cate_logits, gt_cate, pattern='cate'))
+        else:
+            losses['cate_bce_loss'] = torch.tensor(0.).to(x.device)
+            losses['cate_map'] = torch.tensor(0.).to(x.device)
+
+        # for caption dataset
+        att_cate_mask = data_set_type == 2
+        x = pred_logits
+        pred_attcate_logits = x[att_cate_mask]
+        gt_attcate = gt_labels[att_cate_mask]
+        if len(pred_attcate_logits):
+            if hasattr(self, 'reweight_att_frac') and hasattr(self, 'reweight_cate_frac'):
+                total_rew_att = self.reweight_att_frac.to(gt_labels.device)
+                total_rew_cate = self.re_weight_category * self.reweight_cate_frac.to(gt_labels.device)
+                total_rew = torch.cat([total_rew_att, total_rew_cate], dim=0)
+            else:
+                total_rew = None
+            cap_attcate_loss = self.get_classify_loss(
+                pred_attcate_logits, gt_attcate, self.balance_unk, total_rew)
+            losses['cap_attcate_loss'] = cap_attcate_loss
+            # losses.update(self.get_acc(pred_cate_logits, gt_cate, pattern='cate'))
+        else:
+            losses['cap_attcate_loss'] = torch.tensor(0.).to(x.device)
 
         if 'img_crop_features' in kwargs and self.kd_model_loss:
             img_crop_features = kwargs.get('img_crop_features', None)

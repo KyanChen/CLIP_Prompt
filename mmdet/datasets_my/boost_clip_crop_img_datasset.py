@@ -31,7 +31,8 @@ class BoostCLIPCropDataset(Dataset):
 
     def __init__(self,
                  data_root,
-                 pipeline,
+                 cap_pipeline,
+                 vawcoco_pipline=None,
                  dataset_split='train',
                  attribute_index_file=None,
                  test_mode=False,
@@ -45,7 +46,9 @@ class BoostCLIPCropDataset(Dataset):
         assert dataset_split in ['train']
         self.dataset_split = dataset_split
         self.test_mode = test_mode
-        self.pipeline = Compose(pipeline)
+        self.cap_pipeline = Compose(cap_pipeline)
+        if vawcoco_pipline is not None:
+            self.vawcoco_pipline = Compose(vawcoco_pipline)
         self.data_root = data_root
         self.dataset_names = dataset_names
 
@@ -167,16 +170,20 @@ class BoostCLIPCropDataset(Dataset):
             self.pred_labels = np.load(load_label)
             assert len(self) == len(self.pred_labels)
 
-    def filter_instance(self, instances):
+    def filter_instance(self, instances, filter_func='seen'):
         return_instances = []
         for instance in instances:
             img_id = instance['img_id']
             data_set = img_id.split('_')[0]
             if data_set == 'coco':
                 category = instance['name']
-                category_id = self.category2id.get(category, None)  # 未标注的该类别的应该去除
-                if category_id is not None:
-                    return_instances.append(instance)
+                if filter_func == 'seen':
+                    if category in self.category_seen_unseen['seen']:
+                        return_instances.append(instance)
+                else:
+                    category_id = self.category2id.get(category, None)  # 未标注的该类别的应该去除
+                    if category_id is not None:
+                        return_instances.append(instance)
             elif data_set == 'vaw':
                 return_instances.append(instance)
             elif data_set == 'ovadgen':
@@ -406,18 +413,25 @@ class BoostCLIPCropDataset(Dataset):
                 positive_attributes = instance["positive_attributes"]
                 negative_attributes = instance["negative_attributes"]
                 for att in positive_attributes:
-                    att_id = self.att2id.get(att, None)
-                    if att_id is not None:
-                        labels[att_id] = 1
+                    if att in self.att_seen_unseen['seen']:
+                        att_id = self.att2id.get(att, None)
+                        if att_id is not None:
+                            labels[att_id] = 1
                 for att in negative_attributes:
-                    att_id = self.att2id.get(att, None)
-                    if att_id is not None:
-                        labels[att_id] = 0
+                    if att in self.att_seen_unseen['seen']:
+                        att_id = self.att2id.get(att, None)
+                        if att_id is not None:
+                            labels[att_id] = 0
+                results['caption'] = DataContainer([], stack=False, cpu_only=True)
+                results['phase'] = DataContainer([], stack=False, cpu_only=True)
             if data_set == 'coco':
                 category = instance['name']
-                category_id = self.category2id.get(category, None)
-                if category_id is not None:
-                    labels[category_id+len(self.att2id)] = 1
+                if category in self.category_seen_unseen['seen']:
+                    category_id = self.category2id.get(category, None)
+                    if category_id is not None:
+                        labels[category_id+len(self.att2id)] = 1
+                results['caption'] = DataContainer([], stack=False, cpu_only=True)
+                results['phase'] = DataContainer([], stack=False, cpu_only=True)
 
             if data_set == 'cococap':
                 positive_attributes = instance["attribute"]
@@ -436,8 +450,12 @@ class BoostCLIPCropDataset(Dataset):
             if 'gen' in data_set:
                 results = self.pipeline(results, 0)
                 results = self.pipeline(results, (2, ':'))
+            elif data_set in ['coco', 'vaw']:
+                results = self.vawcoco_pipline(results)
+            elif data_set in ['cococap']:
+                results = self.cap_pipeline(results)
             else:
-                results = self.pipeline(results)
+                raise NotImplementedError
             # except Exception as e:
             #     self.error_list.add(idx)
             #     self.error_list.add(img_id)

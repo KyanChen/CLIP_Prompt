@@ -797,13 +797,12 @@ class RPNAttributeDataset(Dataset):
             else:
                 # pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
                 pred_cate_logits = pred[:, 5+len(self.att2id):].float().softmax(dim=-1).cpu()
-                if self.mult_proposal_score:
-                    proposal_scores = pred[:, 4]
-                    pred_cate_logits = (pred_cate_logits * proposal_scores) ** 0.5
 
                 max_v, max_ind = torch.max(pred_cate_logits, dim=-1)
                 max_v = max_v.view(-1, 1)
                 pred_boxes = pred[:, :4]
+
+                # have a check
                 pred_boxes = [torch.cat([pred_boxes[max_ind == i], max_v[max_ind == i]], dim=-1).numpy()
                               for i in range(len(self.category2id))]
             det_results.append(pred_boxes)
