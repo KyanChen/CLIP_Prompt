@@ -289,7 +289,7 @@ class PromptHead(BaseModule):
                 total_rew = None
             cap_attcate_loss = self.get_classify_loss(
                 pred_attcate_logits, gt_attcate, self.balance_unk, total_rew)
-            losses['cap_attcate_loss'] = self.self.balance_capdata * cap_attcate_loss
+            losses['cap_attcate_loss'] = self.balance_capdata * cap_attcate_loss
             # losses.update(self.get_acc(pred_cate_logits, gt_cate, pattern='cate'))
         else:
             losses['cap_attcate_loss'] = torch.tensor(0.).to(x.device)
