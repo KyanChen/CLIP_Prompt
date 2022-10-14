@@ -212,8 +212,8 @@ test_generated_pipeline = [
         ]
     )
 ]
-# captext:24 capimg:48 coco_captext:84 img:128
-samples_per_gpu = 24
+# captext:24 capimg:48 coco_captext:84 img:148
+samples_per_gpu = 148
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -324,5 +324,5 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=60)
 evaluation = dict(interval=5, metric='mAP')
 
-load_from = 'results/EXP20221006_0/epoch_20.pth'
+load_from = None
 resume_from = None
