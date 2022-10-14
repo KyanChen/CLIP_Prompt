@@ -131,7 +131,7 @@ model = dict(
     shared_prompt_vectors=True,
     prompt_att_learner=dict(
         type='PromptAttributes',
-        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
+        # load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         prompt_config=dict(
             n_prompt=30,
             is_att_specific=False,
@@ -147,7 +147,7 @@ model = dict(
     ),
     prompt_category_learner=dict(
         type='PromptAttributes',
-        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
+        # load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         prompt_config=dict(
             n_prompt=30,
             is_att_specific=False,
@@ -166,7 +166,7 @@ model = dict(
         with_attn=False,
         out_indices=[1, 2, 3, 4],
         # backbone_name='ViT-B/16',
-        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
+        # load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         precision='fp32',
     ),
     kd_model=dict(
@@ -174,7 +174,7 @@ model = dict(
         backbone_name='RN50',
         with_attn=True,
         out_indices=[],
-        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
+        # load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         precision='fp32',
     ),
     # text_header=dict(
@@ -367,10 +367,8 @@ data = dict(
         dataset_names=['coco', 'vaw'],
         test_mode=True,
         mult_proposal_score=False,
-
         # test_content='box_given',
         # pipeline=test_box_given_pipeline,
-
         test_content='box_free',
         pipeline=test_box_free_pipeline,
     )
