@@ -59,8 +59,8 @@ model = dict(
     need_train_names=[
         'prompt_category_learner',
         'prompt_att_learner',
-        'image_encoder',
-        # 'text_encoder',
+        # 'image_encoder',
+        'text_encoder',
         'prompt_phase_learner',
         'bbox_head', 'logit_scale'
     ],
@@ -213,7 +213,7 @@ test_generated_pipeline = [
     )
 ]
 
-samples_per_gpu = 48  # 24:text_encoder 48: img_encoder
+samples_per_gpu = 24  # 24:text_encoder 48: img_encoder
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -274,10 +274,9 @@ optimizer = dict(
     sub_model={
         'prompt_att_learner': {},
         # 'prompt_category_learner': {'lr_mult': 0.1},
-        # 'image_encoder',
         'prompt_phase_learner': {},
-        'image_encoder': {'lr_mult': 0.1},
-        # 'text_encoder': {'lr_mult': 0.1},
+        # 'image_encoder': {'lr_mult': 0.1},
+        'text_encoder': {'lr_mult': 0.1},
         'bbox_head': {}, 'logit_scale': {}
     },
     # type='SGD',
