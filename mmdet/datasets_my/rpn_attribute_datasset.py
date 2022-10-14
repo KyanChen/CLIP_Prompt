@@ -680,7 +680,8 @@ class RPNAttributeDataset(Dataset):
         # results List[Tensor] N, Nx(4+1+620)
         # gt_labels List[Tensor] N, Nx(1+4+620)
         result_metrics = OrderedDict()
-
+        import pdb
+        pdb.set_trace()
         gt_labels = self.get_labels()
 
         print('Computing cate RPN recall:')
