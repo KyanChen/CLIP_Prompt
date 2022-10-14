@@ -612,6 +612,8 @@ def eval_map(det_results,
         if ioa_thr is not None:
             args.append([ioa_thr for _ in range(num_imgs)])
         # compute tp and fp for each image with multiple processes
+        import pdb
+        pdb.set_trace()
         tpfp = tpfp_fn(
             zip(cls_dets, cls_gts, cls_gts_ignore,
                 [iou_thr for _ in range(num_imgs)],
