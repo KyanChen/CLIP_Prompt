@@ -192,8 +192,6 @@ def tpfp_default(det_bboxes,
         tuple[np.ndarray]: (tp, fp) whose elements are 0 and 1. The shape of
         each array is (num_scales, m).
     """
-    import pdb
-    pdb.set_trace()
     if not use_legacy_coordinate:
         extra_length = 0.
     else:

@@ -183,11 +183,12 @@ class RPNHead(AnchorHead):
 
         return self._bbox_post_process(mlvl_scores, mlvl_bbox_preds,
                                        mlvl_valid_anchors, level_ids, cfg,
-                                       img_shape, img_meta['scale_factor'], rescale, class_agnostic)
+                                       img_shape, img_meta['scale_factor'],
+                                       rescale, class_agnostic, with_nms)
 
     def _bbox_post_process(self, mlvl_scores, mlvl_bboxes, mlvl_valid_anchors,
                            level_ids, cfg, img_shape, scale_factor,
-                           rescale=False, class_agnostic=False, **kwargs):
+                           rescale=False, class_agnostic=False, with_nms=True, **kwargs):
         """bbox post-processing method.
 
         Do the nms operation for bboxes in same level.
@@ -220,7 +221,7 @@ class RPNHead(AnchorHead):
         if rescale:
             proposals /= proposals.new_tensor(scale_factor)
 
-        ids = torch.cat(level_ids)  # N,不同尺度的标签
+        ids = torch.cat(level_ids)  # N, 不同尺度的标签
 
         if cfg.min_bbox_size >= 0:
             w = proposals[:, 2] - proposals[:, 0]
@@ -230,11 +231,13 @@ class RPNHead(AnchorHead):
                 proposals = proposals[valid_mask]
                 scores = scores[valid_mask]
                 ids = ids[valid_mask]
-
-        if proposals.numel() > 0:
-            dets, _ = batched_nms(proposals, scores, ids, cfg.nms, class_agnostic=class_agnostic)
+        if with_nms:
+            if proposals.numel() > 0:
+                dets, _ = batched_nms(proposals, scores, ids, cfg.nms, class_agnostic=class_agnostic)
+            else:
+                return proposals.new_zeros(0, 5)
         else:
-            return proposals.new_zeros(0, 5)
+            dets = torch.cat([proposals, scores[:, None]], -1)
 
         return dets[:cfg.max_per_img]
 

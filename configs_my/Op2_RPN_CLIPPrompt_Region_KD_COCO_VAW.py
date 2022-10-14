@@ -221,10 +221,14 @@ model = dict(
             debug=False)
     ),
     test_cfg=dict(
+        # rpn=dict(
+        #     nms_pre=2000,
+        #     max_per_img=1000,
+        #     nms=dict(type='nms', class_agnostic=False, iou_threshold=0.7),
+        #     min_bbox_size=4)
         rpn=dict(
-            nms_pre=2000,
-            max_per_img=1000,
-            nms=dict(type='nms', class_agnostic=False, iou_threshold=0.7),
+            nms_pre=3000,
+            max_per_img=3000,
             min_bbox_size=4)
     )
 )
@@ -433,7 +437,13 @@ lr_config = dict(
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=60)
-evaluation = dict(interval=5, metric='mAP')
+evaluation = dict(interval=5, metric='mAP', nms=dict(
+    type='nms',
+    class_agnostic=False,
+    iou_threshold=0.5,
+    score_thr=0.15,
+    max_num=100,
+))
 
 load_from = None
 # resume_from = 'results/EXP20220905_0/latest.pth'

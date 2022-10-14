@@ -7,6 +7,8 @@ import pickle
 import random
 import tempfile
 import warnings
+
+from mmcv.ops import batched_nms
 from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
 from collections import OrderedDict, defaultdict
@@ -20,7 +22,7 @@ from mmcv.parallel import DataContainer
 from sklearn import metrics
 from torchmetrics.detection import MeanAveragePrecision
 
-from ..core import eval_recalls, eval_map
+from ..core import eval_recalls, eval_map, bbox2result
 from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
 from ..datasets.pipelines import Compose
@@ -676,7 +678,7 @@ class RPNAttributeDataset(Dataset):
             gt_labels.append(gt_labels_tmp)
         return gt_labels
 
-    def evaluate_box_free(self, results):
+    def evaluate_box_free(self, results, nms_cfg):
         # results List[Tensor] N, Nx(4+1+620)
         # gt_labels List[Tensor] N, Nx(1+4+620)
         result_metrics = OrderedDict()
@@ -781,38 +783,46 @@ class RPNAttributeDataset(Dataset):
             att_seen_unseen=self.att_seen_unseen
         )
         result_metrics['att_att_all'] = output['PC_ap/all']
+
         print('Computing cate mAP:')
         gt_bboxes = [gt for gt in gt_labels if gt[0, 0] == 0]
         predictions = [x for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 0]
         # predictions List[Tensor] N, Nx(4+1+620)
         # gts List[Tensor] N, Nx(1+4+620)
 
-        det_results = []
-        annotations = []
-        for pred, gt in zip(predictions, gt_bboxes):
-            if pred.shape[0] == 0:
-                pred_boxes = [np.zeros((0, 5), dtype=np.float32) for i in range(len(self.category2id))]
-            else:
-                # pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
-                pred_cate_logits = pred[:, 5+len(self.att2id):].float().softmax(dim=-1).cpu()
-
-                max_v, max_ind = torch.max(pred_cate_logits, dim=-1)
-                max_v = max_v.view(-1, 1)
-                pred_boxes = pred[:, :4]
-
-                # have a check
-                pred_boxes = [torch.cat([pred_boxes[max_ind == i], max_v[max_ind == i]], dim=-1).numpy()
-                              for i in range(len(self.category2id))]
-            det_results.append(pred_boxes)
+        # NMS OP, for
+        print('Computing cate mAP without proposal score:')
+        pred_det_bboxes = []
+        pred_det_labels = []
+        for pred in predictions:
+            pred_scores = pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()
+            max_v, max_ind = torch.max(pred_scores, dim=-1)
+            pred_scores = max_v
+            score_thr = nms_cfg.pop('score_thr', 0.15)
+            mask_pos = pred_scores > score_thr
+            pred_label = max_ind[mask_pos]
+            pred_boxes = pred[:, :4]
+            det_bboxes, keep_idxs = batched_nms(
+                pred_boxes[mask_pos], pred_scores[mask_pos], pred_label, nms_cfg)
+            pred_det_bboxes.append(det_bboxes)
+            pred_det_labels.append(pred_label[keep_idxs])
+        det_bbox_results = [
+            bbox2result(
+                pred_det_bboxes[i],
+                pred_det_labels[i],
+                len(self.category2id)
+            )
+            for i in range(len(pred_det_bboxes))
+        ]
+        gt_annotations = []
+        for gt in gt_bboxes:
             annotation = {
                 'bboxes': gt[:, 1:5],
                 'labels': np.argmax(gt[:, 5 + len(self.att2id):], axis=-1)}
-            annotations.append(annotation)
-        import pdb
-        pdb.set_trace()
+            gt_annotations.append(annotation)
         mean_ap, eval_results = eval_map(
-            det_results,
-            annotations,
+            det_bbox_results,
+            gt_annotations,
             scale_ranges=None,
             iou_thr=0.5,
             ioa_thr=None,
@@ -839,43 +849,47 @@ class RPNAttributeDataset(Dataset):
         result_metrics['cate_ap_all'] = cate_ap_all
 
         print('Computing cate mAP with proposal score:')
-        gt_bboxes = [gt for gt in gt_labels if gt[0, 0] == 0]
-        predictions = [x for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 0]
         # predictions List[Tensor] N, Nx(4+1+620)
         # gts List[Tensor] N, Nx(1+4+620)
 
-        det_results = []
-        annotations = []
-        for pred, gt in zip(predictions, gt_bboxes):
-            if pred.shape[0] == 0:
-                pred_boxes = [np.zeros((0, 5), dtype=np.float32) for i in range(len(self.category2id))]
-            else:
-                # pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
-                pred_cate_logits = pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()
-
-                proposal_scores = pred[:, 4]
-                pred_cate_logits = (pred_cate_logits * proposal_scores[:, None]) ** 0.5
-
-                max_v, max_ind = torch.max(pred_cate_logits, dim=-1)
-                max_v = max_v.view(-1, 1)
-                pred_boxes = pred[:, :4]
-                pred_boxes = [torch.cat([pred_boxes[max_ind == i], max_v[max_ind == i]], dim=-1).numpy()
-                              for i in range(len(self.category2id))]
-            det_results.append(pred_boxes)
+        pred_det_bboxes = []
+        pred_det_labels = []
+        for pred in predictions:
+            pred_scores = (pred[:, 4:5] * pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()) ** 0.5
+            max_v, max_ind = torch.max(pred_scores, dim=-1)
+            pred_scores = max_v
+            score_thr = nms_cfg.pop('score_thr', 0.15)
+            mask_pos = pred_scores > score_thr
+            pred_label = max_ind[mask_pos]
+            pred_boxes = pred[:, :4]
+            det_bboxes, keep_idxs = batched_nms(
+                pred_boxes[mask_pos], pred_scores[mask_pos], pred_label, nms_cfg)
+            pred_det_bboxes.append(det_bboxes)
+            pred_det_labels.append(pred_label[keep_idxs])
+        det_bbox_results = [
+            bbox2result(
+                pred_det_bboxes[i],
+                pred_det_labels[i],
+                len(self.category2id)
+            )
+            for i in range(len(pred_det_bboxes))
+        ]
+        gt_annotations = []
+        for gt in gt_bboxes:
             annotation = {
                 'bboxes': gt[:, 1:5],
                 'labels': np.argmax(gt[:, 5 + len(self.att2id):], axis=-1)}
-            annotations.append(annotation)
+            gt_annotations.append(annotation)
         mean_ap, eval_results = eval_map(
-            det_results,
-            annotations,
+            det_bbox_results,
+            gt_annotations,
             scale_ranges=None,
             iou_thr=0.5,
             ioa_thr=None,
             dataset=None,
             logger=None,
             tpfp_fn=None,
-            nproc=1,
+            nproc=8,
             use_legacy_coordinate=False,
             use_group_of=False)
 
@@ -996,13 +1010,14 @@ class RPNAttributeDataset(Dataset):
 
     def evaluate(self,
                  results,
+                 nms_cfg,
                  logger=None,
                  metric='mAP',
                  per_class_out_file=None,
-                 is_logit=True
+                 is_logit=True,
                  ):
         if self.test_content == 'box_free':
-            return self.evaluate_box_free(results)
+            return self.evaluate_box_free(results, nms_cfg)
         elif self.test_content == 'box_given':
             return self.evaluate_box_given(results)
         else:
