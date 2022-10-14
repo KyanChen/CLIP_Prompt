@@ -1,4 +1,4 @@
-checkpoint_config = dict(interval=2)
+checkpoint_config = dict(interval=5)
 # yapf:disable
 log_config = dict(
     interval=30,
@@ -75,7 +75,7 @@ model = dict(
     shared_prompt_vectors=True,
     prompt_att_learner=dict(
         type='PromptAttributes',
-        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
+        # load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         prompt_config=dict(
             n_prompt=30,
             is_att_specific=False,
@@ -91,7 +91,7 @@ model = dict(
     ),
     prompt_category_learner=dict(
         type='PromptAttributes',
-        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
+        # load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         prompt_config=dict(
             n_prompt=30,
             is_att_specific=False,
@@ -128,7 +128,7 @@ model = dict(
         re_weight_gamma=2,
         re_weight_beta=0.995,
         balance_unk=0.2,  # boost: 0.5; Cap,VAW,COCO: 0.2
-        # balance_unk=0.15,
+        balance_capdata=0.2,
         # balance_unk=1  # gen
     )
 )
@@ -272,7 +272,7 @@ data = dict(
 optimizer = dict(
     constructor='SubModelConstructor',
     sub_model={
-        'prompt_att_learner': {'lr_mult': 0.1},
+        'prompt_att_learner': {},
         # 'prompt_category_learner': {'lr_mult': 0.1},
         # 'image_encoder',
         'prompt_phase_learner': {},
@@ -308,8 +308,8 @@ lr_config = dict(
     warmup_ratio=0.1,
     # gamma=0.5,
     # step=[50, 80],
-    # step=[35, 50],
-    step=[15, 30]
+    step=[35, 50],
+    # step=[15, 30]
 )
 # lr_config = None
 # lr_config = dict(
@@ -322,7 +322,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=40)
+runner = dict(type='EpochBasedRunner', max_epochs=60)
 evaluation = dict(interval=5, metric='mAP')
 
 load_from = 'results/EXP20221006_0/epoch_20.pth'

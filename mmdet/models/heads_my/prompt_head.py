@@ -35,6 +35,7 @@ class PromptHead(BaseModule):
                  balance_unk=0.1,
                  kd_model_loss=None,
                  balance_kd=0.1,
+                 balance_capdata=0.5,
                  balance_teacher_loss=0.5
                  ):
         super(PromptHead, self).__init__(init_cfg)
@@ -101,6 +102,7 @@ class PromptHead(BaseModule):
         self.kd_model_loss = kd_model_loss
         self.balance_kd = balance_kd
         self.balance_teacher_loss = balance_teacher_loss
+        self.balance_capdata = balance_capdata
 
     def reweight_att(self, attr_freq, att2id):
         refine_attr_freq = {}
@@ -287,7 +289,7 @@ class PromptHead(BaseModule):
                 total_rew = None
             cap_attcate_loss = self.get_classify_loss(
                 pred_attcate_logits, gt_attcate, self.balance_unk, total_rew)
-            losses['cap_attcate_loss'] = cap_attcate_loss
+            losses['cap_attcate_loss'] = self.self.balance_capdata * cap_attcate_loss
             # losses.update(self.get_acc(pred_cate_logits, gt_cate, pattern='cate'))
         else:
             losses['cap_attcate_loss'] = torch.tensor(0.).to(x.device)
@@ -346,7 +348,7 @@ class PromptHead(BaseModule):
             logits_phase_cap = kwargs.get('logits_phase_cap', None)
             label_phase_cap = kwargs.get('label_phase_cap', None)
             loss_phase_cap = F.binary_cross_entropy_with_logits(logits_phase_cap, label_phase_cap, reduction='mean')
-            losses['loss_phase_cap'] = loss_phase_cap
+            losses['loss_phase_cap'] = self.balance_capdata * loss_phase_cap
 
         return losses
 
