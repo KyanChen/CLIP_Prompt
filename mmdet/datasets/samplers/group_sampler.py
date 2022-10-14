@@ -36,6 +36,8 @@ class GroupSampler(Sampler):
                 [indice, np.random.choice(indice, num_extra)])
             if hasattr(self, 'flag_dataset'):
                 # rank, world_size = get_dist_info()
+                import pdb
+                pdb.set_trace()
                 indice = np.array(indice, dtype=np.int64)
                 flag_dataset_tmp = self.flag_dataset[indice]
                 num_flag_dataset = np.bincount(flag_dataset_tmp)
