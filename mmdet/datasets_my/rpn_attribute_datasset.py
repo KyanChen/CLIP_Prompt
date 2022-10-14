@@ -794,6 +794,8 @@ class RPNAttributeDataset(Dataset):
         print('Computing cate mAP without proposal score:')
         pred_det_bboxes = []
         pred_det_labels = []
+        import pdb
+        pdb.set_trace()
         for pred in predictions:
             pred_scores = pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()
             max_v, max_ind = torch.max(pred_scores, dim=-1)
