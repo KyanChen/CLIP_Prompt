@@ -77,7 +77,7 @@ class GroupSampler(Sampler):
         ]
         indices = np.concatenate(indices)
         indices = indices.astype(np.int64).tolist()
-        assert len(indices) == self.num_samples
+        # assert len(indices) == self.num_samples
         return iter(indices)
 
     def __len__(self):
@@ -197,7 +197,7 @@ class DistributedGroupSampler(Sampler):
                         indice_rearrange += indice_per_gpu
                     indice = indice[indice_rearrange]
                 indices.extend(indice)
-        assert len(indices) == self.total_size
+        # assert len(indices) == self.total_size
 
         indices = [
             indices[j] for i in list(
@@ -210,7 +210,7 @@ class DistributedGroupSampler(Sampler):
         # subsample
         offset = self.num_samples * self.rank
         indices = indices[offset:offset + self.num_samples]
-        assert len(indices) == self.num_samples
+        # assert len(indices) == self.num_samples
         return iter(indices)
 
     def __len__(self):
