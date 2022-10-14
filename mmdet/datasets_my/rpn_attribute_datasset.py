@@ -797,7 +797,8 @@ class RPNAttributeDataset(Dataset):
         import pdb
         pdb.set_trace()
         for pred in predictions:
-            pred_scores = pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()
+            # pred_scores = pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()
+            pred_scores = pred[:, 5 + len(self.att2id):].cpu()
             max_v, max_ind = torch.max(pred_scores, dim=-1)
             pred_scores = max_v
             score_thr = nms_cfg.pop('score_thr', 0.15)
@@ -857,7 +858,9 @@ class RPNAttributeDataset(Dataset):
         pred_det_bboxes = []
         pred_det_labels = []
         for pred in predictions:
-            pred_scores = (pred[:, 4:5] * pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()) ** 0.5
+            # pred_scores = (pred[:, 4:5] * pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()) ** 0.5
+            pred_scores = pred[:, 5 + len(self.att2id):].cpu()
+            pred_scores = (pred[:, 4:5] * pred_scores) ** 0.5
             max_v, max_ind = torch.max(pred_scores, dim=-1)
             pred_scores = max_v
             score_thr = nms_cfg.pop('score_thr', 0.15)
