@@ -227,8 +227,8 @@ model = dict(
         #     nms=dict(type='nms', class_agnostic=False, iou_threshold=0.7),
         #     min_bbox_size=4)
         rpn=dict(
-            nms_pre=3000,
-            max_per_img=3000,
+            nms_pre=2000,
+            max_per_img=2000,
             min_bbox_size=4)
     )
 )
@@ -350,7 +350,7 @@ data = dict(
         pipeline=test_box_given_pipeline,
     ),
     test=dict(
-        samples_per_gpu=10,
+        samples_per_gpu=5,
         type=dataset_type,
         data_root=data_root,
         dataset_split='test',
