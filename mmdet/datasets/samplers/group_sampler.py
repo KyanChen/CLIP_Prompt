@@ -68,7 +68,7 @@ class GroupSampler(Sampler):
                         indice_per_gpu.append(
                             data_flag_indices[i_flag][i_group * num_samp_of_flag: (i_group + 1) * num_samp_of_flag])
                     indice_rearrange += indice_per_gpu
-                indice = indice[indice_rearrange]
+                indice = indice[np.array(indice_rearrange, dtype=np.int32)]
             indices.append(indice)
         indices = np.concatenate(indices)
         indices = [
@@ -196,7 +196,7 @@ class DistributedGroupSampler(Sampler):
                             indice_per_gpu.append(
                                 data_flag_indices[i_flag][i_group*num_samp_of_flag: (i_group+1)*num_samp_of_flag])
                         indice_rearrange += indice_per_gpu
-                    indice = indice[indice_rearrange].tolist()
+                    indice = indice[np.array(indice_rearrange, dtype=np.int32)].tolist()
                 indices.extend(indice)
         assert len(indices) == self.total_size
 
