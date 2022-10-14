@@ -437,13 +437,14 @@ lr_config = dict(
 
 # runtime settings
 runner = dict(type='EpochBasedRunner', max_epochs=60)
-evaluation = dict(interval=5, metric='mAP', nms=dict(
-    type='nms',
-    class_agnostic=False,
-    iou_threshold=0.5,
-    score_thr=0.15,
-    max_num=100,
-))
+evaluation = dict(
+    interval=5, metric='mAP',
+    nms_cfg=dict(
+        type='nms',
+        class_agnostic=False,
+        iou_threshold=0.5,
+        score_thr=0.15,
+        max_num=100))
 
 load_from = None
 # resume_from = 'results/EXP20220905_0/latest.pth'
