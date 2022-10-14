@@ -346,7 +346,7 @@ data = dict(
         pipeline=test_box_given_pipeline,
     ),
     test=dict(
-        samples_per_gpu=20,
+        samples_per_gpu=10,
         type=dataset_type,
         data_root=data_root,
         dataset_split='test',
