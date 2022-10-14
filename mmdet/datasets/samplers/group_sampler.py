@@ -60,7 +60,7 @@ class GroupSampler(Sampler):
                     assert len(data_flag_indice) == flag_size
                     data_flag_indice = data_flag_indice.tolist()
                     # 让 index 越界
-                    data_flag_indice += data_flag_indice[:samples_per_flag[flag_i]]
+                    data_flag_indice += data_flag_indice
                     data_flag_indices[flag_i] = data_flag_indice
                 indice_rearrange = []
                 for i_group in range(max_group_samps):
