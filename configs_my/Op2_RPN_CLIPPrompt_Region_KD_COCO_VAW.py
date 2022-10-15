@@ -29,7 +29,7 @@ data_root = '/data/kyanchen/prompt/data'
 
 attribute_index_file = dict(
     att_file='../attributes/VAW/common2common_att2id.json',
-    att_group='common1+common2',
+    att_group='common1',
     # att_file='../attributes/VAW/common2rare_att2id.json',
     # att_group='common+rare',
     # att_file='../attributes/OVAD/common2common_att2id.json',
@@ -39,7 +39,7 @@ attribute_index_file = dict(
     # category_group='common1+common2',
     category_file='../attributes/COCO/common2common_category2id_48_17.json',
     # category_file='../attributes/COCO/common2common_category2id_48_32.json',
-    category_group='common1+common2',
+    category_group='common1',
 )
 model = dict(
     type='RPN_CLIP_Prompter_Region',
@@ -104,8 +104,9 @@ model = dict(
             target_means=[.0, .0, .0, .0],
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
-            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='L1Loss', loss_weight=1.0)), # 可以修改
+            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=2.0),
+        # loss_bbox=dict(type='L1Loss', loss_weight=1.0)), # 可以修改
+        loss_bbox=dict(type='CIoULoss', loss_weight=5.0)),  # 可以修改
     att_head=dict(
         type='ProposalEncoder',
         out_channels=1024,
@@ -124,14 +125,14 @@ model = dict(
             use_abs_pos_embed=True,
             drop_rate=0.1,
             class_token=True,
-            num_encoder_layers=5,
+            num_encoder_layers=4,
             global_pool=False,
         )
     ),
     shared_prompt_vectors=True,
     prompt_att_learner=dict(
         type='PromptAttributes',
-        # load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
+        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         prompt_config=dict(
             n_prompt=30,
             is_att_specific=False,
@@ -147,7 +148,7 @@ model = dict(
     ),
     prompt_category_learner=dict(
         type='PromptAttributes',
-        # load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
+        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         prompt_config=dict(
             n_prompt=30,
             is_att_specific=False,
@@ -166,7 +167,7 @@ model = dict(
         with_attn=False,
         out_indices=[1, 2, 3, 4],
         # backbone_name='ViT-B/16',
-        # load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
+        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         precision='fp32',
     ),
     kd_model=dict(
@@ -174,7 +175,7 @@ model = dict(
         backbone_name='RN50',
         with_attn=True,
         out_indices=[],
-        # load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
+        load_ckpt_from='results/EXP20221006_0/epoch_20.pth',
         precision='fp32',
     ),
     # text_header=dict(

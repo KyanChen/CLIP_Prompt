@@ -2,16 +2,16 @@ import os
 import time
 
 while True:
-    os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
-              "sh dist_train.sh "
-              "../configs_my/Op3_CLIPPrompt_Crop_Img_COCO_VAW.py "
-              "results/EXP20221014_1 "
-              "8")
     # os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
     #           "sh dist_train.sh "
-    #           "../configs_my/CLIPPrompt_Crop_Img_VAW1.py "
-    #           "results/EXP20220903_1 "
+    #           "../configs_my/Op3_CLIPPrompt_Crop_Img_COCO_VAW.py "
+    #           "results/EXP20221014_1 "
     #           "8")
+    os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
+              "sh dist_train.sh "
+              "../configs_my/Op2_RPN_CLIPPrompt_Region_KD_COCO_VAW.py "
+              "results/EXP20221016_0 "
+              "8")
     # os.system("CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 "
     #           "sh dist_train.sh "
     #           "../configs_my/CLIPPrompt_Crop_Img_VAW2.py "

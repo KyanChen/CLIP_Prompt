@@ -785,6 +785,61 @@ class RPNAttributeDataset(Dataset):
         )
         result_metrics['att_att_all'] = output['PC_ap/all']
 
+        print('Computing cate mAP, biggest:')
+        gt_bboxes = [gt for gt in gt_labels if gt[0, 0] == 0]
+        predictions = [x.numpy() for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 0]
+
+        prediction_attributes = []
+        gt_attributes = []
+        # predictions List[Tensor] N, Nx(4+1+620)
+        # gts List[Tensor] N, Nx(1+4+620)
+        for prediction, gt in zip(predictions, gt_bboxes):
+            IoUs = bbox_overlaps(prediction[:, :4], gt[:, 1:5])
+            inds = np.argmax(IoUs, axis=0)
+            pred_att = prediction[inds][:, 5 + len(self.att2id):]
+            gt_att = gt[:, 5 + len(self.att2id):]
+
+            # thres = 0.5
+            # IoU_thres = IoUs[inds, range(IoUs.shape[1])]
+            # pred_att = pred_att[IoU_thres > thres]
+            # gt_att = gt_att[IoU_thres > thres]
+            #
+            prediction_attributes.append(pred_att)
+            gt_attributes.append(gt_att)
+        pred_cate_logits = np.concatenate(prediction_attributes, axis=0)
+        gt_cate = np.concatenate(gt_attributes, axis=0)
+
+        dataset_name = self.attribute_index_file['category_file'].split('/')[-2]
+        top_k = 1 if dataset_name == 'COCO' else -1
+        print('dataset_name: ', dataset_name, 'top k: ', top_k)
+
+        # pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
+        pred_cate_logits = pred_cate_logits.float().softmax(dim=-1).cpu()
+        pred_cate_logits = pred_cate_logits * (pred_cate_logits == pred_cate_logits.max(dim=-1)[0][:, None])
+
+        gt_cate = gt_cate.detach().cpu()
+
+        # values, indices = torch.max(pred_cate_logits, dim=-1)
+        # row_indices = torch.arange(len(values))[values > 0.5]
+        # col_indices = indices[values > 0.5]
+        # pred_cate_logits[row_indices, col_indices] = 1
+        # pred_cate_logits[pred_cate_logits < 1] = 0
+
+        pred_cate_logits = pred_cate_logits.numpy()
+        gt_cate = gt_cate.numpy()
+
+        output = cal_metrics(
+            self.category2id,
+            dataset_name,
+            prefix_path=f'../attributes/{dataset_name}',
+            pred=pred_cate_logits,
+            gt_label=gt_cate,
+            top_k=top_k,
+            save_result=True,
+            att_seen_unseen=self.category_seen_unseen
+        )
+        result_metrics['cate_ap_all_iou_biggest'] = output['PC_ap/all']
+
         print('Computing cate mAP:')
         gt_bboxes = [gt for gt in gt_labels if gt[0, 0] == 0]
         predictions = [x for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 0]
