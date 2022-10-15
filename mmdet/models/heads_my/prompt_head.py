@@ -51,6 +51,8 @@ class PromptHead(BaseModule):
             att_group = attribute_index_file['att_group']
             if att_group in ['common1', 'common2', 'common', 'rare']:
                 self.att2id = att2id[att_group]
+                self.att_seen_unseen['seen'] = list(att2id['common1'].keys())
+                self.att_seen_unseen['unseen'] = list(att2id['common2'].keys())
             elif att_group == 'common1+common2':
                 self.att2id.update(att2id['common1'])
                 self.att2id.update(att2id['common2'])
@@ -71,6 +73,8 @@ class PromptHead(BaseModule):
             att_group = attribute_index_file['category_group']
             if att_group in ['common1', 'common2', 'common', 'rare']:
                 self.category2id = category2id[att_group]
+                self.category_seen_unseen['seen'] = list(category2id['common1'].keys())
+                self.category_seen_unseen['unseen'] = list(category2id['common2'].keys())
             elif att_group == 'common1+common2':
                 self.category2id.update(category2id['common1'])
                 self.category2id.update(category2id['common2'])
