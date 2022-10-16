@@ -313,7 +313,6 @@ class RPN_CLIP_Prompter_Region(BaseModule):
             img_f_maps = self.img_backbone(img)
         img_f_maps = self.img_neck(img_f_maps)
 
-        dataset_type = dataset_type == 1  # attribute for 1
         dataset_type = dataset_type.view(-1)
         assert len(dataset_type) == len(img)
         losses = dict()
@@ -328,10 +327,12 @@ class RPN_CLIP_Prompter_Region(BaseModule):
                                                      proposal_cfg=None,
                                                      **kwargs)
         elif self.box_reg == 'coco':
-            if torch.any(~dataset_type):  # 存在非属性目标
-                img_rpn = [x[~dataset_type, ...] for x in img_f_maps]
-                boxes_rpn = [x for idx, x in enumerate(gt_bboxes) if not dataset_type[idx]]
-                img_metas_rpn = [x for idx, x in enumerate(img_metas) if not dataset_type[idx]]
+            coco_seen_mask = dataset_type == 0
+            if torch.any(coco_seen_mask):  # 存在coco seen 目标
+
+                img_rpn = [x[coco_seen_mask, ...] for x in img_f_maps]
+                boxes_rpn = [x for idx, x in enumerate(gt_bboxes) if coco_seen_mask[idx]]
+                img_metas_rpn = [x for idx, x in enumerate(img_metas) if coco_seen_mask[idx]]
                 rpn_losses = self.rpn_head.forward_train(img_rpn,
                                                          img_metas_rpn,
                                                          boxes_rpn,

@@ -29,7 +29,7 @@ data_root = '/data/kyanchen/prompt/data'
 
 attribute_index_file = dict(
     att_file='../attributes/VAW/common2common_att2id.json',
-    att_group='common1',
+    att_group='common1+common2',
     # att_file='../attributes/VAW/common2rare_att2id.json',
     # att_group='common+rare',
     # att_file='../attributes/OVAD/common2common_att2id.json',
@@ -39,7 +39,7 @@ attribute_index_file = dict(
     # category_group='common1+common2',
     category_file='../attributes/COCO/common2common_category2id_48_17.json',
     # category_file='../attributes/COCO/common2common_category2id_48_32.json',
-    category_group='common1',
+    category_group='common1+common2',
 )
 model = dict(
     type='RPN_CLIP_Prompter_Region',
@@ -201,6 +201,7 @@ model = dict(
         # balance_unk=1  # gen
         kd_model_loss='t_ce+ts_ce',
         balance_kd=0.5,
+        balance_teacher_loss=0.5,
     ),
     train_cfg=dict(
         rpn=dict(

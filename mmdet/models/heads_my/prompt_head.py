@@ -49,10 +49,14 @@ class PromptHead(BaseModule):
             file = attribute_index_file['att_file']
             att2id = json.load(open(file, 'r'))
             att_group = attribute_index_file['att_group']
-            if att_group in ['common1', 'common2', 'common', 'rare']:
+            if att_group in ['common1', 'common2']:
                 self.att2id = att2id[att_group]
                 self.att_seen_unseen['seen'] = list(att2id['common1'].keys())
                 self.att_seen_unseen['unseen'] = list(att2id['common2'].keys())
+            elif att_group in ['common', 'rare']:
+                self.att2id = att2id[att_group]
+                self.att_seen_unseen['seen'] = list(att2id['common'].keys())
+                self.att_seen_unseen['unseen'] = list(att2id['rare'].keys())
             elif att_group == 'common1+common2':
                 self.att2id.update(att2id['common1'])
                 self.att2id.update(att2id['common2'])
@@ -250,9 +254,11 @@ class PromptHead(BaseModule):
         att_mask = data_set_type == 1
         x = pred_logits
         pred_att_logits = x[att_mask][:, :len(self.att_seen_unseen['seen'])]
-        pred_cate_logits = x[cate_mask][:, len(self.att2id):len(self.att2id)+len(self.category_seen_unseen['seen'])]
+        # pred_cate_logits = x[cate_mask][:, len(self.att2id):len(self.att2id)+len(self.category_seen_unseen['seen'])]
+        pred_cate_logits = x[cate_mask][:, len(self.att2id):]
         gt_att = gt_labels[att_mask][:, :len(self.att_seen_unseen['seen'])]
-        gt_cate = gt_labels[cate_mask][:, len(self.att2id):len(self.att2id)+len(self.category_seen_unseen['seen'])]
+        # gt_cate = gt_labels[cate_mask][:, len(self.att2id):len(self.att2id)+len(self.category_seen_unseen['seen'])]
+        gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
         if len(pred_att_logits):
             if hasattr(self, 'reweight_att_frac'):
                 total_rew_att = self.reweight_att_frac.to(gt_labels.device)
@@ -298,7 +304,8 @@ class PromptHead(BaseModule):
         else:
             losses['cap_attcate_loss'] = torch.tensor(0.).to(x.device)
 
-        if 'img_crop_features' in kwargs and self.kd_model_loss:
+        # for knowledge distilation
+        if 'kd_logits' in kwargs and self.kd_model_loss:
             img_crop_features = kwargs.get('img_crop_features', None)
             proposal_features = kwargs.get('boxes_feats', None)
             kd_logits = kwargs.get('kd_logits', None)
@@ -320,24 +327,32 @@ class PromptHead(BaseModule):
                 loss_kd = F.binary_cross_entropy(proposal_features, img_crop_features, reduction='mean')
             elif self.kd_model_loss == 't_ce+ts_ce':
                 x = kd_logits
-                pred_att_logits = x[att_mask][:, :len(self.att2id)]
+                pred_att_logits = x[att_mask][:, :len(self.att_seen_unseen['seen'])]
                 pred_cate_logits = x[cate_mask][:, len(self.att2id):]
-                gt_att = gt_labels[att_mask][:, :len(self.att2id)]
+                gt_att = gt_labels[att_mask][:, :len(self.att_seen_unseen['seen'])]
                 gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
                 if len(pred_att_logits):
                     if hasattr(self, 'reweight_att_frac'):
                         total_rew_att = self.reweight_att_frac.to(gt_labels.device)
                     else:
                         total_rew_att = None
-                    att_loss = self.get_classify_loss(pred_att_logits, gt_att, self.balance_unk, total_rew_att)
+                    att_loss = self.get_classify_loss(
+                        pred_att_logits, gt_att,
+                        self.balance_unk,
+                        total_rew_att[:pred_att_logits.size(-1)]
+                    )
 
                 if len(pred_cate_logits):
                     if hasattr(self, 'reweight_cate_frac'):
                         total_rew_cate = self.reweight_cate_frac.to(gt_labels.device)
                     else:
                         total_rew_cate = None
-                    cate_loss = self.get_classify_loss(pred_cate_logits, gt_cate, self.balance_unk, total_rew_cate)
-                losses['t_ce_loss'] = att_loss + cate_loss * self.re_weight_category * self.balance_teacher_loss * self.balance_kd
+                    cate_loss = self.get_classify_loss(
+                        pred_cate_logits, gt_cate,
+                        self.balance_unk,
+                        total_rew_cate[:pred_cate_logits.size(-1)]
+                    )
+                losses['t_ce_loss'] = (att_loss + cate_loss * self.re_weight_category) * self.balance_teacher_loss * self.balance_kd
 
                 loss_ts_ce = F.cross_entropy(pred_logits, (kd_logits.detach()).softmax(dim=-1))
 

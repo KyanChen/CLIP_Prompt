@@ -68,8 +68,14 @@ class RPNAttributeDataset(Dataset):
             file = attribute_index_file['att_file']
             att2id = json.load(open(file, 'r'))
             att_group = attribute_index_file['att_group']
-            if att_group in ['common1', 'common2', 'common', 'rare']:
+            if att_group in ['common1', 'common2']:
                 self.att2id = att2id[att_group]
+                self.att_seen_unseen['seen'] = list(att2id['common1'].keys())
+                self.att_seen_unseen['unseen'] = list(att2id['common2'].keys())
+            elif att_group in ['common', 'rare']:
+                self.att2id = att2id[att_group]
+                self.att_seen_unseen['seen'] = list(att2id['common'].keys())
+                self.att_seen_unseen['unseen'] = list(att2id['rare'].keys())
             elif att_group == 'common1+common2':
                 self.att2id.update(att2id['common1'])
                 self.att2id.update(att2id['common2'])
@@ -90,6 +96,8 @@ class RPNAttributeDataset(Dataset):
             att_group = attribute_index_file['category_group']
             if att_group in ['common1', 'common2', 'common', 'rare']:
                 self.category2id = category2id[att_group]
+                self.category_seen_unseen['seen'] = list(category2id['common1'].keys())
+                self.category_seen_unseen['unseen'] = list(category2id['common2'].keys())
             elif att_group == 'common1+common2':
                 self.category2id.update(category2id['common1'])
                 self.category2id.update(category2id['common2'])
@@ -351,18 +359,24 @@ class RPNAttributeDataset(Dataset):
                 positive_attributes = instance["positive_attributes"]
                 negative_attributes = instance["negative_attributes"]
                 for att in positive_attributes:
-                    att_id = self.att2id.get(att, None)
-                    if att_id is not None:
-                        labels[att_id] = 1
+                    if att in self.att_seen_unseen['seen']:
+                        att_id = self.att2id.get(att, None)
+                        if att_id is not None:
+                            labels[att_id] = 1
                 for att in negative_attributes:
-                    att_id = self.att2id.get(att, None)
-                    if att_id is not None:
-                        labels[att_id] = 0
+                    if att in self.att_seen_unseen['seen']:
+                        att_id = self.att2id.get(att, None)
+                        if att_id is not None:
+                            labels[att_id] = 0
             if data_set == 'coco':
                 category = instance['name']
-                category_id = self.category2id.get(category, None)
-                if category_id is not None:
-                    labels[category_id+len(self.att2id)] = 1
+                if category in self.category_seen_unseen['seen']:
+                    data_set_type = 0
+                    category_id = self.category2id.get(category, None)
+                    if category_id is not None:
+                        labels[category_id+len(self.att2id)] = 1
+                else:
+                    data_set_type = 4  # 只进行蒸馏损失的计算
             attr_label_list.append(labels)
 
         gt_bboxes = np.array(bbox_list, dtype=np.float32)
