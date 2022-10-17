@@ -40,6 +40,7 @@ class BoostCLIPCropDataset(Dataset):
                  dataset_names='vaw',
                  load_label=None,
                  save_label=False,
+                 select_novel=False,
                  file_client_args=dict(backend='disk')
                  ):
 
@@ -51,6 +52,7 @@ class BoostCLIPCropDataset(Dataset):
             self.vawcoco_pipline = Compose(vawcoco_pipline)
         self.data_root = data_root
         self.dataset_names = dataset_names
+        self.select_novel = select_novel
 
         self.attribute_index_file = attribute_index_file
         self.att2id = {}
@@ -254,8 +256,22 @@ class BoostCLIPCropDataset(Dataset):
             id2images[img_id] = data
         cap_data = json.load(open(self.data_root + f'/COCO/annotations/train_2017_caption_tagging_with_proposals.json', 'r'))
         for img_id, data in cap_data.items():
-            img_id = 'cococap_' + str(img_id)
-            id2instances[img_id] = id2instances.get(img_id, []) + [data]
+            if self.select_novel:
+                keep_flag = False
+                for cate in self.category_seen_unseen['unseen']:
+                    if cate in data['category']:
+                        keep_flag = True
+                        break
+                for att in self.att_seen_unseen['unseen']:
+                    if keep_flag:
+                        break
+                    if att in data['attribute']:
+                        keep_flag = True
+            else:
+                keep_flag = True
+            if keep_flag:
+                img_id = 'cococap_' + str(img_id)
+                id2instances[img_id] = id2instances.get(img_id, []) + [data]
         return id2images, id2instances
 
     def read_data_vaw(self, pattern):
