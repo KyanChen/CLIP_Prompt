@@ -59,8 +59,8 @@ model = dict(
     need_train_names=[
         'prompt_category_learner',
         'prompt_att_learner',
-        # 'image_encoder',
-        'text_encoder',
+        'image_encoder',
+        # 'text_encoder',
         'prompt_phase_learner',
         'bbox_head', 'logit_scale'
     ],
@@ -128,7 +128,7 @@ model = dict(
         re_weight_gamma=2,
         re_weight_beta=0.995,
         balance_unk=0.2,  # boost: 0.5; Cap,VAW,COCO: 0.2
-        balance_capdata=0.2,
+        balance_capdata=0.5,
         # balance_unk=1  # gen
     )
 )
@@ -212,8 +212,8 @@ test_generated_pipeline = [
         ]
     )
 ]
-# captext:24 capimg:48 coco_captext:84 img:148
-samples_per_gpu = 148
+# captext:24 capimg:48 coco_captext:84 img:128
+samples_per_gpu = 128
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -229,7 +229,8 @@ data = dict(
         test_mode=False,
         open_category=False,
         cap_pipeline=train_cap_pipeline,
-        vawcoco_pipline=train_vawcoco_pipeline
+        vawcoco_pipline=train_vawcoco_pipeline,
+        select_novel=True
         # pipeline=train_generated_pipeline
     ),
     val=dict(
@@ -275,17 +276,17 @@ optimizer = dict(
         'prompt_att_learner': {},
         # 'prompt_category_learner': {'lr_mult': 0.1},
         'prompt_phase_learner': {},
-        # 'image_encoder': {'lr_mult': 0.1},
-        'text_encoder': {'lr_mult': 0.1},
+        'image_encoder': {'lr_mult': 0.1},
+        # 'text_encoder': {'lr_mult': 0.1},
         'bbox_head': {}, 'logit_scale': {}
     },
-    # type='SGD',
+    type='SGD',
+    lr=5e-3,
+    momentum=0.9,
+    weight_decay=0.0005,
+    # type='AdamW',
     # lr=1e-4,
-    # # momentum=0.9,
-    # weight_decay=0.0005,
-    type='AdamW',
-    lr=1e-4,
-    weight_decay=0.0005
+    # weight_decay=0.0005
 )
 #
 # # optimizer
