@@ -59,8 +59,8 @@ model = dict(
     need_train_names=[
         'prompt_category_learner',
         'prompt_att_learner',
-        'image_encoder',
-        # 'text_encoder',
+        # 'image_encoder',
+        'text_encoder',
         'prompt_phase_learner',
         'bbox_head', 'logit_scale'
     ],
@@ -276,17 +276,17 @@ optimizer = dict(
         'prompt_att_learner': {},
         # 'prompt_category_learner': {'lr_mult': 0.1},
         'prompt_phase_learner': {},
-        'image_encoder': {'lr_mult': 0.1},
-        # 'text_encoder': {'lr_mult': 0.1},
+        # 'image_encoder': {'lr_mult': 0.1},
+        'text_encoder': {'lr_mult': 0.1},
         'bbox_head': {}, 'logit_scale': {}
     },
-    type='SGD',
-    lr=5e-3,
-    momentum=0.9,
-    weight_decay=0.0005,
-    # type='AdamW',
-    # lr=1e-4,
-    # weight_decay=0.0005
+    # type='SGD',
+    # lr=5e-3,
+    # momentum=0.9,
+    # weight_decay=0.0005,
+    type='AdamW',
+    lr=1e-4,
+    weight_decay=0.0005
 )
 #
 # # optimizer
