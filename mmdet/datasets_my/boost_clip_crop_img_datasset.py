@@ -162,6 +162,7 @@ class BoostCLIPCropDataset(Dataset):
         self.flag = np.zeros(len(self), dtype=int)
 
         if rank == 0:
+            print(np.bincount(self.flag_dataset))
             print('data len: ', len(self))
             print('num_att: ', len(self.att2id))
             print('num_category: ', len(self.category2id))
