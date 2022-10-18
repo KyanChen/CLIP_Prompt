@@ -422,7 +422,7 @@ optimizer = dict(
         'img_neck': {},
         'rpn_head': {},
         'att_head': {},
-        'prompt_att_learner': {},
+        'prompt_att_learner': {'lr_mult': 0.1},
         # 'prompt_category_learner': {},
         'logit_scale': {}, 'head': {},
         'kd_img_align': {}, 'kd_logit_scale': {}
@@ -439,7 +439,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=2000,
     warmup_ratio=0.1,
-    step=[30, 45])
+    step=[25, 40])
 
 # lr_config = dict(
 #     policy='CosineAnnealing',
@@ -451,7 +451,7 @@ lr_config = dict(
 #     warmup_by_epoch=True)
 
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=60)
+runner = dict(type='EpochBasedRunner', max_epochs=50)
 evaluation = dict(
     interval=5, metric='mAP',
     nms_cfg=dict(
