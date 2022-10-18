@@ -820,8 +820,8 @@ class RPNAttributeDataset(Dataset):
             #
             prediction_attributes.append(pred_att)
             gt_attributes.append(gt_att)
-        pred_cate_logits = np.concatenate(prediction_attributes, axis=0)
-        gt_cate = np.concatenate(gt_attributes, axis=0)
+        pred_cate_logits = torch.from_numpy(np.concatenate(prediction_attributes, axis=0))
+        gt_cate = torch.from_numpy(np.concatenate(gt_attributes, axis=0))
 
         dataset_name = self.attribute_index_file['category_file'].split('/')[-2]
         top_k = 1 if dataset_name == 'COCO' else -1
