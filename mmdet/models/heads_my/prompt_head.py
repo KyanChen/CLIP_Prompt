@@ -254,11 +254,11 @@ class PromptHead(BaseModule):
         att_mask = data_set_type == 1
         x = pred_logits
         pred_att_logits = x[att_mask][:, :len(self.att_seen_unseen['seen'])]
-        # pred_cate_logits = x[cate_mask][:, len(self.att2id):len(self.att2id)+len(self.category_seen_unseen['seen'])]
-        pred_cate_logits = x[cate_mask][:, len(self.att2id):]
+        pred_cate_logits = x[cate_mask][:, len(self.att2id):len(self.att2id)+len(self.category_seen_unseen['seen'])]
+        # pred_cate_logits = x[cate_mask][:, len(self.att2id):]
         gt_att = gt_labels[att_mask][:, :len(self.att_seen_unseen['seen'])]
-        # gt_cate = gt_labels[cate_mask][:, len(self.att2id):len(self.att2id)+len(self.category_seen_unseen['seen'])]
-        gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
+        gt_cate = gt_labels[cate_mask][:, len(self.att2id):len(self.att2id)+len(self.category_seen_unseen['seen'])]
+        # gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
         if len(pred_att_logits):
             if hasattr(self, 'reweight_att_frac'):
                 total_rew_att = self.reweight_att_frac.to(gt_labels.device)
@@ -328,9 +328,11 @@ class PromptHead(BaseModule):
             elif self.kd_model_loss == 't_ce+ts_ce':
                 x = kd_logits
                 pred_att_logits = x[att_mask][:, :len(self.att_seen_unseen['seen'])]
-                pred_cate_logits = x[cate_mask][:, len(self.att2id):]
                 gt_att = gt_labels[att_mask][:, :len(self.att_seen_unseen['seen'])]
-                gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
+                # pred_cate_logits = x[cate_mask][:, len(self.att2id):]
+                # gt_cate = gt_labels[cate_mask][:, len(self.att2id):]
+                pred_cate_logits = x[cate_mask][:, len(self.att2id):len(self.att2id) + len(self.category_seen_unseen['seen'])]
+                gt_cate = gt_labels[cate_mask][:, len(self.att2id):len(self.att2id) + len(self.category_seen_unseen['seen'])]
                 if len(pred_att_logits):
                     if hasattr(self, 'reweight_att_frac'):
                         total_rew_att = self.reweight_att_frac.to(gt_labels.device)
