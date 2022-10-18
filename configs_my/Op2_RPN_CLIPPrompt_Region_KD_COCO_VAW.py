@@ -44,7 +44,7 @@ attribute_index_file = dict(
 model = dict(
     type='RPN_CLIP_Prompter_Region',
     attribute_index_file=attribute_index_file,
-    test_content='box_free',
+    test_content='box_given',
     box_reg='coco',  # vaw, coco, coco+vaw RPN是否包含属性预测的内容
     need_train_names=[
         # 'img_backbone',
@@ -365,7 +365,7 @@ data = dict(
         pipeline=test_box_given_pipeline,
     ),
     test=dict(
-        samples_per_gpu=5,
+        samples_per_gpu=20,
         type=dataset_type,
         data_root=data_root,
         dataset_split='test',
@@ -386,10 +386,10 @@ data = dict(
         dataset_names=['coco', 'vaw'],
         test_mode=True,
         mult_proposal_score=False,
-        # test_content='box_given',
-        # pipeline=test_box_given_pipeline,
-        test_content='box_free',
-        pipeline=test_box_free_pipeline,
+        test_content='box_given',
+        pipeline=test_box_given_pipeline,
+        # test_content='box_free',
+        # pipeline=test_box_free_pipeline,
     )
 )
 # #
