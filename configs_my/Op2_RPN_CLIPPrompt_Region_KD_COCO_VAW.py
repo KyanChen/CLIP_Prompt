@@ -386,10 +386,10 @@ data = dict(
         dataset_names=['coco', 'vaw'],
         test_mode=True,
         mult_proposal_score=False,
+        # test_content='box_given',
+        # pipeline=test_box_given_pipeline,
         test_content='box_free',
-        pipeline=test_box_given_pipeline,
-        # test_content='box_free',
-        # pipeline=test_box_free_pipeline,
+        pipeline=test_box_free_pipeline,
     )
 )
 # #
