@@ -799,7 +799,7 @@ class RPNAttributeDataset(Dataset):
         )
         result_metrics['att_att_all'] = output['PC_ap/all']
 
-        print('Computing cate mAP, biggest:')
+        print('Computing cate mAP, biggest IoU:')
         gt_bboxes = [gt for gt in gt_labels if gt[0, 0] == 0]
         predictions = [x.numpy() for idx, x in enumerate(results) if gt_labels[idx][0, 0] == 0]
 
@@ -869,12 +869,19 @@ class RPNAttributeDataset(Dataset):
         for pred in predictions:
             # pred_scores = pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()
             pred_scores = pred[:, 5 + len(self.att2id):].cpu()
+            pred_proposal_scores = pred[:, 4].cpu()
+            proposal_score_thr = nms_cfg.pop('proposal_score_thr', 0.15)
+            obj_mask = pred_proposal_scores > proposal_score_thr
+
+            pred_scores = pred_scores[obj_mask]
+            pred_boxes = pred[:, :4][obj_mask]
+
             max_v, max_ind = torch.max(pred_scores, dim=-1)
             pred_scores = max_v
+
             score_thr = nms_cfg.pop('score_thr', 0.15)
             mask_pos = pred_scores > score_thr
             pred_label = max_ind[mask_pos]
-            pred_boxes = pred[:, :4]
             det_bboxes, keep_idxs = batched_nms(
                 pred_boxes[mask_pos], pred_scores[mask_pos], pred_label, nms_cfg)
             pred_det_bboxes.append(det_bboxes)
@@ -930,13 +937,20 @@ class RPNAttributeDataset(Dataset):
         for pred in predictions:
             # pred_scores = (pred[:, 4:5] * pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()) ** 0.5
             pred_scores = pred[:, 5 + len(self.att2id):].cpu()
-            pred_scores = (pred[:, 4:5] * pred_scores) ** 0.5
+            pred_proposal_scores = pred[:, 4].cpu()
+            proposal_score_thr = nms_cfg.pop('proposal_score_thr', 0.15)
+            obj_mask = pred_proposal_scores > proposal_score_thr
+
+            pred_scores = pred_scores[obj_mask]
+            pred_boxes = pred[:, :4][obj_mask]
+            pred_proposal_scores = pred_proposal_scores[obj_mask]
+
+            pred_scores = (pred_proposal_scores[:, None] * pred_scores) ** 0.5
             max_v, max_ind = torch.max(pred_scores, dim=-1)
             pred_scores = max_v
             score_thr = nms_cfg.pop('score_thr', 0.15)
             mask_pos = pred_scores > score_thr
             pred_label = max_ind[mask_pos]
-            pred_boxes = pred[:, :4]
             det_bboxes, keep_idxs = batched_nms(
                 pred_boxes[mask_pos], pred_scores[mask_pos], pred_label, nms_cfg)
             pred_det_bboxes.append(det_bboxes)

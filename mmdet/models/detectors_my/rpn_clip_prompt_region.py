@@ -429,7 +429,7 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         else:
             img_f_maps = self.img_backbone(img)
         img_f_maps = self.img_neck(img_f_maps)
-        proposal_list = self.rpn_head.simple_test_rpn(img_f_maps, img_metas, with_nms=False)
+        proposal_list = self.rpn_head.simple_test_rpn(img_f_maps, img_metas, with_nms=True)
 
         num_boxes_per_img = [len(x) for x in proposal_list]
         boxes_feats, bbox_feat_maps = self.att_head(img_f_maps, proposal_list)

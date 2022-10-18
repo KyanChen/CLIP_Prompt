@@ -229,11 +229,24 @@ model = dict(
         #     nms=dict(type='nms', class_agnostic=False, iou_threshold=0.7),
         #     min_bbox_size=4)
         rpn=dict(
-            nms_pre=2000,
-            max_per_img=2000,
+            nms_pre=1000,
+            max_per_img=1000,
+            nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=4)
     )
 )
+
+# MASK-RCNN
+# rpn=dict(
+#     nms_pre=1000,
+#     max_per_img=1000,
+#     nms=dict(type='nms', iou_threshold=0.7),
+#     min_bbox_size=0),
+# rcnn=dict(
+#     score_thr=0.05,
+#     nms=dict(type='nms', iou_threshold=0.5),
+#     max_per_img=100,
+#     mask_thr_binary=0.5)
 
 # dataset settings
 dataset_type = 'RPNAttributeDataset'
@@ -445,9 +458,14 @@ evaluation = dict(
         type='nms',
         class_agnostic=False,
         iou_threshold=0.5,
+        proposal_score_thr=0.5,
         score_thr=0.5,
         max_num=100))
-
+# rcnn=dict(
+#     score_thr=0.05,
+#     nms=dict(type='nms', iou_threshold=0.5),
+#     max_per_img=100,
+#     mask_thr_binary=0.5)
 load_from = None
 # resume_from = 'results/EXP20220905_0/latest.pth'
 resume_from = None
