@@ -882,10 +882,15 @@ class RPNAttributeDataset(Dataset):
             score_thr = nms_cfg.pop('score_thr', 0.15)
             mask_pos = pred_scores > score_thr
             pred_label = max_ind[mask_pos]
-            det_bboxes, keep_idxs = batched_nms(
-                pred_boxes[mask_pos], pred_scores[mask_pos], pred_label, nms_cfg)
+            if len(pred_label):
+                det_bboxes, keep_idxs = batched_nms(
+                    pred_boxes[mask_pos], pred_scores[mask_pos], pred_label, nms_cfg)
+                pred_label = pred_label[keep_idxs]
+            else:
+                det_bboxes = np.zeros((0, 5), dtype=np.float32)
+                pred_label = np.zeros((0, 1), dtype=np.float32)
             pred_det_bboxes.append(det_bboxes)
-            pred_det_labels.append(pred_label[keep_idxs])
+            pred_det_labels.append(pred_label)
         det_bbox_results = [
             bbox2result(
                 pred_det_bboxes[i],
@@ -951,10 +956,15 @@ class RPNAttributeDataset(Dataset):
             score_thr = nms_cfg.pop('score_thr', 0.15)
             mask_pos = pred_scores > score_thr
             pred_label = max_ind[mask_pos]
-            det_bboxes, keep_idxs = batched_nms(
-                pred_boxes[mask_pos], pred_scores[mask_pos], pred_label, nms_cfg)
+            if len(pred_label):
+                det_bboxes, keep_idxs = batched_nms(
+                    pred_boxes[mask_pos], pred_scores[mask_pos], pred_label, nms_cfg)
+                pred_label = pred_label[keep_idxs]
+            else:
+                det_bboxes = np.zeros((0, 5), dtype=np.float32)
+                pred_label = np.zeros((0, 1), dtype=np.float32)
             pred_det_bboxes.append(det_bboxes)
-            pred_det_labels.append(pred_label[keep_idxs])
+            pred_det_labels.append(pred_label)
         det_bbox_results = [
             bbox2result(
                 pred_det_bboxes[i],
