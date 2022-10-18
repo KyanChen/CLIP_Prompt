@@ -358,7 +358,7 @@ class PromptHead(BaseModule):
 
                 # loss_ts_ce = F.cross_entropy(pred_logits, (kd_logits.detach()).softmax(dim=-1))
                 loss_ts_ce = F.cross_entropy(pred_logits[:, :len(self.att2id)], (kd_logits[:, :len(self.att2id)].detach()).sigmoid()) + \
-                             F.cross_entropy(pred_logits[:, len(self.att2id):], (kd_logits[:, len(self.att2id):].detach()).softmax())
+                             F.cross_entropy(pred_logits[:, len(self.att2id):], (kd_logits[:, len(self.att2id):].detach()).softmax(dim=-1))
 
                 losses['t_s_ce_loss'] = self.balance_kd * 2 * loss_ts_ce
             elif self.kd_model_loss == 't_ce':
