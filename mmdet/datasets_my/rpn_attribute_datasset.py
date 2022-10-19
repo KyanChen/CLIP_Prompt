@@ -1265,8 +1265,7 @@ class RPNAttributeDataset(Dataset):
         Returns:
             dict[str, float]: COCO style evaluation metric.
         """
-        import pdb
-        pdb.set_trace()
+
         if iou_thrs is None:
             iou_thrs = np.linspace(
                 .5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
@@ -1322,7 +1321,8 @@ class RPNAttributeDataset(Dataset):
                     logger=logger,
                     level=logging.ERROR)
                 break
-
+            import pdb
+            pdb.set_trace()
             cocoEval = COCOeval(coco_gt, coco_det, iou_type)
             cocoEval.params.catIds = self.cat_ids
             cocoEval.params.imgIds = self.coco_img_ids
@@ -1473,6 +1473,8 @@ class RPNAttributeDataset(Dataset):
 
         coco_gt = COCO()
         coco_gt.dataset['images'] = [self.id2images[x] for x in coco_img_ids]
+        for idx in len(coco_gt.dataset['images']):
+            coco_gt.dataset['images'][idx]['id'] = 'coco_' + coco_gt.dataset['images'][idx]['id']
         coco_gt_cates = [{'id': v, "name": k, 'supercategory': 'none'} for k, v in self.category2id.items()]
         coco_gt.dataset['categories'] = coco_gt_cates
 
