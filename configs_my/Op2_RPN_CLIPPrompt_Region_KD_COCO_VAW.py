@@ -125,7 +125,7 @@ model = dict(
             use_abs_pos_embed=True,
             drop_rate=0.1,
             class_token=True,
-            num_encoder_layers=5,
+            num_encoder_layers=4,
             global_pool=False,
         )
     ),
