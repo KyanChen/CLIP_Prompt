@@ -490,7 +490,7 @@ class VAWCropDataset(Dataset):
         result_metrics = OrderedDict()
 
         results = np.array(results)
-        if self.save_label:
+        if 'label_coco' in self.dataset_names:
             instances = self.instances
             for i in range(len(instances)):
                 instances['pred_att'] = results[i].tolist()
