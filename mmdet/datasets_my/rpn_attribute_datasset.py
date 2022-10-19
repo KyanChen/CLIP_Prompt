@@ -1455,10 +1455,6 @@ class RPNAttributeDataset(Dataset):
         coco_gt.dataset['categories'] = copy.deepcopy(self.category2id)
         import pdb
         pdb.set_trace()
-        annotation = {
-            'bboxes': gt[:, 1:5],  # xyxydet_bbox_results[
-            'image_id': coco_img_ids[idx],
-            'labels': np.argmax(gt[:, 5 + len(self.att2id):], axis=-1)}
 
         ann_id = 1
         refined_boxes = []
