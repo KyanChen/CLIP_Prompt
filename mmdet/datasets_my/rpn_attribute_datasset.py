@@ -1187,11 +1187,11 @@ class RPNAttributeDataset(Dataset):
             raise TypeError('invalid type of results')
         return result_files
 
-    def _det2json(self, results, img_ids):
+    def _det2json(self, results, coco_img_ids):
         """Convert detection results to COCO json style."""
         json_results = []
-        for idx in range(len(self)):
-            img_id = img_ids[idx]
+        for idx in range(len(coco_img_ids)):
+            img_id = coco_img_ids[idx]
             result = results[idx]
             for label in range(len(result)):
                 bboxes = result[label]
