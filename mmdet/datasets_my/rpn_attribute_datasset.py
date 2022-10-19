@@ -898,7 +898,7 @@ class RPNAttributeDataset(Dataset):
             else:
                 det_bboxes = np.zeros((0, 5), dtype=np.float32)
                 pred_label = np.zeros((0, 1), dtype=np.float32)
-            pred_det_bboxes.append(det_bboxes)
+            pred_det_bboxes.append(det_bboxes)  # xy xy
             pred_det_labels.append(pred_label)
         det_bbox_results = [
             bbox2result(
@@ -911,7 +911,7 @@ class RPNAttributeDataset(Dataset):
         gt_annotations = []
         for idx, gt in enumerate(gt_bboxes):
             annotation = {
-                'bboxes': gt[:, 1:5],
+                'bboxes': gt[:, 1:5],  # xyxydet_bbox_results[
                 'image_id': coco_img_ids[idx],
                 'labels': np.argmax(gt[:, 5 + len(self.att2id):], axis=-1)}
             gt_annotations.append(annotation)
@@ -1187,11 +1187,11 @@ class RPNAttributeDataset(Dataset):
             raise TypeError('invalid type of results')
         return result_files
 
-    def _det2json(self, results):
+    def _det2json(self, results, img_ids):
         """Convert detection results to COCO json style."""
         json_results = []
         for idx in range(len(self)):
-            img_id = self.img_ids[idx]
+            img_id = img_ids[idx]
             result = results[idx]
             for label in range(len(result)):
                 bboxes = result[label]
@@ -1446,23 +1446,38 @@ class RPNAttributeDataset(Dataset):
                     f'{ap[4]:.3f} {ap[5]:.3f}')
 
         return eval_results
-    def eval_coco_det(self, gt_labels, coco_img_ids, results, jsonfile_prefix=None):
+    def eval_coco_det(self, gt_boxes, coco_img_ids, results, jsonfile_prefix=None):
         self.cat_ids = {v: v for k, v in self.category2id.items()}
 
         coco_gt = COCO()
         # coco_gt.dataset['images'] = [img for img in self.dataset['images']]
 
         coco_gt.dataset['categories'] = copy.deepcopy(self.category2id)
-        for id, ann in enumerate(gt_labels):
-            bb = ann['bbox']
-            x1, x2, y1, y2 = [bb[0], bb[0] + bb[2], bb[1], bb[1] + bb[3]]
-            if not 'segmentation' in ann:
-                ann['segmentation'] = [[x1, y1, x1, y2, x2, y2, x2, y1]]
-            ann['area'] = bb[2] * bb[3]
-            ann['id'] = id + 1
-            ann['iscrowd'] = 0
+        import pdb
+        pdb.set_trace()
+        annotation = {
+            'bboxes': gt[:, 1:5],  # xyxydet_bbox_results[
+            'image_id': coco_img_ids[idx],
+            'labels': np.argmax(gt[:, 5 + len(self.att2id):], axis=-1)}
 
-        coco_gt.dataset['annotations'] = gt_labels
+        ann_id = 1
+        refined_boxes = []
+        for id, anns in enumerate(gt_boxes):
+            image_id = anns['image_id']
+            for box, label in zip(anns['bboxes'], anns['labels']):
+                data = dict()
+                data['image_id'] = image_id
+                x1, y1, x2, y2 = [box[0], box[1], box[2], box[3]]
+                data['bbox'] = [x1, y1, x2-x1, y2-y1]
+                data['category_id'] = self.cat_ids[label]
+                data['segmentation'] = [[x1, y1, x1, y2, x2, y2, x2, y1]]
+                data['area'] = data['bbox'][2] * data['bbox'][3]
+                data['id'] = ann_id
+                data['iscrowd'] = 0
+                ann_id += 1
+                refined_boxes.append(data)
+
+        coco_gt.dataset['annotations'] = refined_boxes
         coco_gt.createIndex()
 
         result_files, tmp_dir = self.format_results(results, jsonfile_prefix)
