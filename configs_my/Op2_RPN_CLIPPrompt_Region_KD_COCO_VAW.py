@@ -460,7 +460,7 @@ evaluation = dict(
         iou_threshold=0.5,
         proposal_score_thr=0.15,
         score_thr=0.5,
-        max_num=500))
+        max_num=1000))
 # rcnn=dict(
 #     score_thr=0.05,
 #     nms=dict(type='nms', iou_threshold=0.5),
