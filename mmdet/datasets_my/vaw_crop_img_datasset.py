@@ -495,7 +495,7 @@ class VAWCropDataset(Dataset):
         if 'label_coco' in self.dataset_names:
             instances = self.instances
             for i in range(len(instances)):
-                instances['pred_att'] = results[i].tolist()
+                instances[i]['pred_att'] = results[i].tolist()
             json.dump(instances, open('pred_proposal_att.json', 'w'), indent=4)
         preds = torch.from_numpy(results)
         gt_labels = self.get_labels()
