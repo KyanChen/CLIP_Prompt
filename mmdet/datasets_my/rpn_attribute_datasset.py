@@ -1321,8 +1321,6 @@ class RPNAttributeDataset(Dataset):
                     logger=logger,
                     level=logging.ERROR)
                 break
-            import pdb
-            pdb.set_trace()
             cocoEval = COCOeval(coco_gt, coco_det, iou_type)
             # cocoEval.params.catIds = self.cat_ids
             # cocoEval.params.imgIds = self.coco_img_ids
@@ -1393,10 +1391,12 @@ class RPNAttributeDataset(Dataset):
                     results_per_category50 = []
                     results_per_category50_seen = []
                     results_per_category50_unseen = []
+                    import pdb
+                    pdb.set_trace()
                     for idx, catId in enumerate(self.cat_ids):
                         # area range index 0: all area ranges
                         # max dets index -1: typically 100 per image
-                        nm = self.coco.loadCats(catId)[0]
+                        nm = coco_gt.loadCats(catId)[0]
                         precision = precisions[:, :, idx, 0, -1]
                         precision = precision[precision > -1]
                         if precision.size:
