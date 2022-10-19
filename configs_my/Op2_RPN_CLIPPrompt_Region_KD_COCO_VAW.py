@@ -229,7 +229,7 @@ model = dict(
         #     nms=dict(type='nms', class_agnostic=False, iou_threshold=0.7),
         #     min_bbox_size=4)
         rpn=dict(
-            nms_pre=1000,
+            nms_pre=2000,
             max_per_img=1000,
             nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=4)
@@ -458,9 +458,9 @@ evaluation = dict(
         type='nms',
         class_agnostic=False,
         iou_threshold=0.5,
-        proposal_score_thr=0.5,
+        proposal_score_thr=0.05,
         score_thr=0.5,
-        max_num=100))
+        max_num=500))
 # rcnn=dict(
 #     score_thr=0.05,
 #     nms=dict(type='nms', iou_threshold=0.5),
