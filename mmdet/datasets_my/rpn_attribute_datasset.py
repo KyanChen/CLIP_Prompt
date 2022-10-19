@@ -168,7 +168,7 @@ class RPNAttributeDataset(Dataset):
             self.img_ids = self._filter_imgs()
             self._set_group_flag()
         else:
-            self.img_ids = list(self.id2instances.keys())[:20] + list(self.id2instances.keys())[-20:]
+            self.img_ids = list(self.id2instances.keys())
         # [:20] + list(self.id2instances.keys())[-20:]
 
         img_ids_per_dataset = {}
@@ -951,7 +951,6 @@ class RPNAttributeDataset(Dataset):
 
         pred_det_bboxes = []
         pred_det_labels = []
-        coco_img_ids = [x for idx, x in enumerate(self.img_ids) if gt_labels[idx][0, 0] == 0]
         for pred in predictions:
             # pred_scores = (pred[:, 4:5] * pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()) ** 0.5
             pred_scores = pred[:, 5 + len(self.att2id):].sigmoid().cpu()
