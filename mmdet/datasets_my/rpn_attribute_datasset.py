@@ -1394,8 +1394,8 @@ class RPNAttributeDataset(Dataset):
                     results_per_category50 = []
                     results_per_category50_seen = []
                     results_per_category50_unseen = []
-                    import pdb
-                    pdb.set_trace()
+                    # import pdb
+                    # pdb.set_trace()
                     for idx, catId in enumerate(self.cat_ids):
                         # area range index 0: all area ranges
                         # max dets index -1: typically 100 per image
