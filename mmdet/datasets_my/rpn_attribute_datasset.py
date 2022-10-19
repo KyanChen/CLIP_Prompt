@@ -1453,7 +1453,7 @@ class RPNAttributeDataset(Dataset):
         # coco_gt.dataset['images'] = [img for img in self.dataset['images']]
 
         coco_gt_cates = {k: {'id': v} for k, v in self.category2id.items()}
-        coco_gt.dataset['categories'] = copy.deepcopy(self.category2id)
+        coco_gt.dataset['categories'] = coco_gt_cates
 
 
         ann_id = 1
