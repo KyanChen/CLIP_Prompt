@@ -953,7 +953,7 @@ class RPNAttributeDataset(Dataset):
         pred_det_labels = []
         for pred in predictions:
             # pred_scores = (pred[:, 4:5] * pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()) ** 0.5
-            pred_scores = pred[:, 5 + len(self.att2id):].cpu()
+            pred_scores = pred[:, 5 + len(self.att2id):].sigmoid().cpu()
             pred_proposal_scores = pred[:, 4].cpu()
             proposal_score_thr = nms_cfg.pop('proposal_score_thr', 0.15)
             obj_mask = pred_proposal_scores > proposal_score_thr
@@ -986,11 +986,14 @@ class RPNAttributeDataset(Dataset):
             for i in range(len(pred_det_bboxes))
         ]
         gt_annotations = []
-        for gt in gt_bboxes:
+        for idx, gt in enumerate(gt_bboxes):
             annotation = {
-                'bboxes': gt[:, 1:5],
+                'bboxes': gt[:, 1:5],  # xyxydet_bbox_results[
+                'image_id': coco_img_ids[idx],
                 'labels': np.argmax(gt[:, 5 + len(self.att2id):], axis=-1)}
             gt_annotations.append(annotation)
+
+        metrics_show = self.eval_coco_det(gt_annotations, coco_img_ids, det_bbox_results)
         mean_ap, eval_results = eval_map(
             det_bbox_results,
             gt_annotations,
@@ -1466,7 +1469,7 @@ class RPNAttributeDataset(Dataset):
                 eval_results[f'{metric}_mAP_copypaste'] = (
                     f'{ap[0]:.3f} {ap[1]:.3f} {ap[2]:.3f} {ap[3]:.3f} '
                     f'{ap[4]:.3f} {ap[5]:.3f}')
-
+                print(eval_results)
         return eval_results
     def eval_coco_det(self, gt_boxes, coco_img_ids, results, jsonfile_prefix=None):
         self.cat_ids = {v: v for k, v in self.category2id.items()}
