@@ -1,3 +1,4 @@
+import copy
 import glob
 import json
 import logging
@@ -43,11 +44,16 @@ class BoostCLIPCropDataset(Dataset):
                  select_novel=False,
                  file_client_args=dict(backend='disk')
                  ):
-
+        similary = img_f * text_f.t()
+        loss1 = torch.nn.functional.cross_entropy(similary, torch.arange(len(similary)))
+        loss2
         assert dataset_split in ['train']
         self.dataset_split = dataset_split
         self.test_mode = test_mode
-        self.cap_pipeline = Compose(cap_pipeline)
+        if isinstance(cap_pipeline, list):
+            self.cap_pipeline = [Compose(x) for x in cap_pipeline]
+        else:
+            self.cap_pipeline = Compose(cap_pipeline)
         if vawcoco_pipline is not None:
             self.vawcoco_pipline = Compose(vawcoco_pipline)
         self.data_root = data_root
@@ -410,16 +416,58 @@ class BoostCLIPCropDataset(Dataset):
         results['img_prefix'] = os.path.abspath(self.data_root) + prefix_path
         results['img_info'] = {}
         results['img_info']['filename'] = img_info['file_name']
-        if 'gen' in data_set:
-            pass
-        else:
-            dataset2boxkey = {
-                'coco': 'bbox',
-                'vaw': 'instance_bbox',
-                'cococap': 'biggest_proposal'
-            }
-            x, y, w, h = instance[dataset2boxkey[data_set]][:4]
-            results['crop_box'] = np.array([x, y, x + w, y + h])
+        if data_set == 'cococap':
+            # get whole img
+            results_tmp = self.train_cap_wholeimg_pipeline(results, 0)
+
+            results_wholeimg = copy.deepcopy(results)
+            results_wholeimg = self.train_cap_wholeimg_pipeline(results_wholeimg, (1, ':'))
+            results['wholeimg'] = results_wholeimg['img']
+
+            # get biggest proposal
+            results_biggestproposal = copy.deepcopy(results_tmp)
+            # 注意xyxy还是xywh
+            x, y, w, h = instance['biggest_proposal'][:4]
+            results_biggestproposal['crop_box'] = np.array([x, y, x + w, y + h])
+            results_biggestproposal = self.train_cap_biggestproposal_pipeline(results_biggestproposal)
+            results['biggestproposal'] = results_biggestproposal['img']
+
+            # get random max_crops img crops and crossponding teacher logits
+            max_crops = 5
+            img_crops = []
+            crops_logits = []
+            crops_labels = []
+            proposals_inds = [random.randint(0, 50) for _ in range(max_crops)]
+            for proposal_id in proposals_inds:
+                results_img_crops = copy.deepcopy(results_tmp)
+                crop_box = instance['proposals'][proposal_id][:4]
+                len_label = len(instance['proposals'][0][5:]) // 2
+                teacher_logits = instance['proposals'][proposal_id][5:5+len_label]
+                pesu_labels = instance['proposals'][proposal_id][5+len_label:]
+                results_img_crops['crop_box'] = crop_box
+                cap_imgcrops = self.train_cap_imgcrops_pipeline(results_img_crops)
+                img_crops.append(cap_imgcrops['img'])
+                crops_logits.append(torch.tensor(teacher_logits))
+                crops_labels.append(torch.tensor(pesu_labels))
+            img_crops = torch.stack(img_crops, dim=0)
+            results['img_crops'] = img_crops
+            results['crops_logits'] = torch.stack(crops_logits, dim=0)
+            results['crops_labels'] = torch.stack(crops_labels, dim=0)
+
+            # get random select caption
+            random_id = random.randint(0, len(instance['caption']) - 1)
+            results['caption'] = DataContainer(instance['caption'][random_id], cpu_only=True)
+
+            # get all phases
+            phases = instance['phase']
+            max_phase = 5
+            if len(phases) > max_phase:
+                random_id = [random.randint(0, len(instance['caption']) - 1) for _ in range(max_phase)]
+                phases = [phases[x] for x in random_id]
+            results['phases'] = DataContainer(phases, stack=False, cpu_only=True)
+
+        return results
+
         if self.test_mode:
             results = self.pipeline(results)
         else:

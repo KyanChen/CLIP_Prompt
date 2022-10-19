@@ -156,18 +156,51 @@ train_vawcoco_pipeline = [
     dict(type='Collect', keys=['img', 'gt_labels', 'data_set_type', 'phase', 'caption'])
 ]
 
-train_cap_pipeline = [
-    dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
-    dict(type='ScaleCrop', scale_range=[0.0, 0.0]),
+train_cap_collectall_pipeline = [
+    dict(type='Collect', keys=[
+        'wholeimg', 'biggestproposal',
+        'img_crops', 'crops_logits',
+        'crops_labels', 'caption', 'phases'
+    ])
+]
+
+train_cap_imgcrops_pipeline = [
+    dict(type='ScaleCrop', scale_range=[0.0, 0.3]),
+    dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
+    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(type='Resize', img_scale=img_scale, keep_ratio=True),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='Pad', size=img_scale, center_pad=True),
+    dict(type='ImageToTensor', keys=['img']),
+    # dict(type='ToTensor', keys=['gt_labels']),
+    dict(type='Collect', keys=['img'])
+]
+
+train_cap_biggestproposal_pipeline = [
+    dict(type='ScaleCrop', scale_range=[0.0, 0.05]),
     # dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=img_scale, keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size=img_scale, center_pad=True),
     dict(type='ImageToTensor', keys=['img']),
-    dict(type='ToTensor', keys=['gt_labels']),
-    dict(type='Collect', keys=['img', 'gt_labels', 'data_set_type', 'phase', 'caption'])
+    # dict(type='ToTensor', keys=['gt_labels']),
+    dict(type='Collect', keys=['img'])
 ]
+
+train_cap_wholeimg_pipeline = [
+    dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
+    # dict(type='ScaleCrop', scale_range=[0.0, 0.0]),
+    # dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
+    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(type='Resize', img_scale=img_scale, keep_ratio=True),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='Pad', size=img_scale, center_pad=True),
+    dict(type='ImageToTensor', keys=['img']),
+    # dict(type='ToTensor', keys=['gt_labels']),
+    dict(type='Collect', keys=['img'])
+]
+
 
 train_generated_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True, rearrange=True, channel_order='rgb'),
@@ -228,7 +261,7 @@ data = dict(
         load_label=None,
         test_mode=False,
         open_category=False,
-        cap_pipeline=train_cap_pipeline,
+        cap_pipeline=[train_cap_wholeimg_pipeline, train_cap_biggestproposal_pipeline, train_cap_imgcrops_pipeline, train_cap_collectall_pipeline],
         vawcoco_pipline=train_vawcoco_pipeline,
         select_novel=True
         # pipeline=train_generated_pipeline
