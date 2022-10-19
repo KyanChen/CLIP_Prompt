@@ -1473,7 +1473,7 @@ class RPNAttributeDataset(Dataset):
 
         coco_gt = COCO()
         coco_gt.dataset['images'] = [self.id2images[x] for x in coco_img_ids]
-        for idx in len(coco_gt.dataset['images']):
+        for idx in range(len(coco_gt.dataset['images'])):
             coco_gt.dataset['images'][idx]['id'] = 'coco_' + coco_gt.dataset['images'][idx]['id']
         coco_gt_cates = [{'id': v, "name": k, 'supercategory': 'none'} for k, v in self.category2id.items()]
         coco_gt.dataset['categories'] = coco_gt_cates
