@@ -123,7 +123,7 @@ class VAWCropDataset(Dataset):
                     for box in v['proposals']:
                         data = {'bbox': box[:4]}
                         id2instances[img_id] = id2instances.get(img_id, []) + [data]
-                self.id2instances.update(id2instances[:512])
+                self.id2instances.update(id2instances)
 
             if 'vaw' in self.dataset_names:
                 assert dataset_split in ['train', 'test']
@@ -157,6 +157,7 @@ class VAWCropDataset(Dataset):
                 for item in v:
                     item['img_id'] = k
                     self.instances.append(item)
+            self.instances = self.instances[:256]
 
         rank, world_size = get_dist_info()
         if not test_mode:
