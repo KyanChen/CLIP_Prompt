@@ -1119,7 +1119,7 @@ class RPNAttributeDataset(Dataset):
         result_metrics['att_ap_all'] = output['PC_ap/all']
         return result_metrics
 
-    def format_results(self, results, jsonfile_prefix=None, **kwargs):
+    def format_results(self, results, jsonfile_prefix=None, coco_img_ids=[], **kwargs):
         """Format the results to json (standard format for COCO evaluation).
 
         Args:
@@ -1144,10 +1144,10 @@ class RPNAttributeDataset(Dataset):
             jsonfile_prefix = osp.join(tmp_dir.name, 'results')
         else:
             tmp_dir = None
-        result_files = self.results2json(results, jsonfile_prefix)
+        result_files = self.results2json(results, jsonfile_prefix, coco_img_ids)
         return result_files, tmp_dir
 
-    def results2json(self, results, outfile_prefix):
+    def results2json(self, results, outfile_prefix, coco_img_ids):
         """Dump the detection results to a COCO style json file.
 
         There are 3 types of results: proposals, bbox predictions, mask
@@ -1168,7 +1168,7 @@ class RPNAttributeDataset(Dataset):
         """
         result_files = dict()
         if isinstance(results[0], list):
-            json_results = self._det2json(results)
+            json_results = self._det2json(results, coco_img_ids)
             result_files['bbox'] = f'{outfile_prefix}.bbox.json'
             result_files['proposal'] = f'{outfile_prefix}.bbox.json'
             mmcv.dump(json_results, result_files['bbox'])
@@ -1451,10 +1451,8 @@ class RPNAttributeDataset(Dataset):
 
         coco_gt = COCO()
         # coco_gt.dataset['images'] = [img for img in self.dataset['images']]
-
         coco_gt_cates = [{'id': v, "name": k, 'supercategory': 'none'} for k, v in self.category2id.items()]
         coco_gt.dataset['categories'] = coco_gt_cates
-
 
         ann_id = 1
         refined_boxes = []
@@ -1472,12 +1470,12 @@ class RPNAttributeDataset(Dataset):
                 data['iscrowd'] = 0
                 ann_id += 1
                 refined_boxes.append(data)
-        import pdb
-        pdb.set_trace()
         coco_gt.dataset['annotations'] = refined_boxes
         coco_gt.createIndex()
 
-        result_files, tmp_dir = self.format_results(results, jsonfile_prefix)
+        import pdb
+        pdb.set_trace()
+        result_files, tmp_dir = self.format_results(results, jsonfile_prefix, coco_img_ids)
         eval_results = self.evaluate_det_segm(results, result_files, coco_gt,
                                               metrics=['bbox'])
         return eval_results
