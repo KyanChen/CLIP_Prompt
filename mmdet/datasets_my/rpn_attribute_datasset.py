@@ -1314,8 +1314,6 @@ class RPNAttributeDataset(Dataset):
                         'of small/medium/large instances since v2.12.0. This '
                         'does not change the overall mAP calculation.',
                         UserWarning)
-                import pdb
-                pdb.set_trace()
                 coco_det = coco_gt.loadRes(predictions)
             except IndexError:
                 print_log(
@@ -1323,10 +1321,11 @@ class RPNAttributeDataset(Dataset):
                     logger=logger,
                     level=logging.ERROR)
                 break
-
+            import pdb
+            pdb.set_trace()
             cocoEval = COCOeval(coco_gt, coco_det, iou_type)
-            cocoEval.params.catIds = self.cat_ids
-            cocoEval.params.imgIds = self.coco_img_ids
+            # cocoEval.params.catIds = self.cat_ids
+            # cocoEval.params.imgIds = self.coco_img_ids
             cocoEval.params.maxDets = list(proposal_nums)
             cocoEval.params.iouThrs = iou_thrs
             # mapping of cocoEval.stats
