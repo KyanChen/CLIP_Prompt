@@ -873,8 +873,8 @@ class RPNAttributeDataset(Dataset):
         print('Computing cate mAP without proposal score:')
         pred_det_bboxes = []
         pred_det_labels = []
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         for pred in predictions:
             # pred_scores = pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()
             pred_scores = pred[:, 5 + len(self.att2id):].softmax(dim=-1).cpu()
@@ -1453,8 +1453,7 @@ class RPNAttributeDataset(Dataset):
         # coco_gt.dataset['images'] = [img for img in self.dataset['images']]
 
         coco_gt.dataset['categories'] = copy.deepcopy(self.category2id)
-        import pdb
-        pdb.set_trace()
+
 
         ann_id = 1
         refined_boxes = []
@@ -1472,7 +1471,8 @@ class RPNAttributeDataset(Dataset):
                 data['iscrowd'] = 0
                 ann_id += 1
                 refined_boxes.append(data)
-
+        import pdb
+        pdb.set_trace()
         coco_gt.dataset['annotations'] = refined_boxes
         coco_gt.createIndex()
 
