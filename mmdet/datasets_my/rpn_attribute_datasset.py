@@ -1314,6 +1314,8 @@ class RPNAttributeDataset(Dataset):
                         'of small/medium/large instances since v2.12.0. This '
                         'does not change the overall mAP calculation.',
                         UserWarning)
+                import pdb
+                pdb.set_trace()
                 coco_det = coco_gt.loadRes(predictions)
             except IndexError:
                 print_log(
@@ -1321,8 +1323,7 @@ class RPNAttributeDataset(Dataset):
                     logger=logger,
                     level=logging.ERROR)
                 break
-            import pdb
-            pdb.set_trace()
+
             cocoEval = COCOeval(coco_gt, coco_det, iou_type)
             cocoEval.params.catIds = self.cat_ids
             cocoEval.params.imgIds = self.coco_img_ids
@@ -1474,7 +1475,7 @@ class RPNAttributeDataset(Dataset):
         coco_gt = COCO()
         coco_gt.dataset['images'] = [self.id2images[x] for x in coco_img_ids]
         for idx in range(len(coco_gt.dataset['images'])):
-            coco_gt.dataset['images'][idx]['id'] = 'coco_' + coco_gt.dataset['images'][idx]['id']
+            coco_gt.dataset['images'][idx]['id'] = 'coco_' + str(coco_gt.dataset['images'][idx]['id'])
         coco_gt_cates = [{'id': v, "name": k, 'supercategory': 'none'} for k, v in self.category2id.items()]
         coco_gt.dataset['categories'] = coco_gt_cates
 
