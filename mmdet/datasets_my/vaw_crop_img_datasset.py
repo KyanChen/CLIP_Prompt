@@ -113,6 +113,18 @@ class VAWCropDataset(Dataset):
                 self.id2instances.pop('coco_438629', None)
                 self.id2instances.pop('coco_284932', None)
 
+            if 'label_coco' in self.dataset_names:
+                id2images_coco, id2instances_coco = self.read_data_coco(dataset_split)
+                self.id2images.update(id2images_coco)
+                proposal_json = json.load(open(self.data_root + f'/COCO/annotations/train_2017_caption_tagging_with_proposals.json', 'r'))
+                id2instances = {}
+                for image_id, v in proposal_json.items():
+                    img_id = 'coco_' + str(image_id)
+                    for box in v['proposals']:
+                        data = {'bbox': box[:4]}
+                        id2instances[img_id] = id2instances.get(img_id, []) + [data]
+                self.id2instances.update(id2instances)
+
             if 'vaw' in self.dataset_names:
                 assert dataset_split in ['train', 'test']
                 id2images_vaw, id2instances_vaw = self.read_data_vaw(dataset_split)
@@ -331,7 +343,7 @@ class VAWCropDataset(Dataset):
         img_info = self.id2images[img_id]
 
         data_set = img_id.split('_')[0]
-        if data_set == 'coco':
+        if data_set in ['coco', 'label_coco']:
             data_set_type = 0
             if self.dataset_split == 'test':
                 dataset_split = 'val'
@@ -366,7 +378,7 @@ class VAWCropDataset(Dataset):
         if 'gen' in data_set:
             pass
         else:
-            key = 'bbox' if data_set in ['coco', 'ovadattr', 'ovadcate'] else 'instance_bbox'
+            key = 'bbox' if data_set in ['coco', 'label_coco', 'ovadattr', 'ovadcate'] else 'instance_bbox'
             x, y, w, h = instance[key]
             results['crop_box'] = np.array([x, y, x + w, y + h])
         if self.test_mode:
@@ -477,6 +489,11 @@ class VAWCropDataset(Dataset):
         result_metrics = OrderedDict()
 
         results = np.array(results)
+        if self.save_label:
+            instances = self.instances
+            for i in range(len(instances)):
+                instances['pred_att'] = results[i].tolist()
+            json.dump(instances, open('pred_proposal_att.json', 'w'), indent=4)
         preds = torch.from_numpy(results)
         gt_labels = self.get_labels()
         gt_labels = torch.from_numpy(gt_labels)

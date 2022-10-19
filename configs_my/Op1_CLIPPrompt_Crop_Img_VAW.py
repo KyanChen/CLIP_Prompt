@@ -225,7 +225,7 @@ data = dict(
         open_category=False,
         pipeline=test_pipeline),
     test=dict(
-        samples_per_gpu=256,
+        samples_per_gpu=512,
         type=dataset_type,
         data_root=data_root,
         dataset_split='test',
@@ -242,8 +242,9 @@ data = dict(
         ),
         test_mode=True,
         open_category=False,
-        dataset_names=['coco', 'vaw'],
-        save_label=False,
+        # dataset_names=['coco', 'vaw'],
+        dataset_names=['label_coco'],
+        save_label='',
         load_label=None,
         pipeline=test_pipeline
         # pipeline=test_generated_pipeline
@@ -304,6 +305,6 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=60)
 evaluation = dict(interval=5, metric='mAP')
 
-# load_from = 'results/EXP20220903_0/epoch_20.pth'
+# load_from = 'results/EXP20221006_0/epoch_20.pth'
 load_from = None
 resume_from = None
