@@ -877,7 +877,7 @@ class RPNAttributeDataset(Dataset):
         pdb.set_trace()
         for pred in predictions:
             # pred_scores = pred[:, 5 + len(self.att2id):].float().softmax(dim=-1).cpu()
-            pred_scores = pred[:, 5 + len(self.att2id):].cpu()
+            pred_scores = pred[:, 5 + len(self.att2id):].softmax(dim=-1).cpu()
             pred_proposal_scores = pred[:, 4].cpu()
             proposal_score_thr = nms_cfg.pop('proposal_score_thr', 0.15)
             obj_mask = pred_proposal_scores > proposal_score_thr
