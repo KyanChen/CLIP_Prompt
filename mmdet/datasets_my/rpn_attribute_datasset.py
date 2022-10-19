@@ -1204,6 +1204,26 @@ class RPNAttributeDataset(Dataset):
                     json_results.append(data)
         return json_results
 
+    def xyxy2xywh(self, bbox):
+        """Convert ``xyxy`` style bounding boxes to ``xywh`` style for COCO
+        evaluation.
+
+        Args:
+            bbox (numpy.ndarray): The bounding boxes, shape (4, ), in
+                ``xyxy`` order.
+
+        Returns:
+            list[float]: The converted bounding boxes, in ``xywh`` order.
+        """
+
+        _bbox = bbox.tolist()
+        return [
+            _bbox[0],
+            _bbox[1],
+            _bbox[2] - _bbox[0],
+            _bbox[3] - _bbox[1],
+        ]
+
     def evaluate_det_segm(self,
                           results,
                           result_files,
@@ -1245,6 +1265,8 @@ class RPNAttributeDataset(Dataset):
         Returns:
             dict[str, float]: COCO style evaluation metric.
         """
+        import pdb
+        pdb.set_trace()
         if iou_thrs is None:
             iou_thrs = np.linspace(
                 .5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
@@ -1473,8 +1495,6 @@ class RPNAttributeDataset(Dataset):
         coco_gt.dataset['annotations'] = refined_boxes
         coco_gt.createIndex()
 
-        import pdb
-        pdb.set_trace()
         result_files, tmp_dir = self.format_results(results, jsonfile_prefix, coco_img_ids)
         eval_results = self.evaluate_det_segm(results, result_files, coco_gt,
                                               metrics=['bbox'])
