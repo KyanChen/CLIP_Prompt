@@ -123,7 +123,7 @@ class VAWCropDataset(Dataset):
                     for box in v['proposals']:
                         data = {'bbox': box[:4]}
                         id2instances[img_id] = id2instances.get(img_id, []) + [data]
-                self.id2instances.update(id2instances)
+                self.id2instances.update(id2instances[:512])
 
             if 'vaw' in self.dataset_names:
                 assert dataset_split in ['train', 'test']
