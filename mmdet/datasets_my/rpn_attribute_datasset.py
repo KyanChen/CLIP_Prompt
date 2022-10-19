@@ -29,7 +29,7 @@ from pycocotools.cocoeval import COCOeval
 from sklearn import metrics
 from torchmetrics.detection import MeanAveragePrecision
 
-from .evaluate_tools.custom_coco_eval import CustomCOCOEvaluator
+# from .evaluate_tools.custom_coco_eval import CustomCOCOEvaluator
 from ..core import eval_recalls, eval_map, bbox2result
 from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
