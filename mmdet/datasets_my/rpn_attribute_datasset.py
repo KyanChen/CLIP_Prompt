@@ -1135,9 +1135,9 @@ class RPNAttributeDataset(Dataset):
                 for saving json files when jsonfile_prefix is not specified.
         """
         assert isinstance(results, list), 'results must be a list'
-        assert len(results) == len(self), (
+        assert len(results) == len(coco_img_ids), (
             'The length of results is not equal to the dataset len: {} != {}'.
-            format(len(results), len(self)))
+            format(len(results), len(coco_img_ids)))
 
         if jsonfile_prefix is None:
             tmp_dir = tempfile.TemporaryDirectory()
