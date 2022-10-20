@@ -318,14 +318,22 @@ class RPN_CLIP_Prompter_Region(BaseModule):
         losses = dict()
 
         if self.box_reg == 'coco+vaw':
-            # proposal_cfg = self.train_cfg.get('rpn_proposal', self.test_cfg.rpn)
-            rpn_losses = self.rpn_head.forward_train(img_f_maps,
-                                                     img_metas,
-                                                     gt_bboxes,
-                                                     gt_labels=None,
-                                                     gt_bboxes_ignore=None,
-                                                     proposal_cfg=None,
-                                                     **kwargs)
+            seen_mask = (dataset_type == 0) | (dataset_type == 1)
+            if torch.any(seen_mask):  # 存在coco seen 目标
+
+                img_rpn = [x[seen_mask, ...] for x in img_f_maps]
+                boxes_rpn = [x for idx, x in enumerate(gt_bboxes) if seen_mask[idx]]
+                img_metas_rpn = [x for idx, x in enumerate(img_metas) if seen_mask[idx]]
+                rpn_losses = self.rpn_head.forward_train(img_rpn,
+                                                         img_metas_rpn,
+                                                         boxes_rpn,
+                                                         gt_labels=None,
+                                                         gt_bboxes_ignore=None,
+                                                         proposal_cfg=None,
+                                                         **kwargs)
+            else:
+                rpn_losses = dict(loss_rpn_cls=torch.tensor(0.).to(img.device),
+                                  loss_rpn_bbox=torch.tensor(0.).to(img.device))
         elif self.box_reg == 'coco':
             coco_seen_mask = dataset_type == 0
             if torch.any(coco_seen_mask):  # 存在coco seen 目标
