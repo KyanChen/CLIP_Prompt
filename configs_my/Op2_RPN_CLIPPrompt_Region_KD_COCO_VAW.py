@@ -334,7 +334,7 @@ test_box_free_pipeline = [
 ]
 
 # find_unused_parameters = True
-samples_per_gpu = 24
+samples_per_gpu = 22
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=4,
