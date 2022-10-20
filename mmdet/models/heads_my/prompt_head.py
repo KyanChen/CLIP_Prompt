@@ -357,8 +357,15 @@ class PromptHead(BaseModule):
                 losses['t_ce_loss'] = (att_loss + cate_loss * self.re_weight_category) * self.balance_teacher_loss * self.balance_kd
 
                 # loss_ts_ce = F.cross_entropy(pred_logits, (kd_logits.detach()).softmax(dim=-1))
-                loss_ts_ce = 0.5 * F.cross_entropy(pred_logits[:, :len(self.att2id)], (kd_logits[:, :len(self.att2id)].detach()).softmax(dim=-1)) + \
-                             F.cross_entropy(pred_logits[:, len(self.att2id):], (kd_logits[:, len(self.att2id):].detach()).softmax(dim=-1))
+
+                # loss_ts_ce = 0.5 * F.cross_entropy(pred_logits[:, :len(self.att2id)], (kd_logits[:, :len(self.att2id)].detach()).softmax(dim=-1)) + \
+                             # F.cross_entropy(pred_logits[:, len(self.att2id):], (kd_logits[:, len(self.att2id):].detach()).softmax(dim=-1))
+                # matching_temp = 0.01
+                loss_ts_ce = 0.5 * F.kl_div(
+                    F.log_softmax(pred_logits[:, :len(self.att2id)], dim=-1),
+                    F.softmax(kd_logits[:, :len(self.att2id)].detach(), dim=-1)) + \
+                             F.kl_div(F.log_softmax(pred_logits[:, len(self.att2id):], dim=-1),
+                                      F.softmax(kd_logits[:, len(self.att2id):].detach(), dim=-1))
 
                 losses['t_s_ce_loss'] = self.balance_kd * 2 * loss_ts_ce
             elif self.kd_model_loss == 't_ce':

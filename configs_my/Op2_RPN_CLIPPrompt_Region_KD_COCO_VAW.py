@@ -45,7 +45,7 @@ model = dict(
     type='RPN_CLIP_Prompter_Region',
     attribute_index_file=attribute_index_file,
     test_content='box_given',
-    box_reg='coco',  # vaw, coco, coco+vaw RPN是否包含属性预测的内容
+    box_reg='coco+vaw',  # vaw, coco, coco+vaw RPN是否包含属性预测的内容
     need_train_names=[
         # 'img_backbone',
         'img_neck',
@@ -105,7 +105,7 @@ model = dict(
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=2.0),
-        loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)), # 可以修改
+        loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),  # 可以修改
         # loss_bbox=dict(type='CIoULoss', loss_weight=5.0)),  # 可以修改
     att_head=dict(
         type='ProposalEncoder',
