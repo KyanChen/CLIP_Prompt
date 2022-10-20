@@ -363,9 +363,9 @@ class PromptHead(BaseModule):
                 # matching_temp = 0.01
                 loss_ts_ce = 0.5 * F.kl_div(
                     F.log_softmax(pred_logits[:, :len(self.att2id)], dim=-1),
-                    F.softmax(kd_logits[:, :len(self.att2id)].detach(), dim=-1)) + \
+                    F.softmax(kd_logits[:, :len(self.att2id)].detach(), dim=-1), reduction='batchmean') + \
                              F.kl_div(F.log_softmax(pred_logits[:, len(self.att2id):], dim=-1),
-                                      F.softmax(kd_logits[:, len(self.att2id):].detach(), dim=-1))
+                                      F.softmax(kd_logits[:, len(self.att2id):].detach(), dim=-1), reduction='batchmean')
 
                 losses['t_s_ce_loss'] = self.balance_kd * 2 * loss_ts_ce
             elif self.kd_model_loss == 't_ce':
