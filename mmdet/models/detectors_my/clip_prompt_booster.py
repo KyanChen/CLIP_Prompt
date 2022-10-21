@@ -32,7 +32,7 @@ class CLIP_Prompt_Booster(BaseDetector):
                  mil_loss=None,
                  init_cfg=None):
         super(CLIP_Prompt_Booster, self).__init__(init_cfg)
-        self.matching_temp = matching_temp
+        # self.matching_temp = matching_temp
         self.att2id = {}
         if 'att_file' in attribute_index_file.keys():
             file = attribute_index_file['att_file']
