@@ -1,9 +1,9 @@
 import json
-
 import mmcv
 import numpy as np
 from tqdm import tqdm
-
+import sys
+sys.path.append(sys.path[0]+'/../..')
 # from mmdet.core import bbox_overlaps
 from tools_my.cache_data_tools.redis_utils import RedisHelper
 
