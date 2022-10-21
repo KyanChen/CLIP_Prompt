@@ -504,6 +504,7 @@ class VAWCropDataset(Dataset):
             if not redis_helper.redis:
                 redis_helper.init_redis()
             prefix = 'cky_'
+            mmcv.dump(results, f'train2017_proposals_predatts.pkl')
             for img_id, data in tqdm(ori_data.items()):
                 proposals = np.array(data['proposals'])
                 flag_id_end = flag_id_start + len(proposals)

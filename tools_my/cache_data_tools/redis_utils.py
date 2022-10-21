@@ -4,6 +4,8 @@
 """
 from ast import arg
 from multiprocessing import pool
+
+import mmcv
 import numpy as np
 import redis
 try:
@@ -60,7 +62,13 @@ class RedisHelper(object):
         """
         print('clear {} keys ...'.format(len(self.redis.keys())))
         [self.redis.delete(x) for x in tqdm.tqdm(self.redis.keys())]
-        return 
+        return
+
+    def save_all_data(self, pkl_file):
+        all_data = {}
+        for x in tqdm.tqdm(self.redis.keys()):
+            all_data[x] = self.get_values(x)
+        mmcv.dump(all_data, pkl_file)
 
     @reconnect_decorator
     def get_values(self, key):
@@ -207,6 +215,7 @@ class RedisHelper(object):
 if __name__ == '__main__':
     redis_helper = RedisHelper()
     # redis_helper.init_dataset_memory_with_CSVs()
-    redis_helper.init_dataset_memory_with_json()
+    # redis_helper.init_dataset_memory_with_json()
+    redis_helper.save_all_data('train2017_proposals_predatts.pkl')
     
         

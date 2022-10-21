@@ -20,6 +20,7 @@ from mmcv.parallel import DataContainer
 from mmcv.runner import get_dist_info
 from sklearn import metrics
 
+from tools_my.cache_data_tools.redis_utils import RedisHelper
 from ..datasets.builder import DATASETS
 from torch.utils.data import Dataset
 from ..datasets.pipelines import Compose
@@ -149,6 +150,7 @@ class BoostCLIPCropDataset(Dataset):
             id2images_coco, id2instances_coco = self.read_data_coco_cap(dataset_split)
             self.id2images.update(id2images_coco)
             self.id2instances.update(id2instances_coco)
+            self.redis_helper = RedisHelper()
 
         self.instances = []
         for k, v in self.id2instances.items():
@@ -260,7 +262,7 @@ class BoostCLIPCropDataset(Dataset):
             img_id = 'cococap_' + str(data['id'])
             data['file_name'] = f'{data["id"]:012d}.jpg'
             id2images[img_id] = data
-        cap_data = json.load(open(self.data_root + f'/COCO/annotations/train_2017_caption_tagging_with_proposals_predatts.json', 'r'))
+        cap_data = json.load(open(self.data_root + f'/COCO/annotations/train_2017_caption_tagging_with_proposals.json', 'r'))
         for img_id, data in cap_data.items():
             if self.select_novel:
                 keep_flag = False
@@ -379,7 +381,7 @@ class BoostCLIPCropDataset(Dataset):
         img_id = instance['img_id']
         img_info = self.id2images[img_id]
 
-        data_set = img_id.split('_')[0]
+        data_set, img_id = img_id.split('_')
         if data_set == 'coco':
             data_set_type = 0
             if self.dataset_split == 'test':
@@ -408,6 +410,9 @@ class BoostCLIPCropDataset(Dataset):
         elif data_set == 'cococap':
             data_set_type = 2
             prefix_path = f'/COCO/train2017'
+            if not self.redis_helper.redis:
+                self.redis_helper.init_redis()
+            instance.update(self.redis_helper.get_values('cky_'+img_id))
         else:
             raise NameError
         results = {}
