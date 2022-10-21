@@ -538,8 +538,6 @@ class VAWCropDataset(Dataset):
             top_k = 1 if dataset_name == 'COCO' else -1
 
             # pred_cate_logits = pred_cate_logits.detach().sigmoid().cpu()
-            import pdb
-            pdb.set_trace()
             pred_cate_logits = pred_cate_logits.float().softmax(dim=-1).cpu()
 
             #         if self.mult_proposal_score:
