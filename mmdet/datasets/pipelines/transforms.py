@@ -880,6 +880,8 @@ class RandomCrop:
             crop_size (tuple): (crop_h, crop_w) in absolute pixels.
         """
         h, w = image_size
+        import pdb
+        pdb.set_trace()
         if self.crop_type == 'absolute':
             return (min(self.crop_size[0], h), min(self.crop_size[1], w))
         elif self.crop_type == 'absolute_range':

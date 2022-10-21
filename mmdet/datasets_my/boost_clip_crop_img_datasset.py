@@ -475,7 +475,8 @@ class BoostCLIPCropDataset(Dataset):
                 teacher_att = teacher_logits[:len(self.att2id)].sigmoid()
                 teacher_cate = teacher_logits[len(self.att2id):].softmax(dim=0)
 
-                pesu_label_att = teacher_att > att_thres
+                pesu_label_att = torch.ones_like(teacher_att) * 2
+                pesu_label_att[teacher_att > att_thres] = 1
                 for att in att_in_img:
                     att_id = self.att2id.get(att, None)
                     if att_id is not None:
