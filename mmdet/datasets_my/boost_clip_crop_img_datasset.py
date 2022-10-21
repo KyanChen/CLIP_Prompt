@@ -438,7 +438,8 @@ class BoostCLIPCropDataset(Dataset):
             results_biggestproposal['crop_box'] = np.array([x, y, x + w, y + h])
             results_biggestproposal = self.cap_pipeline[1](results_biggestproposal)
             results['img'] = results_biggestproposal['img']
-
+            import pdb
+            pdb.set_trace()
             # get label
             labels = np.ones(len(self.att2id) + len(self.category2id)) * 2
             labels[len(self.att2id):] = 0
