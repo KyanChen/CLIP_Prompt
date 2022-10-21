@@ -377,8 +377,6 @@ class BoostCLIPCropDataset(Dataset):
     def __getitem__(self, idx):
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
-        import pdb
-        pdb.set_trace()
         instance = self.instances[idx]
         img_id = instance['img_id']
         img_info = self.id2images[img_id]
@@ -457,8 +455,8 @@ class BoostCLIPCropDataset(Dataset):
 
             # get random max_crops img crops and crossponding teacher logits
             max_crops = 5
-            att_thres = 0.9
-            cate_thres = 0.9
+            att_thres = 0.7
+            cate_thres = 0.7
             img_crops = []
             crops_logits = []
             crops_labels = []
@@ -482,21 +480,20 @@ class BoostCLIPCropDataset(Dataset):
                 for att in att_in_img:
                     att_id = self.att2id.get(att, None)
                     if att_id is not None:
-                        if teacher_att[att_id] > 0.55:
+                        if teacher_att[att_id] > 0.52:
                             pesu_label_att[att_id] = 1
 
                 pesu_label_cate = teacher_cate > cate_thres
                 for cate in cate_in_img:
                     cate_id = self.category2id.get(cate, None)
                     if cate_id is not None:
-                        if teacher_cate[cate_id] > 0.55:
+                        if teacher_cate[cate_id] > 0.52:
                             pesu_label_att[cate_id] = 1
                 if torch.any(pesu_label_cate > 0):
                     results_img_crops = copy.deepcopy(results_tmp)
                     crop_box = instance['proposals'][proposal_id][:4]  # xywh,c,c,621a
                     results_img_crops['crop_box'] = crop_box
                     cap_imgcrops = self.cap_pipeline[2](results_img_crops)
-
                     img_crops.append(cap_imgcrops['img'])
                     crops_logits.append(teacher_logits)
                     crops_labels.append(torch.cat((pesu_label_att, pesu_label_cate)))
