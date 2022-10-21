@@ -1,17 +1,16 @@
 import json
-
-# parent_folder = '../../data/COCO/annotations'
 import numpy as np
+from mmdet.core import bbox_overlaps
 
-# from mmdet.core import bbox_overlaps
-
-parent_folder = '/Users/kyanchen/Documents/COCO/annotations'
-json_file = parent_folder+'/val_2017_caption_tagging_with_proposals.json'
+parent_folder = '../../data/COCO/annotations'
+# parent_folder = '/Users/kyanchen/Documents/COCO/annotations'
+json_file = parent_folder+'/train_2017_caption_tagging_with_proposals.json'
 ori_data = json.load(open(json_file, 'r'))
 
-pred_atts = parent_folder+'/pred_proposal_att.json'
+pred_atts = parent_folder+'/pred_train2017_proposal_att.json'
 pred_atts = json.load(open(pred_atts, 'r'))
-
+import pdb
+pdb.set_trace()
 flag_id_start = 0
 ori_data_tmp = ori_data.copy()
 for img_id, data in ori_data_tmp.items():
