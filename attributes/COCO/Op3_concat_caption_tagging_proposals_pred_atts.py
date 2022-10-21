@@ -1,5 +1,9 @@
 import json
+
+import mmcv
 import numpy as np
+from tqdm import tqdm
+
 from mmdet.core import bbox_overlaps
 from tools_my.cache_data_tools.redis_utils import RedisHelper
 
@@ -8,30 +12,24 @@ parent_folder = '../../data/COCO/annotations'
 json_file = parent_folder+'/train_2017_caption_tagging_with_proposals.json'
 ori_data = json.load(open(json_file, 'r'))
 
-pred_atts = parent_folder+'/pred_train2017_proposal_att.json'
-pred_atts = json.load(open(pred_atts, 'r'))
-import pdb
-pdb.set_trace()
+pred_atts = '../../tools/train2017_proposals_predatts.pkl'
+pred_atts = mmcv.load(pred_atts)
+
+redis_helper = RedisHelper()
+if not redis_helper.redis:
+    redis_helper.init_redis()
+
 flag_id_start = 0
-ori_data_tmp = ori_data.copy()
-for img_id, data in ori_data_tmp.items():
-    img_id_coco = 'coco_' + str(img_id)
+prefix = 'cky_'
+for img_id, data in tqdm(ori_data.items()):
     proposals = np.array(data['proposals'])
     flag_id_end = flag_id_start + len(proposals)
     proposals_atts = pred_atts[flag_id_start: flag_id_end]
-    proposals_imgids = [x['img_id'] for x in proposals_atts]
-    assert set(img_id_coco) == set(proposals_imgids)
-    pred_proposals = [x['bbox'] for x in proposals_atts]
-    pred_proposals = np.array(pred_proposals)
-    iou = bbox_overlaps(proposals, pred_proposals)
-    assert np.all(iou[:, np.arange(len(iou))] > 0.99)
-    all_atts = np.array([x['pred_att'] for x in proposals_atts])
-    proposals = np.concatenate((proposals, all_atts), axis=-1)  # 6 [xywh,conf,class]+ 606
-    ori_data[img_id]['proposals'] = proposals.tolist()
-
-redis_helper = RedisHelper()
-redis_helper.init_dataset_memory_with_json('pred_att', ori_data)
-# json.dump(ori_data, open(parent_folder+'/train_2017_caption_tagging_with_proposals_predatts.json', 'w'), indent=4)
-
+    proposals = np.concatenate((proposals, proposals_atts), axis=-1)  # 6 [xywh,conf,class]+ 606
+    data['proposals'] = proposals.tolist()
+    data['img_id'] = img_id
+    img_id = prefix + str(img_id)
+    redis_helper.redis.set(img_id, json.dumps(data))
+    flag_id_start = flag_id_end
 
 
