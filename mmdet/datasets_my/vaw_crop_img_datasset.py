@@ -493,11 +493,12 @@ class VAWCropDataset(Dataset):
         result_metrics = OrderedDict()
 
         results = np.array(results)
+        import pdb
+        pdb.set_trace()
         if 'label_coco' in self.dataset_names:
             ori_data = json.load(
                 open(self.data_root + f'/COCO/annotations/train_2017_caption_tagging_with_proposals.json', 'r'))
-            import pdb
-            pdb.set_trace()
+
             flag_id_start = 0
             pred_atts = results
             redis_helper = RedisHelper()
