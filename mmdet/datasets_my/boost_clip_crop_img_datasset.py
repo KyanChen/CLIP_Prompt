@@ -436,8 +436,7 @@ class BoostCLIPCropDataset(Dataset):
             results_biggestproposal['crop_box'] = np.array([x, y, x + w, y + h])
             results_biggestproposal = self.cap_pipeline[1](results_biggestproposal)
             results['img'] = results_biggestproposal['img']
-            import pdb
-            pdb.set_trace()
+
             # get label
             labels = np.ones(len(self.att2id) + len(self.category2id)) * 2
             labels[len(self.att2id):] = 0
@@ -499,7 +498,8 @@ class BoostCLIPCropDataset(Dataset):
                     crops_labels.append(torch.cat((pesu_label_att, pesu_label_cate)))
             if len(img_crops) == 0:
                 return self.__getitem__(np.random.randint(0, len(self)))
-
+            import pdb
+            pdb.set_trace()
             img_crops = torch.stack(img_crops, dim=0)
             results['img_crops'] = img_crops
             results['crops_logits'] = torch.stack(crops_logits, dim=0)
