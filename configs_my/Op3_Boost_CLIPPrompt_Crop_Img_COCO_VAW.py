@@ -180,7 +180,7 @@ train_cap_imgcrops_pipeline = [
 ]
 
 train_cap_biggestproposal_pipeline = [
-    dict(type='ScaleCrop', scale_range=[0.0, 0.05]),
+    dict(type='ScaleCrop', scale_range=[0.0, 0.01]),
     # dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=img_scale, keep_ratio=True),
