@@ -439,10 +439,25 @@ class BoostCLIPCropDataset(Dataset):
             results_biggestproposal = self.cap_pipeline[1](results_biggestproposal)
             results['img'] = results_biggestproposal['img']
 
+            # get label
+            labels = np.ones(len(self.att2id) + len(self.category2id)) * 2
+            labels[len(self.att2id):] = 0
+            positive_attributes = instance["attribute"]
+            for att in positive_attributes:
+                att_id = self.att2id.get(att, None)
+                if att_id is not None:
+                    labels[att_id] = 1
+            categories = instance["category"]
+            for category in categories:
+                category_id = self.category2id.get(category, None)
+                if category_id is not None:
+                    labels[category_id + len(self.att2id)] = 1
+            results['gt_labels'] = labels.astype(np.int)
+
             # get random max_crops img crops and crossponding teacher logits
             max_crops = 5
-            att_thres = 0.8
-            cate_thres = 0.8
+            att_thres = 0.9
+            cate_thres = 0.9
             img_crops = []
             crops_logits = []
             crops_labels = []

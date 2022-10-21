@@ -201,6 +201,7 @@ class CLIP_Prompt_Booster(BaseDetector):
             img_metas,
             gt_bboxes_ignore=None,
             data_set_type=None,
+            gt_labels=None,
             **kwargs
     ):
         # 'img', 'biggestproposal',
@@ -281,8 +282,7 @@ class CLIP_Prompt_Booster(BaseDetector):
         # MIL crops - att
         crop_att_scores = img_all_feats[len(img):] @ text_all_features[: len(att_prompt_context)].t()
         crop_att_scores = crop_att_scores * logit_scale
-        loss_crop_att_mil = self.mil_loss(crop_att_scores, crops_logits[:, :len(self.att2id)], weights=None,
-                                          avg_positives=False)
+        loss_crop_att_mil = self.mil_loss(crop_att_scores, crops_logits[:, :len(self.att2id)], weighted_unk=5.)
         losses["loss_crop_att_mil"] = loss_crop_att_mil
         # MIL crops - cate
         cate_start = len(att_prompt_context)
@@ -292,6 +292,19 @@ class CLIP_Prompt_Booster(BaseDetector):
         loss_crop_cate_mil = self.mil_loss(crop_cate_scores, crops_logits[:, len(self.att2id):], weights=None,
                                            avg_positives=False)
         losses["loss_crop_cate_mil"] = loss_crop_cate_mil
+        # MIL biggest proposal - att
+        img_att_scores = img_all_feats[:len(img)] @ text_all_features[: len(att_prompt_context)].t()
+        img_att_scores = img_att_scores * logit_scale
+        loss_bp_att_mil = self.mil_loss(img_att_scores, gt_labels[:, :len(self.att2id)], weighted_unk=10.)
+        losses["loss_bp_att_mil"] = loss_bp_att_mil
+        # MIL biggest proposal - cate
+        cate_start = len(att_prompt_context)
+        cate_end = cate_start + len(cate_prompt_context)
+        img_cate_scores = img_all_feats[len(img):] @ text_all_features[cate_start: cate_end].t()
+        img_cate_scores = img_cate_scores * logit_scale
+        loss_bp_cate_mil = self.mil_loss(img_cate_scores, gt_labels[:, len(self.att2id):], weights=None,
+                                           avg_positives=False)
+        losses["loss_bp_cate_mil"] = loss_bp_cate_mil
         # KLLoss crops - cate_att
         kl_att_loss = F.kl_div(F.log_softmax(crop_att_scores, dim=-1), F.softmax(crops_logits[:, :len(self.att2id)]),
                                reduction='batchmean')  # input is log-probabilities, target is probabilities
