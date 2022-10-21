@@ -160,7 +160,7 @@ class VAWCropDataset(Dataset):
                 for item in v:
                     item['img_id'] = k
                     self.instances.append(item)
-            self.instances = self.instances
+            # self.instances = self.instances
 
         rank, world_size = get_dist_info()
         if not test_mode:
