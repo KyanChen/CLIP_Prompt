@@ -500,8 +500,9 @@ class VAWCropDataset(Dataset):
             pdb.set_trace()
             flag_id_start = 0
             pred_atts = results
-            redis_ = RedisHelper()
-            redis_helper = redis_.init_redis()
+            redis_helper = RedisHelper()
+            if not redis_helper.redis:
+                redis_helper.init_redis()
             prefix = 'cky_'
             for img_id, data in tqdm(ori_data.items()):
                 proposals = np.array(data['proposals'])
@@ -512,6 +513,7 @@ class VAWCropDataset(Dataset):
                 data['img_id'] = img_id
                 img_id = prefix + str(img_id)
                 redis_helper.redis.set(img_id, json.dumps(data))
+                flag_id_start = flag_id_end
 
         preds = torch.from_numpy(results)
         gt_labels = self.get_labels()
