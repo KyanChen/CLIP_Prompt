@@ -48,8 +48,6 @@ class BoostCLIPCropDataset(Dataset):
         assert dataset_split in ['train']
         self.dataset_split = dataset_split
         self.test_mode = test_mode
-        import pdb
-        pdb.set_trace()
         if isinstance(cap_pipeline, list):
             # train_cap_wholeimg_pipeline, train_cap_biggestproposal_pipeline,
             # train_cap_imgcrops_pipeline, train_cap_collectall_pipeline
@@ -379,6 +377,8 @@ class BoostCLIPCropDataset(Dataset):
     def __getitem__(self, idx):
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
+        import pdb
+        pdb.set_trace()
         instance = self.instances[idx]
         img_id = instance['img_id']
         img_info = self.id2images[img_id]
