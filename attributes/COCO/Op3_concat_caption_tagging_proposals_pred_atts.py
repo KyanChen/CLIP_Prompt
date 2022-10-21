@@ -1,6 +1,7 @@
 import json
 import numpy as np
 from mmdet.core import bbox_overlaps
+from tools_my.cache_data_tools.redis_utils import RedisHelper
 
 parent_folder = '../../data/COCO/annotations'
 # parent_folder = '/Users/kyanchen/Documents/COCO/annotations'
@@ -28,7 +29,9 @@ for img_id, data in ori_data_tmp.items():
     proposals = np.concatenate((proposals, all_atts), axis=-1)  # 6 [xywh,conf,class]+ 606
     ori_data[img_id]['proposals'] = proposals.tolist()
 
-json.dump(ori_data, open(parent_folder+'/train_2017_caption_tagging_with_proposals_predatts.json', 'w'), indent=4)
+redis_helper = RedisHelper()
+redis_helper.init_dataset_memory_with_json('pred_att', ori_data)
+# json.dump(ori_data, open(parent_folder+'/train_2017_caption_tagging_with_proposals_predatts.json', 'w'), indent=4)
 
 
 

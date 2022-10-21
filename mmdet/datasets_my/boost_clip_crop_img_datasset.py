@@ -44,13 +44,12 @@ class BoostCLIPCropDataset(Dataset):
                  select_novel=False,
                  file_client_args=dict(backend='disk')
                  ):
-        similary = img_f * text_f.t()
-        loss1 = torch.nn.functional.cross_entropy(similary, torch.arange(len(similary)))
-        loss2
         assert dataset_split in ['train']
         self.dataset_split = dataset_split
         self.test_mode = test_mode
         if isinstance(cap_pipeline, list):
+            # train_cap_wholeimg_pipeline, train_cap_biggestproposal_pipeline,
+            # train_cap_imgcrops_pipeline, train_cap_collectall_pipeline
             self.cap_pipeline = [Compose(x) for x in cap_pipeline]
         else:
             self.cap_pipeline = Compose(cap_pipeline)
@@ -163,7 +162,7 @@ class BoostCLIPCropDataset(Dataset):
             flag_dataset = [x['img_id'].split('_')[0] for x in self.instances]
             dataset_types = {'coco': 0, 'vaw': 1, 'ovadgen': 1, 'cococap': 2}
             flag_dataset = [dataset_types[x] for x in flag_dataset]
-            self.flag_dataset = np.array(flag_dataset, dtype=np.int)
+            # self.flag_dataset = np.array(flag_dataset, dtype=np.int)
 
         self.flag = np.zeros(len(self), dtype=int)
 
@@ -261,7 +260,7 @@ class BoostCLIPCropDataset(Dataset):
             img_id = 'cococap_' + str(data['id'])
             data['file_name'] = f'{data["id"]:012d}.jpg'
             id2images[img_id] = data
-        cap_data = json.load(open(self.data_root + f'/COCO/annotations/train_2017_caption_tagging_with_proposals.json', 'r'))
+        cap_data = json.load(open(self.data_root + f'/COCO/annotations/train_2017_caption_tagging_with_proposals_predatts.json', 'r'))
         for img_id, data in cap_data.items():
             if self.select_novel:
                 keep_flag = False
@@ -418,37 +417,69 @@ class BoostCLIPCropDataset(Dataset):
         results['img_info']['filename'] = img_info['file_name']
         if data_set == 'cococap':
             # get whole img
-            results_tmp = self.train_cap_wholeimg_pipeline(results, 0)
+            results_tmp = self.cap_pipeline[0](results, 0)
 
-            results_wholeimg = copy.deepcopy(results)
-            results_wholeimg = self.train_cap_wholeimg_pipeline(results_wholeimg, (1, ':'))
-            results['wholeimg'] = results_wholeimg['img']
+            # 全图，不需要
+            # results_wholeimg = copy.deepcopy(results)
+            # results_wholeimg = self.cap_pipeline[0](results_wholeimg, (1, ':'))
+            # results['img'] = results_wholeimg['img']
 
             # get biggest proposal
             results_biggestproposal = copy.deepcopy(results_tmp)
             # 注意xyxy还是xywh
             x, y, w, h = instance['biggest_proposal'][:4]
             results_biggestproposal['crop_box'] = np.array([x, y, x + w, y + h])
-            results_biggestproposal = self.train_cap_biggestproposal_pipeline(results_biggestproposal)
-            results['biggestproposal'] = results_biggestproposal['img']
+            results_biggestproposal = self.cap_pipeline[1](results_biggestproposal)
+            results['img'] = results_biggestproposal['img']
 
             # get random max_crops img crops and crossponding teacher logits
             max_crops = 5
+            att_thres = 0.8
+            cate_thres = 0.8
             img_crops = []
             crops_logits = []
             crops_labels = []
-            proposals_inds = [random.randint(0, 50) for _ in range(max_crops)]
+
+            proposals_inds = list(range(0, len(instance['proposals'])))
+            random.shuffle(proposals_inds)
             for proposal_id in proposals_inds:
-                results_img_crops = copy.deepcopy(results_tmp)
-                crop_box = instance['proposals'][proposal_id][:4]
-                len_label = len(instance['proposals'][0][5:]) // 2
-                teacher_logits = instance['proposals'][proposal_id][5:5+len_label]
-                pesu_labels = instance['proposals'][proposal_id][5+len_label:]
-                results_img_crops['crop_box'] = crop_box
-                cap_imgcrops = self.train_cap_imgcrops_pipeline(results_img_crops)
-                img_crops.append(cap_imgcrops['img'])
-                crops_logits.append(torch.tensor(teacher_logits))
-                crops_labels.append(torch.tensor(pesu_labels))
+                if len(img_crops) > max_crops:
+                    break
+                teacher_logits = torch.tensor(instance['proposals'][proposal_id][6:])
+
+                cate_in_img = instance['category']
+                att_in_img = instance['attribute']
+
+                assert len(teacher_logits) == len(self.att2id) + len(self.category2id)
+
+                teacher_att = teacher_logits[:len(self.att2id)].sigmoid()
+                teacher_cate = teacher_logits[len(self.att2id):].softmax(dim=0)
+
+                pesu_label_att = teacher_att > att_thres
+                for att in att_in_img:
+                    att_id = self.att2id.get(att, None)
+                    if att_id is not None:
+                        if teacher_att[att_id] > 0.55:
+                            pesu_label_att[att_id] = 1
+
+                pesu_label_cate = teacher_cate > cate_thres
+                for cate in cate_in_img:
+                    cate_id = self.category2id.get(cate, None)
+                    if cate_id is not None:
+                        if teacher_cate[cate_id] > 0.55:
+                            pesu_label_att[cate_id] = 1
+                if torch.any(pesu_label_cate > 0):
+                    results_img_crops = copy.deepcopy(results_tmp)
+                    crop_box = instance['proposals'][proposal_id][:4]  # xywh,c,c,621a
+                    results_img_crops['crop_box'] = crop_box
+                    cap_imgcrops = self.cap_pipeline[2](results_img_crops)
+
+                    img_crops.append(cap_imgcrops['img'])
+                    crops_logits.append(teacher_logits)
+                    crops_labels.append(torch.cat((pesu_label_att, pesu_label_cate)))
+            if len(img_crops) == 0:
+                return self.__getitem__(np.random.randint(0, len(self)))
+
             img_crops = torch.stack(img_crops, dim=0)
             results['img_crops'] = img_crops
             results['crops_logits'] = torch.stack(crops_logits, dim=0)
@@ -457,7 +488,7 @@ class BoostCLIPCropDataset(Dataset):
             # get random select caption
             random_id = random.randint(0, len(instance['caption']) - 1)
             results['caption'] = DataContainer(instance['caption'][random_id], cpu_only=True)
-
+            results['data_set_type'] = data_set_type
             # get all phases
             phases = instance['phase']
             max_phase = 5

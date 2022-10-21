@@ -119,6 +119,9 @@ model = dict(
         ),
     ),
     neck=None,
+    mil_loss=dict(
+        type='MILCrossEntropy'
+    ),
     bbox_head=dict(
         type='PromptHead',
         attr_freq_file='../attributes/VAW/attr_freq_wo_sort.json',
@@ -158,9 +161,9 @@ train_vawcoco_pipeline = [
 
 train_cap_collectall_pipeline = [
     dict(type='Collect', keys=[
-        'wholeimg', 'biggestproposal',
+        'img',
         'img_crops', 'crops_logits',
-        'crops_labels', 'caption', 'phases'
+        'crops_labels', 'caption', 'phases', 'data_set_type'
     ])
 ]
 
@@ -256,14 +259,14 @@ data = dict(
         data_root=data_root,
         dataset_split='train',
         attribute_index_file=attribute_index_file,
-        dataset_names=['coco', 'vaw', 'cococap'],
+        dataset_names=['cococap'],
         save_label=False,
         load_label=None,
         test_mode=False,
         open_category=False,
         cap_pipeline=[train_cap_wholeimg_pipeline, train_cap_biggestproposal_pipeline, train_cap_imgcrops_pipeline, train_cap_collectall_pipeline],
-        vawcoco_pipline=train_vawcoco_pipeline,
-        select_novel=True
+        vawcoco_pipline=None,
+        select_novel=False
         # pipeline=train_generated_pipeline
     ),
     val=dict(

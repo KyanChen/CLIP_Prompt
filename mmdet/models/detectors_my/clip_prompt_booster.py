@@ -2,9 +2,10 @@ import json
 
 import torch
 from mmcv.runner import get_dist_info
-from torch import nn
+from torch import nn, distributed
+import torch.nn.functional as F
 
-from ..builder import DETECTORS, build_backbone, build_head, build_neck
+from ..builder import DETECTORS, build_backbone, build_head, build_neck, build_loss
 from ..detectors.base import BaseDetector
 import warnings
 
@@ -22,14 +23,16 @@ class CLIP_Prompt_Booster(BaseDetector):
                  img_encoder=None,
                  shared_prompt_vectors=False,
                  load_prompt_weights='',
+                 matching_temp=0.1,
                  neck=None,
                  bbox_head=None,
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None,
+                 mil_loss=None,
                  init_cfg=None):
         super(CLIP_Prompt_Booster, self).__init__(init_cfg)
-
+        self.matching_temp = matching_temp
         self.att2id = {}
         if 'att_file' in attribute_index_file.keys():
             file = attribute_index_file['att_file']
@@ -130,9 +133,11 @@ class CLIP_Prompt_Booster(BaseDetector):
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
+        self.mil_loss = build_loss(mil_loss)
+
         self.need_train_names = need_train_names
 
-        rank, world_size = get_dist_info()
+        self.rank, self.world_size = get_dist_info()
 
         for name, param in self.named_parameters():
             flag = False
@@ -181,80 +186,119 @@ class CLIP_Prompt_Booster(BaseDetector):
 
         return outputs
 
+    def gather_features(self, features, keep_loss=True):
+        gathered_features = [torch.zeros_like(features) for _ in range(self.world_size)]
+        distributed.all_gather(gathered_features, features)
+
+        if keep_loss:
+            gathered_features[self.rank] = features
+        gathered_features = torch.cat(gathered_features, dim=0)
+        return gathered_features
+
     def forward_train(
             self,
             img,
             img_metas,
-            gt_labels,
             gt_bboxes_ignore=None,
             data_set_type=None,
             **kwargs
     ):
-        # import pdb
-        # pdb.set_trace()
-        image_features, last_f_map, f_maps = self.image_encoder(img)  # 2x1024
-        # prompts = self.prompt_learner()  # 620x77x512
-        # tokenized_prompts = self.tokenized_prompts
-        # text_features = self.text_encoder(prompts, tokenized_prompts)  # 620x1024
-        text_features = []
-        if hasattr(self, 'prompt_att_learner'):
-            prompt_context, eot_index, att_group_member_num = self.prompt_att_learner()  # 620x77x512
-            text_features_att = self.text_encoder(prompt_context, eot_index)
-            text_features.append(text_features_att)
+        # 'img', 'biggestproposal',
+        # 'img_crops', 'crops_logits',
+        # 'crops_labels', 'caption', 'phases'
+        # biggestproposal = kwargs['biggestproposal']
+        img_crops = kwargs['img_crops']
+        crops_logits = kwargs['crops_logits']
+        crops_labels = kwargs['crops_labels']
+        caption = kwargs['caption']
+        phases = kwargs['phases']
 
-        if hasattr(self, 'prompt_category_learner'):
-            prompt_context, eot_index, cate_group_member_num = self.prompt_category_learner()  # 620x77x512
-            text_features_cate = self.text_encoder(prompt_context, eot_index)
-            text_features.append(text_features_cate)
-        text_features = torch.cat(text_features, dim=0)
+        # region features
+        img_all = torch.cat((img, img_crops), dim=0)
+        img_all_feats, last_f_map, f_maps = self.image_encoder(img_all)
 
-        if hasattr(self, 'prompt_phase_learner') and hasattr(self, 'prompt_caption_learner'):
-            phases = kwargs['phase']
-            captions = kwargs['caption']
-            num_phase_per_img = [len(x) for x in phases]
-            num_caption_per_img = [len(x) for x in captions]
-            phases = [t for x in phases for t in x]
-            captions = [t for x in captions for t in x]
-            phase_context, phase_eot_index, _ = self.prompt_phase_learner(phases, device=img.device)  # 620x77x512
-            caption_context, caption_eot_index, _ = self.prompt_caption_learner(captions, device=img.device)
-            prompt_context = torch.cat([phase_context, caption_context], dim=0)
-            eot_index = torch.cat([phase_eot_index, caption_eot_index], dim=0)
-            phase_cap_features = self.text_encoder(prompt_context, eot_index)
+        # attributes all
+        att_prompt_context, att_eot_index, att_group_member_num = self.prompt_att_learner()  # 620x77x512
+        cate_prompt_context, cate_eot_index, cate_group_member_num = self.prompt_category_learner()  # 620x77x512
 
-        if hasattr(self, 'img_proj_head'):
-            image_features = getattr(self, 'img_proj_head')(image_features)
-        if hasattr(self, 'text_proj_head'):
-            text_features = getattr(self, 'text_proj_head')(text_features)
+        num_phase_per_img = [len(x) for x in phases]
+        phases = [t for x in phases for t in x]
+        phase_context, phase_eot_index, _ = self.prompt_phase_learner(phases, device=img.device)
+
+        caption_context, caption_eot_index, _ = self.prompt_caption_learner(caption, device=img.device)
+
+        all_prompt_context = torch.cat([att_prompt_context, cate_prompt_context, phase_context, caption_context], dim=0)
+        all_eot_index = torch.cat([att_eot_index, cate_eot_index, phase_eot_index, caption_eot_index], dim=0)
+
+        text_all_features = self.text_encoder(all_prompt_context, all_eot_index)
 
         logit_scale = self.logit_scale.exp()
-        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-        if hasattr(self, 'prompt_phase_learner') and hasattr(self, 'prompt_caption_learner'):
-            phase_cap_features = phase_cap_features / phase_cap_features.norm(dim=-1, keepdim=True)
-            logits_phase_cap = logit_scale * image_features @ phase_cap_features.T
-            # logits_per_text = logit_scale * phase_cap_features @ image_features.T
-            label_phase_cap = torch.zeros_like(logits_phase_cap, device=img.device)
-            flag_set_cursor = 0
-            for idx_sample, num_content in enumerate(num_phase_per_img):
-                label_phase_cap[idx_sample, flag_set_cursor:flag_set_cursor+num_content] = 1
-                flag_set_cursor += num_content
-            for idx_sample, num_content in enumerate(num_caption_per_img):
-                label_phase_cap[idx_sample, flag_set_cursor:flag_set_cursor + num_content] = 1
-                flag_set_cursor += num_content
-            assert flag_set_cursor == logits_phase_cap.shape[-1]
+        img_all_feats = img_all_feats / img_all_feats.norm(dim=-1, keepdim=True)
+        text_all_features = text_all_features / text_all_features.norm(dim=-1, keepdim=True)
 
-        logits = logit_scale * image_features @ text_features.t()  # 2x620
-        # if hasattr(self, 'prompt_att_learner'):
-        #     att_logit, cate_logit = logits[:, :len(text_features_att)], logits[:, len(text_features_att):]
-        #     split_att_group_logits = att_logit.split(att_group_member_num, dim=-1)
-        #     att_logit = [torch.mean(x, dim=-1, keepdim=True) for x in split_att_group_logits]
-        #     att_logit = torch.cat(att_logit, dim=-1)
-        #     logits = torch.cat((att_logit, cate_logit), dim=-1)
+        # caption-img, caption-biggest_proposal
+        img_b_feats = img_all_feats[:len(img)]
+        text_cap_feats = text_all_features[-len(caption):]
 
-        losses = self.bbox_head.forward_train(logits, img_metas, data_set_type, gt_labels,
-                                              logits_phase_cap=logits_phase_cap,
-                                              label_phase_cap=label_phase_cap
-                                              )
+        if self.gather_gpus:
+            img_b_feats = self.gather_features(img_b_feats)
+            text_cap_feats = self.gather_features(text_cap_feats)
+
+        losses = {}
+        # NCE biggest proposal - caption
+        img_cap_scores = img_b_feats @ text_cap_feats.t()  # [#regions, img_batch * n_ctx]
+        img_cap_scores = img_cap_scores * logit_scale
+        img_cap_contrast_target = torch.arange(len(img_cap_scores)).to(img_cap_scores.device)
+        cap_row_loss = F.cross_entropy(img_cap_scores, img_cap_contrast_target)
+        cap_col_loss = F.cross_entropy(img_cap_scores.t(), img_cap_contrast_target)
+        losses["loss_bp_cap_nce"] = (cap_row_loss + cap_col_loss) / 2.0
+        # NCE biggest proposal - phase
+        keep_phase_ids = [torch.randint(0, len_p, size=[1]) for len_p in num_phase_per_img]
+        keep_phase_ids = torch.cat(keep_phase_ids) + len(att_prompt_context) + len(cate_prompt_context)
+        selected_phase_embs = text_all_features[keep_phase_ids]
+        if self.gather_gpus:
+            selected_phase_embs = self.gather_features(selected_phase_embs)
+        img_pha_scores = img_b_feats @ selected_phase_embs.t()
+        img_pha_scores = img_pha_scores * logit_scale
+        img_pha_contrast_target = torch.arange(len(img_pha_scores)).to(img_pha_scores.device)
+        pha_row_loss = F.cross_entropy(img_pha_scores, img_pha_contrast_target)
+        pha_col_loss = F.cross_entropy(img_pha_scores.t(), img_pha_contrast_target)
+        losses["loss_bp_pha_nce"] = (pha_row_loss + pha_col_loss) / 2.0
+        # MIL biggest proposal - phase
+        phase_start = len(att_prompt_context) + len(cate_prompt_context)
+        phase_end = phase_start + len(phases)
+        img_allpha_scores = img_all_feats[:len(img)] @ text_all_features[phase_start: phase_end].t()
+
+        allpha_labels = torch.zeros_like(img_allpha_scores, device=img.device)
+        flag_set_cursor = 0
+        for idx_sample, num_pha in enumerate(num_phase_per_img):
+            allpha_labels[idx_sample, flag_set_cursor:flag_set_cursor + num_pha] = 1
+            flag_set_cursor += num_pha
+
+        img_allpha_scores = img_allpha_scores * logit_scale
+        loss_bp_pha_mil = self.mil_loss(img_allpha_scores, allpha_labels, weights=None, avg_positives=False)
+        losses["loss_bp_pha_mil"] = loss_bp_pha_mil
+        # MIL crops - att
+        crop_att_scores = img_all_feats[len(img):] @ text_all_features[: len(att_prompt_context)].t()
+        crop_att_scores = crop_att_scores * logit_scale
+        loss_crop_att_mil = self.mil_loss(crop_att_scores, crops_logits[:, :len(self.att2id)], weights=None,
+                                          avg_positives=False)
+        losses["loss_crop_att_mil"] = loss_crop_att_mil
+        # MIL crops - cate
+        cate_start = len(att_prompt_context)
+        cate_end = cate_start + len(cate_prompt_context)
+        crop_cate_scores = img_all_feats[len(img):] @ text_all_features[cate_start: cate_end].t()
+        crop_cate_scores = crop_cate_scores * logit_scale
+        loss_crop_cate_mil = self.mil_loss(crop_cate_scores, crops_logits[:, len(self.att2id):], weights=None,
+                                           avg_positives=False)
+        losses["loss_crop_cate_mil"] = loss_crop_cate_mil
+        # KLLoss crops - cate_att
+        kl_att_loss = F.kl_div(F.log_softmax(crop_att_scores, dim=-1), F.softmax(crops_logits[:, :len(self.att2id)]),
+                               reduction='batchmean')  # input is log-probabilities, target is probabilities
+        kl_cate_loss = F.kl_div(F.log_softmax(crop_cate_scores, dim=-1), F.softmax(crops_logits[:, len(self.att2id):]),
+                                reduction='batchmean')  # input is log-probabilities, target is probabilities
+        losses["kl_att_loss"] = kl_att_loss
+        losses["kl_cate_loss"] = kl_cate_loss
 
         return losses
 
