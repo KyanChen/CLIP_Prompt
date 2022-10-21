@@ -4,7 +4,7 @@ import mmcv
 import numpy as np
 from tqdm import tqdm
 
-from mmdet.core import bbox_overlaps
+# from mmdet.core import bbox_overlaps
 from tools_my.cache_data_tools.redis_utils import RedisHelper
 
 parent_folder = '../../data/COCO/annotations'
