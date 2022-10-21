@@ -168,8 +168,8 @@ train_cap_collectall_pipeline = [
 ]
 
 train_cap_imgcrops_pipeline = [
-    dict(type='ScaleCrop', scale_range=[0.0, 0.3]),
-    dict(type='RandomCrop', crop_size=[0.8, 0.8], crop_type='relative_range'),
+    dict(type='ScaleCrop', scale_range=[0.0, 0.1]),
+    dict(type='RandomCrop', crop_size=[0.9, 0.9], crop_type='relative_range'),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=img_scale, keep_ratio=True),
     dict(type='Normalize', **img_norm_cfg),
@@ -249,11 +249,11 @@ test_generated_pipeline = [
     )
 ]
 # captext:24 capimg:48 coco_captext:80 img:128
-samples_per_gpu = 168
+samples_per_gpu = 200
 data = dict(
     samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=8,
-    persistent_workers=True,
+    workers_per_gpu=0,
+    persistent_workers=False,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -361,5 +361,5 @@ lr_config = dict(
 runner = dict(type='EpochBasedRunner', max_epochs=60)
 evaluation = dict(interval=5, metric='mAP')
 
-load_from = None
+load_from = 'results/EXP20221006_0/epoch_20.pth'
 resume_from = None

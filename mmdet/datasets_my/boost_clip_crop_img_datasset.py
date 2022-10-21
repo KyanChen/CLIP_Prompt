@@ -48,6 +48,8 @@ class BoostCLIPCropDataset(Dataset):
         assert dataset_split in ['train']
         self.dataset_split = dataset_split
         self.test_mode = test_mode
+        import pdb
+        pdb.set_trace()
         if isinstance(cap_pipeline, list):
             # train_cap_wholeimg_pipeline, train_cap_biggestproposal_pipeline,
             # train_cap_imgcrops_pipeline, train_cap_collectall_pipeline
