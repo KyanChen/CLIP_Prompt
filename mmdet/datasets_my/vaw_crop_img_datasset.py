@@ -160,7 +160,7 @@ class VAWCropDataset(Dataset):
                 for item in v:
                     item['img_id'] = k
                     self.instances.append(item)
-            self.instances = self.instances[:256*8]
+            # self.instances = self.instances[:256*8]
 
         rank, world_size = get_dist_info()
         if not test_mode:
@@ -493,8 +493,8 @@ class VAWCropDataset(Dataset):
         result_metrics = OrderedDict()
 
         results = np.array(results)
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         if 'label_coco' in self.dataset_names:
             ori_data = json.load(
                 open(self.data_root + f'/COCO/annotations/train_2017_caption_tagging_with_proposals.json', 'r'))
