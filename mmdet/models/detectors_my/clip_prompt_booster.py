@@ -263,6 +263,9 @@ class CLIP_Prompt_Booster(BaseDetector):
         shift_id = torch.cumsum(shift_id, dim=0) + len(att_prompt_context) + len(cate_prompt_context)
         keep_phase_ids = torch.cat(keep_phase_ids).to(img.device) + shift_id
         selected_phase_embs = text_all_features[keep_phase_ids]
+        if self.rank == 0:
+            import pdb
+            pdb.set_trace()
         if self.gather_gpus and self.world_size > 1:
             selected_phase_embs = self.gather_features(selected_phase_embs)
             mask_has_phase = self.gather_features(mask_has_phase)
@@ -314,8 +317,7 @@ class CLIP_Prompt_Booster(BaseDetector):
         img_cate_scores = img_cate_scores * logit_scale
         loss_bp_cate_mil = self.mil_loss(img_cate_scores, gt_labels[:, len(self.att2id):], weights=None, avg_positives=False)
         losses["loss_bp_cate_mil"] = loss_bp_cate_mil
-        import pdb
-        pdb.set_trace()
+
         # KLLoss crops - cate_att
         kl_att_loss = F.kl_div(F.log_softmax(crop_att_scores, dim=-1), F.softmax(crops_logits[:, :len(self.att2id)]),
                                reduction='batchmean')  # input is log-probabilities, target is probabilities
