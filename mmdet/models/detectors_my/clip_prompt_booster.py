@@ -321,8 +321,8 @@ class CLIP_Prompt_Booster(BaseDetector):
                                reduction='batchmean')  # input is log-probabilities, target is probabilities
         kl_cate_loss = F.kl_div(F.log_softmax(crop_cate_scores, dim=-1), F.softmax(crops_logits[:, len(self.att2id):]),
                                 reduction='batchmean')  # input is log-probabilities, target is probabilities
-        losses["kl_att_loss"] = kl_att_loss
-        losses["kl_cate_loss"] = kl_cate_loss
+        losses["loss_kl_att"] = kl_att_loss
+        losses["loss_kl_cate"] = kl_cate_loss
 
         return losses
 
