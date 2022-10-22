@@ -170,7 +170,7 @@ train_cap_collectall_pipeline = [
             'img',
             'img_crops', 'crops_logits',
             'crops_labels', 'caption',
-             'phases', 'data_set_type', 'gt_labels',
+             'phases', 'data_set_type', 'gt_labels'
     ])
 ]
 

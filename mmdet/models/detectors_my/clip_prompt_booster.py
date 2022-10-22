@@ -331,7 +331,7 @@ class CLIP_Prompt_Booster(BaseDetector):
                                 reduction='batchmean')  # input is log-probabilities, target is probabilities
         losses["loss_kl_att"] = kl_att_loss
         losses["loss_kl_cate"] = kl_cate_loss
-
+        print(losses)
         return losses
 
     def forward_test(self, imgs, img_metas, **kwargs):
