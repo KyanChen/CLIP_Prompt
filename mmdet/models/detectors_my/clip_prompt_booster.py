@@ -231,8 +231,6 @@ class CLIP_Prompt_Booster(BaseDetector):
 
         all_prompt_context = torch.cat([att_prompt_context, cate_prompt_context, phase_context, caption_context], dim=0)
         all_eot_index = torch.cat([att_eot_index, cate_eot_index, phase_eot_index, caption_eot_index], dim=0)
-        import pdb
-        pdb.set_trace()
         text_all_features = self.text_encoder(all_prompt_context, all_eot_index)
 
         logit_scale = self.logit_scale.exp()
@@ -242,6 +240,8 @@ class CLIP_Prompt_Booster(BaseDetector):
         # caption-img, caption-biggest_proposal
         img_b_feats = img_all_feats[:len(img)]
         text_cap_feats = text_all_features[-len(caption):]
+        import pdb
+        pdb.set_trace()
 
         if self.gather_gpus and self.world_size > 1:
             img_b_feats = self.gather_features(img_b_feats)
