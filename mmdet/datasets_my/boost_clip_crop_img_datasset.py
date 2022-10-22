@@ -501,15 +501,11 @@ class BoostCLIPCropDataset(Dataset):
                 return self.__getitem__(np.random.randint(0, len(self)))
             img_crops = torch.stack(img_crops, dim=0)
             results['img_crops'] = img_crops
-            results['img_crops'] = DataContainer(results['img_crops'], stack=False)
             results['crops_logits'] = torch.stack(crops_logits, dim=0)
-            results['img_crops'] = DataContainer(results['crops_logits'], stack=False)
             results['crops_labels'] = torch.stack(crops_labels, dim=0)
-            results['img_crops'] = DataContainer(results['crops_labels'], stack=False)
 
             # get random select caption
             random_id = random.randint(0, len(instance['caption']) - 1)
-            results['caption'] = DataContainer(instance['caption'][random_id], stack=True, cpu_only=True)
             results['data_set_type'] = data_set_type
             # get all phases
             phases = instance['phase']
@@ -517,7 +513,12 @@ class BoostCLIPCropDataset(Dataset):
             if len(phases) > max_phase:
                 random_id = [random.randint(0, len(instance['caption']) - 1) for _ in range(max_phase)]
                 phases = [phases[x] for x in random_id]
+            results['caption'] = DataContainer(instance['caption'][random_id], stack=True, cpu_only=True)
             results['phases'] = DataContainer(phases, stack=False, cpu_only=True)
+            results['img_crops'] = DataContainer(results['img_crops'], stack=False)
+            results['crops_logits'] = DataContainer(results['crops_logits'], stack=False)
+            results['crops_labels'] = DataContainer(results['crops_labels'], stack=False)
+            results = self.cap_pipeline[3](results)
             import pdb
             pdb.set_trace()
         return results
