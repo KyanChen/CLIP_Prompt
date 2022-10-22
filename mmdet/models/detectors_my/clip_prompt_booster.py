@@ -29,6 +29,7 @@ class CLIP_Prompt_Booster(BaseDetector):
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None,
+                 gather_gpus=True,
                  mil_loss=None,
                  init_cfg=None):
         super(CLIP_Prompt_Booster, self).__init__(init_cfg)
@@ -134,7 +135,7 @@ class CLIP_Prompt_Booster(BaseDetector):
         self.test_cfg = test_cfg
 
         self.mil_loss = build_loss(mil_loss)
-
+        self.gather_gpus = gather_gpus
         self.need_train_names = need_train_names
 
         self.rank, self.world_size = get_dist_info()
