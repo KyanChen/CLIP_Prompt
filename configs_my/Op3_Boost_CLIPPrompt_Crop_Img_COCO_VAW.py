@@ -61,7 +61,7 @@ model = dict(
         'prompt_category_learner',
         'prompt_att_learner',
         'image_encoder',
-        # 'text_encoder',
+        'text_encoder',
         'prompt_phase_learner',
         'bbox_head', 'logit_scale'
     ],
@@ -256,7 +256,7 @@ test_generated_pipeline = [
     )
 ]
 # captext:24 capimg:48 coco_captext:80 img:128
-samples_per_gpu = 48
+samples_per_gpu = 32
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
@@ -320,7 +320,7 @@ optimizer = dict(
         # 'prompt_category_learner': {'lr_mult': 0.1},
         'prompt_phase_learner': {},
         'image_encoder': {'lr_mult': 0.1},
-        # 'text_encoder': {'lr_mult': 0.1},
+        'text_encoder': {'lr_mult': 0.1},
         'bbox_head': {}, 'logit_scale': {}
     },
     type='SGD',
