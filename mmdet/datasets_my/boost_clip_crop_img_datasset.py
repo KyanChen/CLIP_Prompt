@@ -519,8 +519,6 @@ class BoostCLIPCropDataset(Dataset):
             results['crops_logits'] = DataContainer(results['crops_logits'], stack=False)
             results['crops_labels'] = DataContainer(results['crops_labels'], stack=False)
             results = self.cap_pipeline[3](results)
-            import pdb
-            pdb.set_trace()
         return results
 
         if self.test_mode:
