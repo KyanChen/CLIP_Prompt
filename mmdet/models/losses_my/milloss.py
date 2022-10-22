@@ -25,6 +25,11 @@ class MILCrossEntropy(nn.Module):
             pred_logits[target == 2] /= weighted_unk
             target[target == 2] = 0
         probs = F.softmax(pred_logits, dim=-1)
+        # 对于没有标签的样本忽视
+
+        valid_mask = torch.any(target > 0, dim=-1)
+        probs = probs[valid_mask]
+        target = target[valid_mask]
         if avg_positives:  # average the logits over positive targets
             loss = -torch.log(torch.sum(target * probs, dim=dim) / (torch.sum(target, dim=dim) + 1e-6))
         else:  # sum the logits over positive targets
