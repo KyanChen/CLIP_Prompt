@@ -507,14 +507,25 @@ class BoostCLIPCropDataset(Dataset):
             # get random select caption
             random_id = random.randint(0, len(instance['caption']) - 1)
             results['caption'] = DataContainer(instance['caption'][random_id], stack=True, cpu_only=True)
+
             # get dataset type
             results['data_set_type'] = data_set_type
+
             # get all phases
             phases = instance['phase']
             max_phase = 5
             if len(phases) > max_phase:
                 random_id = [random.randint(0, len(phases) - 1) for _ in range(max_phase)]
                 phases = [phases[x] for x in random_id]
+
+            # get random select caption
+            if len(phases) == 0:
+                samp_phase = 'a image.'
+            else:
+                random_id = random.randint(0, len(phases) - 1)
+                samp_phase = phases[random_id]
+            results['samp_phase'] = DataContainer(samp_phase, stack=True, cpu_only=True)
+
             results['phases'] = DataContainer(phases, stack=False, cpu_only=True)
             results['img_crops'] = DataContainer(results['img_crops'], stack=False)
             results['crops_logits'] = DataContainer(results['crops_logits'], stack=False)
