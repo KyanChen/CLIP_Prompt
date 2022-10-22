@@ -261,7 +261,7 @@ class CLIP_Prompt_Booster(BaseDetector):
         shift_id = [0] + [len_p for len_p in num_phase_per_img[:-1] if len_p > 0]
         shift_id = torch.tensor(shift_id).to(img.device)
         shift_id = torch.cumsum(shift_id, dim=0) + len(att_prompt_context) + len(cate_prompt_context)
-        keep_phase_ids = torch.cat(keep_phase_ids) + shift_id
+        keep_phase_ids = torch.cat(keep_phase_ids).to(img.device) + shift_id
         selected_phase_embs = text_all_features[keep_phase_ids]
         if self.gather_gpus:
             selected_phase_embs = self.gather_features(selected_phase_embs)
