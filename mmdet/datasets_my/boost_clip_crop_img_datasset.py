@@ -501,6 +501,7 @@ class BoostCLIPCropDataset(Dataset):
                 return self.__getitem__(np.random.randint(0, len(self)))
             img_crops = torch.stack(img_crops, dim=0)
             results['img_crops'] = img_crops
+            results['img_crops'] = DataContainer(results['img_crops'], stack=False)
             results['crops_logits'] = torch.stack(crops_logits, dim=0)
             results['crops_labels'] = torch.stack(crops_labels, dim=0)
 
