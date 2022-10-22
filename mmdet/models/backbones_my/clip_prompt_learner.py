@@ -379,7 +379,7 @@ class PromptAttributes(BaseModule):
                                      [self.pad_embedding] * (context_length - len(rearranged_context_tmp))
             rearranged_context_tmp = torch.cat(rearranged_context_tmp, dim=0)
             rearranged_context.append(rearranged_context_tmp)
-        return torch.stack(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long)
+        return torch.stack(rearranged_context, dim=0), torch.tensor(eot_index, dtype=torch.long, device=self.prompt_vectors.device)
 
     def rearrange_generated_context(
             self,
