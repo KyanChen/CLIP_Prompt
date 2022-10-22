@@ -422,7 +422,7 @@ class BoostCLIPCropDataset(Dataset):
         results['img_info']['filename'] = img_info['file_name']
         if data_set == 'cococap':
             # get whole img
-            results_tmp = self.cap_pipeline[0](results, 0)
+            results_tmp = copy.deepcopy(self.cap_pipeline[0](results, 0))
 
             # 全图，不需要
             # results_wholeimg = copy.deepcopy(results)
@@ -491,8 +491,6 @@ class BoostCLIPCropDataset(Dataset):
                             pesu_label_att[cate_id] = 1
                 if torch.any(pesu_label_cate > 0):
                     results_img_crops = copy.deepcopy(results_tmp)
-                    import pdb
-                    pdb.set_trace()
                     x, y, w, h = instance['proposals'][proposal_id][:4]  # xywh,c,c,621a
                     results_img_crops['crop_box'] = np.array([x, y, x + w, y + h])
                     cap_imgcrops = self.cap_pipeline[2](results_img_crops)
