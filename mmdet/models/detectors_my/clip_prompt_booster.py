@@ -240,14 +240,13 @@ class CLIP_Prompt_Booster(BaseDetector):
         # caption-img, caption-biggest_proposal
         img_b_feats = img_all_feats[:len(img)]
         text_cap_feats = text_all_features[-len(caption):]
-        import pdb
-        pdb.set_trace()
 
         if self.gather_gpus and self.world_size > 1:
             img_b_feats = self.gather_features(img_b_feats)
             text_cap_feats = self.gather_features(text_cap_feats)
 
         losses = {}
+
         # NCE biggest proposal - caption
         img_cap_scores = img_b_feats @ text_cap_feats.t()  # [#regions, img_batch * n_ctx]
         img_cap_scores = img_cap_scores * logit_scale
@@ -255,6 +254,8 @@ class CLIP_Prompt_Booster(BaseDetector):
         cap_row_loss = F.cross_entropy(img_cap_scores, img_cap_contrast_target)
         cap_col_loss = F.cross_entropy(img_cap_scores.t(), img_cap_contrast_target)
         losses["loss_bp_cap_nce"] = (cap_row_loss + cap_col_loss) / 2.0
+        import pdb
+        pdb.set_trace()
         # NCE biggest proposal - phase
         keep_phase_ids = [torch.randint(0, len_p, size=[1]) for len_p in num_phase_per_img if len_p > 0]
         shift_id = [0] + [len_p for len_p in num_phase_per_img[:-1] if len_p > 0]
