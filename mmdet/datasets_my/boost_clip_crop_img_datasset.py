@@ -503,11 +503,13 @@ class BoostCLIPCropDataset(Dataset):
             results['img_crops'] = img_crops
             results['img_crops'] = DataContainer(results['img_crops'], stack=False)
             results['crops_logits'] = torch.stack(crops_logits, dim=0)
+            results['img_crops'] = DataContainer(results['crops_logits'], stack=False)
             results['crops_labels'] = torch.stack(crops_labels, dim=0)
+            results['img_crops'] = DataContainer(results['crops_labels'], stack=False)
 
             # get random select caption
             random_id = random.randint(0, len(instance['caption']) - 1)
-            results['caption'] = DataContainer([instance['caption'][random_id]], stack=True, cpu_only=True)
+            results['caption'] = DataContainer(instance['caption'][random_id], stack=True, cpu_only=True)
             results['data_set_type'] = data_set_type
             # get all phases
             phases = instance['phase']
