@@ -9,13 +9,14 @@ from tqdm import tqdm
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Download CC images of the VAW/COCO attributes')
-    parser.add_argument('--name-file', default='/data/kyanchen/prompt/data/CC/Train_GCC-training.tsv',
+    # parser.add_argument('--name-file', default='/data/kyanchen/prompt/data/CC/Train_GCC-training.tsv',
+    parser.add_argument('--name-file', default='/Users/kyanchen/Documents/CC/Validation_GCC-1.1.0-Validation.tsv',
                         help='LVIS/COCO category name and description')
-    parser.add_argument('--valid-ind-file', default='train_valid_cc_idx.json',
+    parser.add_argument('--valid-ind-file', default='val_valid_cc_idx.json',
                         help='index of the LVIS/COCO base categories')
     parser.add_argument('--base-category', action='store_true',
                         help='whether to retrieval the images of the base categories')
-    parser.add_argument('--output-folder', default='/data/kyanchen/prompt/data/CC/images',
+    parser.add_argument('--output-folder', default='/Users/kyanchen/Documents/CC/images',
                         help='output path')
     parser.add_argument('--num-thread', type=int, default=10,
                         help='the number of the thread to download the images')
@@ -47,10 +48,11 @@ def main():
         save_additional_columns=['ori_id'],
         caption_col='caption',
         min_image_size=48,
-        max_aspect_ratio=5,
+        max_aspect_ratio=5.,
         image_size=1024,
+        thread_count=8,
         output_folder=output_folder,
-        processes_count=64,
+        processes_count=2,
         timeout=20
     )
 
