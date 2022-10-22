@@ -188,13 +188,21 @@ class CLIP_Prompt_Booster(BaseDetector):
         return outputs
 
     def gather_features(self, features, keep_loss=True):
+        batch_size = torch.tensor(features.shape[0], device=features.device)
+        batch_size_full = [torch.zeros_like(batch_size) for _ in range(self.world_size)]
+        distributed.all_gather(batch_size_full, batch_size)
+        # cutting all data to min batch size across all GPUs
+        min_bs = min([bs.item() for bs in batch_size_full])
+        if min_bs < batch_size:
+            features = features[:min_bs]
+
         gathered_features = [torch.zeros_like(features) for _ in range(self.world_size)]
         distributed.all_gather(gathered_features, features)
 
         if keep_loss:
             gathered_features[self.rank] = features
         gathered_features = torch.cat(gathered_features, dim=0)
-        return gathered_features
+        return gathered_features, min_bs
 
     def forward_train(
             self,
@@ -242,8 +250,8 @@ class CLIP_Prompt_Booster(BaseDetector):
         text_cap_feats = text_all_features[-len(caption):]
 
         if self.gather_gpus and self.world_size > 1:
-            img_b_feats = self.gather_features(img_b_feats)
-            text_cap_feats = self.gather_features(text_cap_feats)
+            img_b_feats, min_bs = self.gather_features(img_b_feats)
+            text_cap_feats, min_bs = self.gather_features(text_cap_feats)
 
         losses = {}
 
@@ -264,8 +272,11 @@ class CLIP_Prompt_Booster(BaseDetector):
         keep_phase_ids = torch.cat(keep_phase_ids).to(img.device) + shift_id
         selected_phase_embs = text_all_features[keep_phase_ids]
         if self.gather_gpus and self.world_size > 1:
-            selected_phase_embs = self.gather_features(selected_phase_embs)
-            mask_has_phase = self.gather_features(mask_has_phase)
+            selected_phase_embs, min_bs = self.gather_features(selected_phase_embs)
+            mask_has_phase, min_bs = self.gather_features(mask_has_phase)
+            img_b_feats = torch.split(img_b_feats, [len(img)]*self.world_size)
+            img_b_feats = [x[:min_bs] for x in img_b_feats]
+            img_b_feats = torch.cat(img_b_feats, dim=0)
         img_pha_scores = img_b_feats[mask_has_phase] @ selected_phase_embs.t()
         img_pha_scores = img_pha_scores * logit_scale
         img_pha_contrast_target = torch.arange(len(img_pha_scores)).to(img_pha_scores.device)
