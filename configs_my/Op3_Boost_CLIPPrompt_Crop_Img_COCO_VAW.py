@@ -254,7 +254,7 @@ test_generated_pipeline = [
     )
 ]
 # captext:24 capimg:48 coco_captext:80 img:128
-samples_per_gpu = 256
+samples_per_gpu = 128
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
