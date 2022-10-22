@@ -491,8 +491,8 @@ class BoostCLIPCropDataset(Dataset):
                             pesu_label_att[cate_id] = 1
                 if torch.any(pesu_label_cate > 0):
                     results_img_crops = copy.deepcopy(results_tmp)
-                    crop_box = instance['proposals'][proposal_id][:4]  # xywh,c,c,621a
-                    results_img_crops['crop_box'] = crop_box
+                    x, y, w, h = instance['proposals'][proposal_id][:4]  # xywh,c,c,621a
+                    results_img_crops['crop_box'] = np.array([x, y, x + w, y + h])
                     cap_imgcrops = self.cap_pipeline[2](results_img_crops)
                     img_crops.append(cap_imgcrops['img'])
                     crops_logits.append(teacher_logits)
