@@ -8,13 +8,13 @@ from tqdm import tqdm
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Download CC images of the VAW/COCO attributes')
-    parser.add_argument('--name-file', default='/Users/kyanchen/Documents/CC/Validation_GCC-1.1.0-Validation.tsv',
+    parser.add_argument('--name-file', default='/data/kyanchen/prompt/data/CC/Train_GCC-training.tsv',
                         help='LVIS/COCO category name and description')
-    parser.add_argument('--valid-ind-file', default='val_valid_cc_idx.json',
+    parser.add_argument('--valid-ind-file', default='train_valid_cc_idx.json',
                         help='index of the LVIS/COCO base categories')
     parser.add_argument('--base-category', action='store_true',
                         help='whether to retrieval the images of the base categories')
-    parser.add_argument('--output-folder', default='/Users/kyanchen/Documents/CC/images',
+    parser.add_argument('--output-folder', default='/data/kyanchen/prompt/data/CC/images',
                         help='output path')
     parser.add_argument('--num-thread', type=int, default=10,
                         help='the number of the thread to download the images')
@@ -39,7 +39,7 @@ def main():
     url_list = [x+'\n' for idx, x in enumerate(url_list)]
     tmp_file = open('tmp_url_list.txt', 'w')
     tmp_file.writelines(url_list)
-    img2dataset.download(url_list='tmp_url_list.txt', image_size=1024, output_folder=output_folder, processes_count=1, timeout=20)
+    img2dataset.download(url_list='tmp_url_list.txt', image_size=1024, output_folder=output_folder, processes_count=64, timeout=20)
 
 
 if __name__ == '__main__':
