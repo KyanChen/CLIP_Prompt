@@ -259,13 +259,15 @@ class CLIP_Prompt_Booster(BaseDetector):
         # NCE biggest proposal - phase
         keep_phase_ids = [torch.randint(0, len_p, size=[1]) for len_p in num_phase_per_img if len_p > 0]
         shift_id = [0] + [len_p for len_p in num_phase_per_img[:-1] if len_p > 0]
+        mask_has_phase = torch.tensor(num_phase_per_img, device=img.device) > 0
         shift_id = torch.tensor(shift_id).to(img.device)
         shift_id = torch.cumsum(shift_id, dim=0) + len(att_prompt_context) + len(cate_prompt_context)
         keep_phase_ids = torch.cat(keep_phase_ids).to(img.device) + shift_id
         selected_phase_embs = text_all_features[keep_phase_ids]
         if self.gather_gpus and self.world_size > 1:
             selected_phase_embs = self.gather_features(selected_phase_embs)
-        img_pha_scores = img_b_feats @ selected_phase_embs.t()
+            mask_has_phase = self.gather_features(mask_has_phase)
+        img_pha_scores = img_b_feats[mask_has_phase] @ selected_phase_embs.t()
         img_pha_scores = img_pha_scores * logit_scale
         img_pha_contrast_target = torch.arange(len(img_pha_scores)).to(img_pha_scores.device)
         pha_row_loss = F.cross_entropy(img_pha_scores, img_pha_contrast_target)
