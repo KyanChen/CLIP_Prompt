@@ -242,7 +242,7 @@ class CLIP_Prompt_Booster(BaseDetector):
         img_b_feats = img_all_feats[:len(img)]
         text_cap_feats = text_all_features[-len(caption):]
 
-        if self.gather_gpus:
+        if self.gather_gpus and self.world_size > 1:
             img_b_feats = self.gather_features(img_b_feats)
             text_cap_feats = self.gather_features(text_cap_feats)
 
