@@ -377,7 +377,7 @@ class BoostCLIPCropDataset(Dataset):
     def __getitem__(self, idx):
         if idx in self.error_list and not self.test_mode:
             idx = np.random.randint(0, len(self))
-        instance = self.instances[idx]
+        instance = copy.deepcopy(self.instances[idx])
         img_id = instance['img_id']
         img_info = self.id2images[img_id]
 

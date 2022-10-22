@@ -56,7 +56,7 @@ attribute_index_file = dict(
 model = dict(
     type='CLIP_Prompt_Booster',
     attribute_index_file=attribute_index_file,
-    gather_gpus=False,  # True: 32
+    gather_gpus=False,  # True or False: 32
     need_train_names=[
         'prompt_category_learner',
         'prompt_att_learner',
