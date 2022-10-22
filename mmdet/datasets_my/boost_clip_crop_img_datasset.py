@@ -454,7 +454,7 @@ class BoostCLIPCropDataset(Dataset):
 
             # get random max_crops img crops and crossponding teacher logits
             max_crops = 5
-            att_thres = 0.7
+            att_thres = 0.65
             cate_thres = 0.7
             img_crops = []
             crops_logits = []
