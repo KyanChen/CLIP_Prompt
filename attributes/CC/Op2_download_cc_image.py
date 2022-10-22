@@ -2,6 +2,7 @@ import json
 import os
 import argparse
 import img2dataset
+import mmcv
 import pandas as pd
 from tqdm import tqdm
 
@@ -37,9 +38,21 @@ def main():
     valid_idxs_dict = json.load(open(args.valid_ind_file))
     url_list = [df.iloc[int(idx), 1] for idx in valid_idxs_dict.keys()]
     url_list = [x+'\n' for idx, x in enumerate(url_list)]
-    tmp_file = open('tmp_url_list.txt', 'w')
-    tmp_file.writelines(url_list)
-    img2dataset.download(url_list='tmp_url_list.txt', image_size=1024, output_folder=output_folder, processes_count=64, timeout=20)
+    all_data = {'ori_id': list(valid_idxs_dict.keys()), 'url': url_list, 'caption': list(valid_idxs_dict.values())}
+    print('need down num imgs: ', len(url_list))
+    mmcv.dump(all_data, 'tmp_pair_json_file.json')
+    img2dataset.download(
+        url_list='tmp_pair_json_file.json',
+        input_format='json',
+        save_additional_columns=['ori_id'],
+        caption_col='caption',
+        min_image_size=48,
+        max_aspect_ratio=5,
+        image_size=1024,
+        output_folder=output_folder,
+        processes_count=64,
+        timeout=20
+    )
 
 
 if __name__ == '__main__':
