@@ -254,8 +254,7 @@ class CLIP_Prompt_Booster(BaseDetector):
         cap_row_loss = F.cross_entropy(img_cap_scores, img_cap_contrast_target)
         cap_col_loss = F.cross_entropy(img_cap_scores.t(), img_cap_contrast_target)
         losses["loss_bp_cap_nce"] = (cap_row_loss + cap_col_loss) / 2.0
-        import pdb
-        pdb.set_trace()
+
         # NCE biggest proposal - phase
         keep_phase_ids = [torch.randint(0, len_p, size=[1]) for len_p in num_phase_per_img if len_p > 0]
         shift_id = [0] + [len_p for len_p in num_phase_per_img[:-1] if len_p > 0]
@@ -273,25 +272,26 @@ class CLIP_Prompt_Booster(BaseDetector):
         pha_row_loss = F.cross_entropy(img_pha_scores, img_pha_contrast_target)
         pha_col_loss = F.cross_entropy(img_pha_scores.t(), img_pha_contrast_target)
         losses["loss_bp_pha_nce"] = (pha_row_loss + pha_col_loss) / 2.0
+
         # MIL biggest proposal - phase
         phase_start = len(att_prompt_context) + len(cate_prompt_context)
         phase_end = phase_start + len(phases)
         img_allpha_scores = img_all_feats[:len(img)] @ text_all_features[phase_start: phase_end].t()
-
+        img_allpha_scores = img_allpha_scores * logit_scale
         allpha_labels = torch.zeros_like(img_allpha_scores, device=img.device)
         flag_set_cursor = 0
         for idx_sample, num_pha in enumerate(num_phase_per_img):
             allpha_labels[idx_sample, flag_set_cursor:flag_set_cursor + num_pha] = 1
             flag_set_cursor += num_pha
-
-        img_allpha_scores = img_allpha_scores * logit_scale
         loss_bp_pha_mil = self.mil_loss(img_allpha_scores, allpha_labels, weights=None, avg_positives=False)
         losses["loss_bp_pha_mil"] = loss_bp_pha_mil
+
         # MIL crops - att
-        crop_att_scores = img_all_feats[len(img):] @ text_all_features[: len(att_prompt_context)].t()
+        crop_att_scores = img_all_feats[len(img):] @ text_all_features[:len(att_prompt_context)].t()
         crop_att_scores = crop_att_scores * logit_scale
         loss_crop_att_mil = self.mil_loss(crop_att_scores, crops_labels[:, :len(self.att2id)], weighted_unk=5.)
         losses["loss_crop_att_mil"] = loss_crop_att_mil
+
         # MIL crops - cate
         cate_start = len(att_prompt_context)
         cate_end = cate_start + len(cate_prompt_context)
@@ -300,19 +300,22 @@ class CLIP_Prompt_Booster(BaseDetector):
         loss_crop_cate_mil = self.mil_loss(crop_cate_scores, crops_labels[:, len(self.att2id):], weights=None,
                                            avg_positives=False)
         losses["loss_crop_cate_mil"] = loss_crop_cate_mil
+
         # MIL biggest proposal - att
         img_att_scores = img_all_feats[:len(img)] @ text_all_features[: len(att_prompt_context)].t()
         img_att_scores = img_att_scores * logit_scale
         loss_bp_att_mil = self.mil_loss(img_att_scores, gt_labels[:, :len(self.att2id)], weighted_unk=10.)
         losses["loss_bp_att_mil"] = loss_bp_att_mil
+
         # MIL biggest proposal - cate
         cate_start = len(att_prompt_context)
         cate_end = cate_start + len(cate_prompt_context)
-        img_cate_scores = img_all_feats[len(img):] @ text_all_features[cate_start: cate_end].t()
+        img_cate_scores = img_all_feats[:len(img)] @ text_all_features[cate_start: cate_end].t()
         img_cate_scores = img_cate_scores * logit_scale
-        loss_bp_cate_mil = self.mil_loss(img_cate_scores, gt_labels[:, len(self.att2id):], weights=None,
-                                           avg_positives=False)
+        loss_bp_cate_mil = self.mil_loss(img_cate_scores, gt_labels[:, len(self.att2id):], weights=None, avg_positives=False)
         losses["loss_bp_cate_mil"] = loss_bp_cate_mil
+        import pdb
+        pdb.set_trace()
         # KLLoss crops - cate_att
         kl_att_loss = F.kl_div(F.log_softmax(crop_att_scores, dim=-1), F.softmax(crops_logits[:, :len(self.att2id)]),
                                reduction='batchmean')  # input is log-probabilities, target is probabilities

@@ -21,6 +21,8 @@ class MILCrossEntropy(nn.Module):
         # # identity = torch.eye(target.shape[0]).type_as(target)
         # # laplacian = 1 - (target - identity)
         # probs = exp_logits / (exp_logits).sum(dim=dim, keepdim=True)
+        import pdb
+        pdb.set_trace()
         if weighted_unk:
             pred_logits[target == 2] /= weighted_unk
             target[target == 2] = 0
