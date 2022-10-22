@@ -160,10 +160,15 @@ train_vawcoco_pipeline = [
 ]
 
 train_cap_collectall_pipeline = [
-    dict(type='Collect', keys=[
-        'img',
-        'img_crops', 'crops_logits',
-        'crops_labels', 'caption', 'phases', 'data_set_type', 'gt_labels'
+    dict(type='Collect',
+         meta_keys=('filename',
+                    'ori_filename',
+                    'ori_shape',
+                    'img_shape'),
+         keys=[
+            'img',
+            'img_crops', 'crops_logits',
+            'crops_labels', 'caption', 'phases', 'data_set_type', 'gt_labels'
     ])
 ]
 
