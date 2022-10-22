@@ -56,6 +56,7 @@ attribute_index_file = dict(
 model = dict(
     type='CLIP_Prompt_Booster',
     attribute_index_file=attribute_index_file,
+    gather_gpus=True,
     need_train_names=[
         'prompt_category_learner',
         'prompt_att_learner',
@@ -254,7 +255,7 @@ test_generated_pipeline = [
     )
 ]
 # captext:24 capimg:48 coco_captext:80 img:128
-samples_per_gpu = 64
+samples_per_gpu = 32
 data = dict(
     samples_per_gpu=samples_per_gpu,
     workers_per_gpu=8,
