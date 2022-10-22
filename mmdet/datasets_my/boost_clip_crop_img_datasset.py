@@ -507,7 +507,7 @@ class BoostCLIPCropDataset(Dataset):
 
             # get random select caption
             random_id = random.randint(0, len(instance['caption']) - 1)
-            results['caption'] = DataContainer(instance['caption'][random_id], cpu_only=True)
+            results['caption'] = DataContainer([instance['caption'][random_id]], stack=True, cpu_only=True)
             results['data_set_type'] = data_set_type
             # get all phases
             phases = instance['phase']
