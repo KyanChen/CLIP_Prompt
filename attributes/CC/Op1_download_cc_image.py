@@ -7,7 +7,7 @@ from concurrent import futures
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Download LAION images of the LVIS/COCO novel categories')
+        description='Download CC images of the VAW/COCO attributes')
     parser.add_argument('--name-file', default='promptdet_resources/lvis_category_and_description.txt',
                         help='LVIS/COCO category name and description')
     parser.add_argument('--base-ind-file', default='promptdet_resources/lvis_base_inds.txt',
