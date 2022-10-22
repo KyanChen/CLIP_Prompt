@@ -513,12 +513,12 @@ class BoostCLIPCropDataset(Dataset):
             phases = instance['phase']
             max_phase = 5
             if len(phases) > max_phase:
-                random_id = [random.randint(0, len(instance['caption']) - 1) for _ in range(max_phase)]
+                random_id = [random.randint(0, len(phases) - 1) for _ in range(max_phase)]
                 phases = [phases[x] for x in random_id]
             results['phases'] = DataContainer(phases, stack=False, cpu_only=True)
-            # results['img_crops'] = DataContainer(results['img_crops'], stack=False)
-            # results['crops_logits'] = DataContainer(results['crops_logits'], stack=False)
-            # results['crops_labels'] = DataContainer(results['crops_labels'], stack=False)
+            results['img_crops'] = DataContainer(results['img_crops'], stack=False)
+            results['crops_logits'] = DataContainer(results['crops_logits'], stack=False)
+            results['crops_labels'] = DataContainer(results['crops_labels'], stack=False)
             results = self.cap_pipeline[3](results)
         return results
 

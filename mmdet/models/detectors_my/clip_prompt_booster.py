@@ -208,9 +208,9 @@ class CLIP_Prompt_Booster(BaseDetector):
         # 'img_crops', 'crops_logits',
         # 'crops_labels', 'caption', 'phases'
         # biggestproposal = kwargs['biggestproposal']
-        img_crops = kwargs['img_crops']
-        crops_logits = kwargs['crops_logits']
-        crops_labels = kwargs['crops_labels']
+        img_crops = torch.cat(kwargs['img_crops'], dim=0)
+        crops_logits = torch.cat(kwargs['crops_logits'], dim=0)
+        crops_labels = torch.cat(kwargs['crops_labels'], dim=0)
         caption = kwargs['caption']
         phases = kwargs['phases']
 
