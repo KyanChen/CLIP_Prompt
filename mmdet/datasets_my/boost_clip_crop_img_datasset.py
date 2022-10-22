@@ -516,7 +516,8 @@ class BoostCLIPCropDataset(Dataset):
                 random_id = [random.randint(0, len(instance['caption']) - 1) for _ in range(max_phase)]
                 phases = [phases[x] for x in random_id]
             results['phases'] = DataContainer(phases, stack=False, cpu_only=True)
-
+            import pdb
+            pdb.set_trace()
         return results
 
         if self.test_mode:
