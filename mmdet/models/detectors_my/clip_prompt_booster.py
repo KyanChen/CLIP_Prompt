@@ -214,6 +214,9 @@ class CLIP_Prompt_Booster(BaseDetector):
         caption = kwargs['caption']
         phases = kwargs['phases']
 
+        import pdb
+        pdb.set_trace()
+
         # region features
         img_all = torch.cat((img, img_crops), dim=0)
         img_all_feats, last_f_map, f_maps = self.image_encoder(img_all)
@@ -282,14 +285,14 @@ class CLIP_Prompt_Booster(BaseDetector):
         # MIL crops - att
         crop_att_scores = img_all_feats[len(img):] @ text_all_features[: len(att_prompt_context)].t()
         crop_att_scores = crop_att_scores * logit_scale
-        loss_crop_att_mil = self.mil_loss(crop_att_scores, crops_logits[:, :len(self.att2id)], weighted_unk=5.)
+        loss_crop_att_mil = self.mil_loss(crop_att_scores, crops_labels[:, :len(self.att2id)], weighted_unk=5.)
         losses["loss_crop_att_mil"] = loss_crop_att_mil
         # MIL crops - cate
         cate_start = len(att_prompt_context)
         cate_end = cate_start + len(cate_prompt_context)
         crop_cate_scores = img_all_feats[len(img):] @ text_all_features[cate_start: cate_end].t()
         crop_cate_scores = crop_cate_scores * logit_scale
-        loss_crop_cate_mil = self.mil_loss(crop_cate_scores, crops_logits[:, len(self.att2id):], weights=None,
+        loss_crop_cate_mil = self.mil_loss(crop_cate_scores, crops_labels[:, len(self.att2id):], weights=None,
                                            avg_positives=False)
         losses["loss_crop_cate_mil"] = loss_crop_cate_mil
         # MIL biggest proposal - att

@@ -463,7 +463,7 @@ class BoostCLIPCropDataset(Dataset):
             proposals_inds = list(range(0, len(instance['proposals'])))
             random.shuffle(proposals_inds)
             for proposal_id in proposals_inds:
-                if len(img_crops) > max_crops:
+                if len(img_crops) >= max_crops:
                     break
                 teacher_logits = torch.tensor(instance['proposals'][proposal_id][6:])
 
@@ -499,8 +499,6 @@ class BoostCLIPCropDataset(Dataset):
                     crops_labels.append(torch.cat((pesu_label_att, pesu_label_cate)))
             if len(img_crops) == 0:
                 return self.__getitem__(np.random.randint(0, len(self)))
-            import pdb
-            pdb.set_trace()
             img_crops = torch.stack(img_crops, dim=0)
             results['img_crops'] = img_crops
             results['crops_logits'] = torch.stack(crops_logits, dim=0)
