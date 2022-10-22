@@ -256,8 +256,11 @@ class CLIP_Prompt_Booster(BaseDetector):
         cap_col_loss = F.cross_entropy(img_cap_scores.t(), img_cap_contrast_target)
         losses["loss_bp_cap_nce"] = (cap_row_loss + cap_col_loss) / 2.0
         # NCE biggest proposal - phase
-        keep_phase_ids = [torch.randint(0, len_p, size=[1]) for len_p in num_phase_per_img]
-        keep_phase_ids = torch.cat(keep_phase_ids) + len(att_prompt_context) + len(cate_prompt_context)
+        keep_phase_ids = [torch.randint(0, len_p, size=[1]) for len_p in num_phase_per_img if len_p > 0]
+        shift_id = [0] + [len_p for len_p in num_phase_per_img[:-1] if len_p > 0]
+        shift_id = torch.tensor(shift_id).to(img.device)
+        shift_id = torch.cumsum(shift_id) + len(att_prompt_context) + len(cate_prompt_context)
+        keep_phase_ids = torch.cat(keep_phase_ids) + shift_id
         selected_phase_embs = text_all_features[keep_phase_ids]
         if self.gather_gpus:
             selected_phase_embs = self.gather_features(selected_phase_embs)
