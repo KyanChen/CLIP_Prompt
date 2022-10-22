@@ -214,9 +214,6 @@ class CLIP_Prompt_Booster(BaseDetector):
         caption = kwargs['caption']
         phases = kwargs['phases']
 
-        import pdb
-        pdb.set_trace()
-
         # region features
         img_all = torch.cat((img, img_crops), dim=0)
         img_all_feats, last_f_map, f_maps = self.image_encoder(img_all)
@@ -233,7 +230,8 @@ class CLIP_Prompt_Booster(BaseDetector):
 
         all_prompt_context = torch.cat([att_prompt_context, cate_prompt_context, phase_context, caption_context], dim=0)
         all_eot_index = torch.cat([att_eot_index, cate_eot_index, phase_eot_index, caption_eot_index], dim=0)
-
+        import pdb
+        pdb.set_trace()
         text_all_features = self.text_encoder(all_prompt_context, all_eot_index)
 
         logit_scale = self.logit_scale.exp()
